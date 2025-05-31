@@ -43,13 +43,17 @@
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| **Backend API** | FastAPI + Python | High-performance REST API |
+| **Backend API** | FastAPI + Python | High-performance REST API (Port 8000) |
+| **Frontend UI** | React 18 (CDN) + HTML | Voice-to-voice interface (Port 3000) |
+| **Styling** | Tailwind CSS (CDN) | Utility-first CSS framework |
+| **JSX Transform** | Babel Standalone | In-browser JSX compilation |
 | **Package Manager** | UV | Fast Python package installer |
 | **AI Engine** | OpenAI GPT-4 | Negotiation strategy and responses |
 | **Voice Processing** | OpenAI Whisper + ElevenLabs | Speech-to-text and text-to-speech |
 | **Data Management** | Pydantic + JSON | Type-safe data models and storage |
 | **Real-Time Processing** | Async/Await | Non-blocking voice and AI operations |
 | **API Documentation** | FastAPI Auto-docs | Interactive API documentation |
+| **CORS Configuration** | Frontend ↔ Backend | Enables cross-origin requests (3000 → 8000) |
 
 ### **Why UV Package Manager?**
 
@@ -141,15 +145,177 @@
    source influencer-ai/bin/activate
    ```
 
-6. **Start the Server**
+6. **Start the Development Servers**
+
+   **Backend Server (Terminal 1):**
    ```bash
    uvicorn main:app --reload --port 8000
    ```
 
+   **Frontend Server (Terminal 2):**
+   ```bash
+   cd frontend
+   npm run dev
+   # or: bun run dev
+   ```
+
+   **Quick Start Script (Optional):**
+   ```bash
+   # Create a start script for convenience
+   
+   # Linux/Mac (start.sh):
+   #!/bin/bash
+   echo "Starting InfluencerFlow AI Platform..."
+   uvicorn main:app --reload --port 8000 &
+   sleep 2
+   python -m http.server 3000 &
+   echo "Backend: http://localhost:8000"
+   echo "Frontend: http://localhost:3000"
+   wait
+   
+   # Windows (start.bat):
+   @echo off
+   echo Starting InfluencerFlow AI Platform...
+   start cmd /k "uvicorn main:app --reload --port 8000"
+   timeout /t 2
+   start cmd /k "python -m http.server 3000"
+   echo Backend: http://localhost:8000
+   echo Frontend: http://localhost:3000
+   ```
+
 7. **Access the Application**
-   - **API**: http://localhost:8000
-   - **Documentation**: http://localhost:8000/docs
+   - **Backend API**: http://localhost:8000
+   - **API Documentation**: http://localhost:8000/docs
    - **Health Check**: http://localhost:8000/api/health
+   - **Frontend UI**: http://localhost:3000 (see Frontend Setup below)
+
+---
+
+## 🎨 **Frontend Setup**
+
+The platform includes a React-based frontend for the voice-to-voice negotiation interface.
+
+### **Frontend Prerequisites**
+- Node.js 16+ or Bun
+- npm, yarn, or pnpm
+
+### **Frontend Installation**
+
+#### **Method 1: Using Node.js + npm**
+
+```bash
+# Navigate to frontend directory (if separate)
+cd frontend  # or wherever your React app is located
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+# or
+npm start
+```
+
+#### **Method 2: Using Bun (Recommended for speed)**
+
+```bash
+# Install Bun if not already installed
+curl -fsSL https://bun.sh/install | bash
+
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+bun install
+
+# Start development server
+bun run dev
+```
+
+### **Frontend Environment Setup**
+
+Create `.env.local` in your frontend directory:
+
+```env
+# React App Environment Variables
+REACT_APP_API_BASE_URL=http://localhost:8000
+REACT_APP_WS_URL=ws://localhost:8000
+REACT_APP_ENABLE_VOICE=true
+
+# Optional: Environment indicator
+REACT_APP_ENV=development
+```
+
+### **Available Scripts**
+
+```bash
+# Start development server
+npm run dev          # or bun run dev
+
+# Build for production
+npm run build        # or bun run build
+
+# Run tests
+npm test            # or bun test
+
+# Preview production build
+npm run preview     # or bun run preview
+```
+
+### **Frontend Features**
+
+- **🎤 Voice Interface**: Click-to-speak negotiation interface
+- **📊 Real-time Dashboard**: Live deal parameters and insights
+- **💬 Chat Interface**: Text-based conversation fallback
+- **📈 Analytics Panel**: ROI calculations and performance metrics
+- **🎯 Demo Scenarios**: Pre-configured negotiation scenarios
+
+---
+
+## 🚀 **Full Stack Development Setup**
+
+### **Running Both Backend + Frontend**
+
+#### **Terminal 1: Backend Server**
+```bash
+# Activate virtual environment
+influencer-ai\Scripts\activate  # Windows
+# or source influencer-ai/bin/activate  # Linux/Mac
+
+# Start FastAPI server
+uvicorn main:app --reload --port 8000
+```
+
+#### **Terminal 2: Frontend Server**
+```bash
+# Navigate to frontend
+cd frontend  # or your React app directory
+
+# Start React development server
+npm run dev  # Runs on http://localhost:3000
+# or bun run dev
+```
+
+#### **Terminal 3: Development Tools (Optional)**
+```bash
+# Watch for file changes, run tests, etc.
+npm run test:watch
+```
+
+### **Development Workflow**
+
+1. **Backend Changes**: 
+   - Edit Python files → FastAPI auto-reloads
+   - Test API endpoints at http://localhost:8000/docs
+
+2. **Frontend Changes**:
+   - Edit React components → Hot reload at http://localhost:3000
+   - Test voice features and UI interactions
+
+3. **Full Stack Testing**:
+   - Frontend calls backend API
+   - Voice features use both servers
+   - Real-time updates across both interfaces
 
 ### **Dependencies List**
 
@@ -311,11 +477,36 @@ Once the server is running, visit:
 
 ### **Voice Demo Walkthrough**
 
-1. **Start the application** and click "Demo 1"
-2. **Click the microphone** and say:
+**Prerequisites:** 
+- Backend server running on http://localhost:8000
+- Frontend served via HTTP (not file://) for microphone access
+
+**Setup Steps:**
+1. **Start Backend**: `uvicorn main:app --reload --port 8000`
+2. **Start Frontend**: `python -m http.server 3000`
+3. **Open Browser**: Navigate to http://localhost:3000
+
+**Demo Flow:**
+1. **Click "Demo 1"** to load the TechReviewer_Sarah scenario
+2. **Click the microphone icon** and say:
    > *"Hi Sarah! We'd like to collaborate on a wireless charging pad review. Our budget is $4,000."*
-3. **Listen to AI response** and continue the conversation
-4. **Watch real-time updates** in the strategy panel and deal parameters
+3. **Listen to AI response** through your speakers/headphones
+4. **Continue the conversation** and watch real-time updates in:
+   - Strategy panel (right sidebar)
+   - Deal parameters (top dashboard)
+   - ROI calculations (analytics section)
+   - Conversation history (chat panel)
+
+### **Demo Checklist**
+
+Before starting the demo, ensure:
+- [ ] Backend server running on http://localhost:8000
+- [ ] Frontend served on http://localhost:3000 (not file://)
+- [ ] Microphone permissions enabled in browser
+- [ ] Speaker/headphone volume audible
+- [ ] OpenAI API key configured in `.env`
+- [ ] ElevenLabs API key configured (for voice responses)
+- [ ] Using Chrome or Firefox for best compatibility
 
 ### **Sample Creators Available**
 
@@ -334,6 +525,7 @@ Once the server is running, visit:
 ```
 influencerflow-ai/
 ├── main.py                     # FastAPI application entry point
+├── index.html                  # React frontend (CDN-based, no build required)
 ├── models/                     # Pydantic data models
 │   ├── conversation.py         # Conversation and deal models
 │   └── creator.py             # Creator profile models
@@ -419,12 +611,38 @@ curl http://localhost:8000/api/creators
 curl http://localhost:8000/api/market-data
 ```
 
-### **Testing Voice Features**
+### **Frontend Troubleshooting**
 
-1. Ensure microphone permissions are enabled
-2. Use Chrome or Firefox for best compatibility
-3. Speak clearly for better transcription accuracy
-4. Check browser console for any errors
+**Port 3000 Already in Use:**
+```bash
+# Kill process on port 3000
+# Windows:
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+
+# Linux/Mac:
+lsof -ti:3000 | xargs kill -9
+
+# Or use different port:
+python -m http.server 3001
+```
+
+**CORS Errors:**
+- Ensure backend is running on port 8000
+- Check that CORS middleware allows localhost:3000
+- Must use HTTP server (not file://) to avoid CORS issues
+
+**Voice Features Not Working:**
+- Enable microphone permissions in browser
+- Must serve via HTTP (not file://) for microphone access
+- Check browser console for WebRTC errors
+- Verify ElevenLabs API key configuration
+- Ensure both backend and frontend servers are running
+
+**CDN Loading Issues:**
+- Check internet connection for CDN resources
+- Verify browser allows loading external scripts
+- Try different browser if scripts fail to load
 
 ---
 
@@ -481,7 +699,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🚀 **What's Next?**
 
-- [ ] Frontend React application
 - [ ] Database integration (PostgreSQL/MongoDB)
 - [ ] Real-time WebSocket connections
 - [ ] Advanced analytics dashboard
@@ -489,6 +706,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Integration with social media APIs
 - [ ] Campaign performance tracking
 - [ ] Advanced AI training on negotiation data
+- [ ] Mobile app (React Native)
+- [ ] Chrome extension for quick negotiations
 
 ---
 
