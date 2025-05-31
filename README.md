@@ -1,1 +1,1 @@
-# Buildathon-2.0
+# influencer-ai
