@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfluencerFlow AI - Voice Negotiation Demo</title>
+    <title>InfluencerFlow AI - Voice Negotiation Platform</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -32,6 +32,17 @@
             0%, 100% { opacity: 0.5; }
             50% { opacity: 1; }
         }
+        .tab-active {
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid white;
+        }
+        .call-status-ringing {
+            animation: ring 1s infinite;
+        }
+        @keyframes ring {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
     </style>
 </head>
 <body>
@@ -40,6 +51,10 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        // API Base URL
+        const API_BASE = 'http://localhost:8000/api';
+
+        // Original Voice Demo Component
         const VoiceNegotiationDemo = () => {
             const [isRecording, setIsRecording] = useState(false);
             const [conversation, setConversation] = useState(null);
@@ -55,9 +70,6 @@
             const mediaRecorderRef = useRef(null);
             const audioChunksRef = useRef([]);
             const audioRef = useRef(null);
-
-            // API Base URL - Updated for your local setup
-            const API_BASE = 'http://localhost:8000/api';
 
             useEffect(() => {
                 checkConnection();
@@ -321,241 +333,192 @@
             ];
 
             return (
-                <div className="min-h-screen bg-gray-50">
-                    {/* Header */}
-                    <div className="gradient-bg text-white p-6">
-                        <div className="max-w-6xl mx-auto flex justify-between items-center">
-                            <div>
-                                <h1 className="text-3xl font-bold mb-2">InfluencerFlow AI</h1>
-                                <p className="text-blue-100">Voice-Powered Negotiation Assistant</p>
-                            </div>
-                            <div className={`text-sm ${getStatusColor()}`}>
-                                {getStatusText()}
+                <div className="max-w-6xl mx-auto p-6">
+                    {/* Campaign Setup */}
+                    {!conversation && connectionStatus === 'connected' && (
+                        <div className="bg-white rounded-lg card-shadow p-6 mb-6">
+                            <h2 className="text-xl font-semibold mb-4">Voice Demo - Initialize Campaign</h2>
+                            <div className="flex items-center gap-4">
+                                <select 
+                                    value={selectedCreator}
+                                    onChange={(e) => setSelectedCreator(e.target.value)}
+                                    className="border rounded px-3 py-2 min-w-0 flex-1"
+                                >
+                                    {creators.map(creator => (
+                                        <option key={creator.id} value={creator.name}>
+                                            {creator.name} ({creator.niche} - {creator.followers.toLocaleString()} followers)
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={initializeCampaign}
+                                    disabled={isLoading}
+                                    className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 transition-colors"
+                                >
+                                    {isLoading ? 'Initializing...' : 'Start Demo'}
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="max-w-6xl mx-auto p-6">
-                        {/* Campaign Setup */}
-                        {!conversation && connectionStatus === 'connected' && (
-                            <div className="bg-white rounded-lg card-shadow p-6 mb-6">
-                                <h2 className="text-xl font-semibold mb-4">Initialize Campaign</h2>
-                                <div className="flex items-center gap-4">
-                                    <select 
-                                        value={selectedCreator}
-                                        onChange={(e) => setSelectedCreator(e.target.value)}
-                                        className="border rounded px-3 py-2 min-w-0 flex-1"
-                                    >
-                                        {creators.map(creator => (
-                                            <option key={creator.id} value={creator.name}>
-                                                {creator.name} ({creator.niche} - {creator.followers.toLocaleString()} followers)
-                                            </option>
+                    {conversation && (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Chat Interface */}
+                            <div className="lg:col-span-2">
+                                <div className="bg-white rounded-lg card-shadow">
+                                    {/* Messages */}
+                                    <div className="h-96 overflow-y-auto p-4 border-b">
+                                        {messages.map((msg, idx) => (
+                                            <div key={idx} className={`mb-4 ${msg.role === 'assistant' ? 'text-left' : 'text-right'}`}>
+                                                <div className={`inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                                    msg.role === 'assistant' 
+                                                        ? msg.type === 'ai_strategy' 
+                                                            ? 'bg-purple-100 text-purple-900'
+                                                            : 'bg-blue-100 text-blue-900'
+                                                        : msg.role === 'system'
+                                                        ? 'bg-gray-100 text-gray-700 text-sm'
+                                                        : 'bg-green-100 text-green-900'
+                                                }`}>
+                                                    <div className="font-medium text-xs mb-1">
+                                                        {msg.role === 'assistant' 
+                                                            ? msg.type === 'ai_strategy' ? 'AI Strategy' : 'AI Agent'
+                                                            : msg.role === 'system' ? 'System' : 'Creator (You)'}
+                                                        {msg.type && msg.type !== 'ai_strategy' && (
+                                                            <span className="ml-2 text-gray-500">
+                                                                ({msg.type})
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div>{msg.content}</div>
+                                                </div>
+                                            </div>
                                         ))}
-                                    </select>
-                                    <button
-                                        onClick={initializeCampaign}
-                                        disabled={isLoading}
-                                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 transition-colors"
-                                    >
-                                        {isLoading ? 'Initializing...' : 'Start Campaign'}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {conversation && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                {/* Chat Interface */}
-                                <div className="lg:col-span-2">
-                                    <div className="bg-white rounded-lg card-shadow">
-                                        {/* Messages */}
-                                        <div className="h-96 overflow-y-auto p-4 border-b">
-                                            {messages.map((msg, idx) => (
-                                                <div key={idx} className={`mb-4 ${msg.role === 'assistant' ? 'text-left' : 'text-right'}`}>
-                                                    <div className={`inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                                                        msg.role === 'assistant' 
-                                                            ? msg.type === 'ai_strategy' 
-                                                                ? 'bg-purple-100 text-purple-900'
-                                                                : 'bg-blue-100 text-blue-900'
-                                                            : msg.role === 'system'
-                                                            ? 'bg-gray-100 text-gray-700 text-sm'
-                                                            : 'bg-green-100 text-green-900'
-                                                    }`}>
-                                                        <div className="font-medium text-xs mb-1">
-                                                            {msg.role === 'assistant' 
-                                                                ? msg.type === 'ai_strategy' ? 'AI Strategy' : 'AI Agent'
-                                                                : msg.role === 'system' ? 'System' : 'Creator (You)'}
-                                                            {msg.type && msg.type !== 'ai_strategy' && (
-                                                                <span className="ml-2 text-gray-500">
-                                                                    ({msg.type})
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div>{msg.content}</div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {isLoading && (
-                                                <div className="text-center py-4">
-                                                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                                                    <span className="ml-2 text-gray-600 ai-thinking">AI is thinking...</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Controls */}
-                                        <div className="p-4">
-                                            {/* Voice Controls */}
-                                            <div className="flex items-center justify-center gap-4 mb-4">
-                                                <button
-                                                    onClick={isRecording ? stopRecording : startRecording}
-                                                    disabled={isLoading}
-                                                    className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-lg transition-all ${
-                                                        isRecording 
-                                                            ? 'bg-red-500 hover:bg-red-600 recording-pulse' 
-                                                            : 'bg-green-500 hover:bg-green-600'
-                                                    } disabled:bg-gray-400`}
-                                                >
-                                                    {isRecording ? '⏹️' : '🎤'}
-                                                </button>
-                                                <div className="text-center">
-                                                    <p className="text-sm text-gray-600">
-                                                        {isRecording ? 'Recording... Click to stop' : 'Click microphone to start recording'}
-                                                    </p>
-                                                </div>
+                                        {isLoading && (
+                                            <div className="text-center py-4">
+                                                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                                                <span className="ml-2 text-gray-600 ai-thinking">AI is thinking...</span>
                                             </div>
-
-                                            {/* Demo Messages */}
-                                            <div className="border-t pt-4">
-                                                <p className="text-sm text-gray-600 mb-2">Quick Demo Messages:</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {demoMessages.map((msg, idx) => (
-                                                        <button
-                                                            key={idx}
-                                                            onClick={() => sendTextMessage(msg)}
-                                                            disabled={isLoading}
-                                                            className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded transition-colors disabled:opacity-50"
-                                                        >
-                                                            Demo {idx + 1}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* Custom Message */}
-                                            <div className="mt-4">
-                                                <button
-                                                    onClick={() => {
-                                                        const message = prompt('Enter your message as the creator:');
-                                                        if (message) sendTextMessage(message);
-                                                    }}
-                                                    disabled={isLoading}
-                                                    className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-gray-400 transition-colors"
-                                                >
-                                                    Type Custom Message
-                                                </button>
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
-                                </div>
 
-                                {/* Deal Status & Insights */}
-                                <div className="space-y-6">
-                                    {/* Current Deal */}
-                                    {currentDeal && (
-                                        <div className={`bg-white rounded-lg card-shadow p-4 ${currentDeal.negotiation_progress > 90 ? 'success-glow' : ''}`}>
-                                            <h3 className="font-semibold mb-3">Current Deal</h3>
-                                            <div className="space-y-2 text-sm">
-                                                <div className="flex justify-between">
-                                                    <span>Current Offer:</span>
-                                                    <span className="font-semibold">${currentDeal.current_offer?.toLocaleString()}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>Creator Rate:</span>
-                                                    <span>${currentDeal.creator_typical_rate?.toLocaleString()}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>Progress:</span>
-                                                    <span className={`font-semibold ${currentDeal.negotiation_progress > 90 ? 'text-green-600' : ''}`}>
-                                                        {currentDeal.negotiation_progress}%
-                                                    </span>
-                                                </div>
-                                                <div className="pt-2">
-                                                    <span className="text-gray-600">Timeline:</span>
-                                                    <div className="mt-1">{currentDeal.timeline}</div>
-                                                </div>
-                                                <div className="pt-2">
-                                                    <span className="text-gray-600">Price Changes:</span>
-                                                    <div className="mt-1">{currentDeal.total_price_changes}</div>
-                                                </div>
+                                    {/* Controls */}
+                                    <div className="p-4">
+                                        {/* Voice Controls */}
+                                        <div className="flex items-center justify-center gap-4 mb-4">
+                                            <button
+                                                onClick={isRecording ? stopRecording : startRecording}
+                                                disabled={isLoading}
+                                                className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-lg transition-all ${
+                                                    isRecording 
+                                                        ? 'bg-red-500 hover:bg-red-600 recording-pulse' 
+                                                        : 'bg-green-500 hover:bg-green-600'
+                                                } disabled:bg-gray-400`}
+                                            >
+                                                {isRecording ? '⏹️' : '🎤'}
+                                            </button>
+                                            <div className="text-center">
+                                                <p className="text-sm text-gray-600">
+                                                    {isRecording ? 'Recording... Click to stop' : 'Click microphone to start recording'}
+                                                </p>
                                             </div>
                                         </div>
-                                    )}
 
-                                    {/* Insights */}
-                                    {insights.length > 0 && (
-                                        <div className="bg-white rounded-lg card-shadow p-4">
-                                            <h3 className="font-semibold mb-3">AI Insights</h3>
-                                            <div className="space-y-2">
-                                                {insights.map((insight, idx) => (
-                                                    <div key={idx} className="text-sm bg-blue-50 p-2 rounded">
-                                                        💡 {insight}
-                                                    </div>
+                                        {/* Demo Messages */}
+                                        <div className="border-t pt-4">
+                                            <p className="text-sm text-gray-600 mb-2">Quick Demo Messages:</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {demoMessages.map((msg, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => sendTextMessage(msg)}
+                                                        disabled={isLoading}
+                                                        className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded transition-colors disabled:opacity-50"
+                                                    >
+                                                        Demo {idx + 1}
+                                                    </button>
                                                 ))}
                                             </div>
                                         </div>
-                                    )}
 
-                                    {/* Creator Info */}
-                                    {conversation && (
-                                        <div className="bg-white rounded-lg card-shadow p-4">
-                                            <h3 className="font-semibold mb-3">Creator Profile</h3>
-                                            <div className="text-sm space-y-1">
-                                                <div><strong>{conversation.creator_profile.name}</strong></div>
-                                                <div>{conversation.creator_profile.platform} • {conversation.creator_profile.followers.toLocaleString()} followers</div>
-                                                <div>Engagement: {conversation.creator_profile.engagement_rate}%</div>
-                                                <div>Niche: {conversation.creator_profile.niche}</div>
+                                        {/* Custom Message */}
+                                        <div className="mt-4">
+                                            <button
+                                                onClick={() => {
+                                                    const message = prompt('Enter your message as the creator:');
+                                                    if (message) sendTextMessage(message);
+                                                }}
+                                                disabled={isLoading}
+                                                className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-gray-400 transition-colors"
+                                            >
+                                                Type Custom Message
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Deal Status & Insights */}
+                            <div className="space-y-6">
+                                {/* Current Deal */}
+                                {currentDeal && (
+                                    <div className={`bg-white rounded-lg card-shadow p-4 ${currentDeal.negotiation_progress > 90 ? 'success-glow' : ''}`}>
+                                        <h3 className="font-semibold mb-3">Current Deal</h3>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span>Current Offer:</span>
+                                                <span className="font-semibold">${currentDeal.current_offer?.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Creator Rate:</span>
+                                                <span>${currentDeal.creator_typical_rate?.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Progress:</span>
+                                                <span className={`font-semibold ${currentDeal.negotiation_progress > 90 ? 'text-green-600' : ''}`}>
+                                                    {currentDeal.negotiation_progress}%
+                                                </span>
+                                            </div>
+                                            <div className="pt-2">
+                                                <span className="text-gray-600">Timeline:</span>
+                                                <div className="mt-1">{currentDeal.timeline}</div>
+                                            </div>
+                                            <div className="pt-2">
+                                                <span className="text-gray-600">Price Changes:</span>
+                                                <div className="mt-1">{currentDeal.total_price_changes}</div>
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Error Display */}
-                        {error && (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <strong>Error:</strong> {error}
                                     </div>
-                                    <button
-                                        onClick={() => setError(null)}
-                                        className="text-red-700 hover:text-red-900 font-bold text-lg"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+                                )}
 
-                        {/* Connection Error State */}
-                        {connectionStatus === 'error' && (
-                            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-                                <h3 className="font-semibold mb-2">API Server Not Running</h3>
-                                <p>Please start your FastAPI server:</p>
-                                <code className="block bg-gray-800 text-green-400 p-2 rounded mt-2 text-sm">
-                                    python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-                                </code>
-                                <button 
-                                    onClick={checkConnection}
-                                    className="mt-3 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-                                >
-                                    Retry Connection
-                                </button>
+                                {/* Insights */}
+                                {insights.length > 0 && (
+                                    <div className="bg-white rounded-lg card-shadow p-4">
+                                        <h3 className="font-semibold mb-3">AI Insights</h3>
+                                        <div className="space-y-2">
+                                            {insights.map((insight, idx) => (
+                                                <div key={idx} className="text-sm bg-blue-50 p-2 rounded">
+                                                    💡 {insight}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Creator Info */}
+                                {conversation && (
+                                    <div className="bg-white rounded-lg card-shadow p-4">
+                                        <h3 className="font-semibold mb-3">Creator Profile</h3>
+                                        <div className="text-sm space-y-1">
+                                            <div><strong>{conversation.creator_profile.name}</strong></div>
+                                            <div>{conversation.creator_profile.platform} • {conversation.creator_profile.followers.toLocaleString()} followers</div>
+                                            <div>Engagement: {conversation.creator_profile.engagement_rate}%</div>
+                                            <div>Niche: {conversation.creator_profile.niche}</div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
 
                     {/* Hidden audio element for playing responses */}
                     <audio ref={audioRef} controls style={{display: 'none'}} />
@@ -563,7 +526,465 @@
             );
         };
 
-        ReactDOM.render(<VoiceNegotiationDemo />, document.getElementById('root'));
+        // NEW: Live Voice Call Interface
+        const VoiceCallInterface = () => {
+            const [callState, setCallState] = useState('idle'); // idle, initiating, ringing, active, completed
+            const [currentCall, setCurrentCall] = useState(null);
+            const [liveTranscript, setLiveTranscript] = useState([]);
+            const [currentDeal, setCurrentDeal] = useState({});
+            const [selectedCreator, setSelectedCreator] = useState(null);
+            const [creators, setCreators] = useState([]);
+            const [campaignBrief, setCampaignBrief] = useState({
+                brand_name: 'TechBrand Agency',
+                product_name: 'iPhone MagSafe Case',
+                campaign_type: 'Product Review',
+                deliverables: ['video_review', 'instagram_post'],
+                budget_max: 4000,
+                timeline: 'Next Friday'
+            });
+
+            useEffect(() => {
+                loadCreators();
+            }, []);
+
+            const loadCreators = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/creators`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setCreators(data);
+                        if (data.length > 0) {
+                            setSelectedCreator(data[0]);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to load creators:', err);
+                }
+            };
+
+            const initiateCreatorCall = async () => {
+                try {
+                    setCallState('initiating');
+                    
+                    const response = await fetch(`${API_BASE}/voice/initiate-creator-call`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            creator_id: selectedCreator.id,
+                            campaign_brief: campaignBrief,
+                            brand_name: campaignBrief.brand_name,
+                            contact_person: 'AI Assistant Alex'
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        setCurrentCall(result);
+                        setCallState('ringing');
+                        startCallStatusPolling(result.call_sid);
+                    } else {
+                        throw new Error(result.message || 'Failed to initiate call');
+                    }
+                } catch (error) {
+                    console.error('Call initiation failed:', error);
+                    setCallState('idle');
+                    alert('Failed to initiate call: ' + error.message);
+                }
+            };
+
+            const startCallStatusPolling = (callSid) => {
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const response = await fetch(`${API_BASE}/voice/call-status/${callSid}`);
+                        const status = await response.json();
+                        
+                        setCurrentCall(prev => ({ ...prev, ...status }));
+                        setLiveTranscript(status.live_transcript || []);
+                        setCurrentDeal(status.current_deal || {});
+                        
+                        // Update call state based on Twilio status
+                        if (status.status === 'in-progress') {
+                            setCallState('active');
+                        } else if (status.status === 'completed') {
+                            setCallState('completed');
+                            clearInterval(pollInterval);
+                        } else if (status.status === 'failed' || status.status === 'busy') {
+                            setCallState('failed');
+                            clearInterval(pollInterval);
+                        }
+                        
+                    } catch (error) {
+                        console.error('Status polling error:', error);
+                    }
+                }, 2000); // Poll every 2 seconds
+
+                // Clean up after 10 minutes
+                setTimeout(() => clearInterval(pollInterval), 600000);
+            };
+
+            const formatDuration = (seconds) => {
+                if (!seconds) return '0:00';
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            const getCallStatusDisplay = () => {
+                switch (callState) {
+                    case 'initiating': return { text: '📞 Placing call...', color: 'text-blue-600', icon: '📞' };
+                    case 'ringing': return { text: '📳 Ringing...', color: 'text-yellow-600', icon: '📳' };
+                    case 'active': return { text: '🔴 Live conversation', color: 'text-green-600', icon: '🔴' };
+                    case 'completed': return { text: '✅ Call completed', color: 'text-green-700', icon: '✅' };
+                    case 'failed': return { text: '❌ Call failed', color: 'text-red-600', icon: '❌' };
+                    default: return { text: '⚪ Ready to call', color: 'text-gray-600', icon: '📞' };
+                }
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto p-6">
+                    {/* Call Control Panel */}
+                    <div className="bg-white rounded-lg card-shadow p-6 mb-6">
+                        <h2 className="text-2xl font-bold mb-4">🤖 AI Agency Representative - Live Creator Calls</h2>
+                        
+                        {/* Creator Selection */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Select Creator to Call</label>
+                                <select 
+                                    value={selectedCreator?.id || ''} 
+                                    onChange={(e) => {
+                                        const creator = creators.find(c => c.id === e.target.value);
+                                        setSelectedCreator(creator);
+                                    }}
+                                    className="w-full border rounded-lg px-3 py-2"
+                                    disabled={callState !== 'idle'}
+                                >
+                                    <option value="">Choose a creator...</option>
+                                    {creators.map(creator => (
+                                        <option key={creator.id} value={creator.id}>
+                                            {creator.name} - {creator.platform} ({creator.followers.toLocaleString()})
+                                            {creator.phone_number ? ' 📞' : ' (No phone)'}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Campaign Brief</label>
+                                <div className="text-sm bg-gray-50 p-3 rounded border">
+                                    <div><strong>Brand:</strong> {campaignBrief.brand_name}</div>
+                                    <div><strong>Product:</strong> {campaignBrief.product_name}</div>
+                                    <div><strong>Budget:</strong> Up to ${campaignBrief.budget_max.toLocaleString()}</div>
+                                    <div><strong>Timeline:</strong> {campaignBrief.timeline}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Call Status and Controls */}
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div className="flex items-center space-x-4">
+                                <div className={`text-lg font-semibold ${getCallStatusDisplay().color} ${callState === 'ringing' ? 'call-status-ringing' : ''}`}>
+                                    {getCallStatusDisplay().icon} {getCallStatusDisplay().text}
+                                </div>
+                                {currentCall?.duration && (
+                                    <div className="text-gray-600">
+                                        Duration: {formatDuration(currentCall.duration)}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="space-x-3">
+                                {callState === 'idle' && (
+                                    <button
+                                        onClick={initiateCreatorCall}
+                                        disabled={!selectedCreator || !selectedCreator.phone_number}
+                                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+                                    >
+                                        📞 Call Creator
+                                    </button>
+                                )}
+                                
+                                {callState === 'active' && (
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                                        <span className="text-red-600 font-semibold">AI Agent is negotiating...</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {!selectedCreator?.phone_number && selectedCreator && (
+                            <div className="mt-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                                ⚠️ This creator doesn't have a phone number configured. Add one to creators.json to enable calling.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Live Call Interface */}
+                    {callState !== 'idle' && (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            
+                            {/* Live Transcript */}
+                            <div className="lg:col-span-2 bg-white rounded-lg card-shadow p-6">
+                                <h3 className="text-lg font-semibold mb-4 flex items-center">
+                                    📝 Live Conversation
+                                    {callState === 'active' && <span className="ml-2 text-sm text-green-600">(Real-time)</span>}
+                                </h3>
+                                
+                                <div className="h-96 overflow-y-auto border rounded-lg p-4 bg-gray-50">
+                                    {liveTranscript.length === 0 && callState !== 'active' ? (
+                                        <div className="text-gray-500 text-center py-8">
+                                            {callState === 'ringing' ? 'Waiting for creator to answer...' : 
+                                             callState === 'initiating' ? 'Placing call...' : 'No transcript available yet'}
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {liveTranscript.map((message, idx) => (
+                                                <div key={idx} className={`flex ${message.speaker === 'ai_agent' ? 'justify-start' : 'justify-end'}`}>
+                                                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                                        message.speaker === 'ai_agent' 
+                                                            ? 'bg-blue-100 text-blue-900' 
+                                                            : 'bg-green-100 text-green-900'
+                                                    }`}>
+                                                        <div className="font-medium text-xs mb-1">
+                                                            {message.speaker === 'ai_agent' ? '🤖 AI Agent' : '👤 Creator'}
+                                                            <span className="ml-2 text-gray-500">
+                                                                {new Date(message.timestamp).toLocaleTimeString()}
+                                                            </span>
+                                                        </div>
+                                                        <div>{message.content}</div>
+                                                        {message.confidence && (
+                                                            <div className="text-xs text-gray-500 mt-1">
+                                                                Confidence: {(message.confidence * 100).toFixed(0)}%
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            
+                                            {callState === 'active' && (
+                                                <div className="text-center text-gray-500 text-sm animate-pulse">
+                                                    🎙️ Conversation in progress...
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Deal Status Panel */}
+                            <div className="space-y-6">
+                                {/* Current Deal Parameters */}
+                                <div className="bg-white rounded-lg card-shadow p-4">
+                                    <h3 className="font-semibold mb-3 flex items-center">
+                                        💰 Deal Parameters
+                                        {callState === 'active' && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Live</span>}
+                                    </h3>
+                                    
+                                    {Object.keys(currentDeal).length > 0 ? (
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span>Price:</span>
+                                                <span className="font-semibold">${currentDeal.price?.toLocaleString() || 'TBD'}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Timeline:</span>
+                                                <span>{currentDeal.timeline || 'TBD'}</span>
+                                            </div>
+                                            <div className="pt-2">
+                                                <span className="text-gray-600">Deliverables:</span>
+                                                <div className="mt-1">
+                                                    {currentDeal.deliverables?.map((item, idx) => (
+                                                        <div key={idx} className="text-xs bg-gray-100 inline-block px-2 py-1 rounded mr-1 mb-1">
+                                                            {item}
+                                                        </div>
+                                                    )) || 'TBD'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-gray-500 text-sm">Negotiation not started</div>
+                                    )}
+                                </div>
+
+                                {/* Creator Info */}
+                                {selectedCreator && (
+                                    <div className="bg-white rounded-lg card-shadow p-4">
+                                        <h3 className="font-semibold mb-3">👤 Creator Profile</h3>
+                                        <div className="text-sm space-y-1">
+                                            <div><strong>{selectedCreator.name}</strong></div>
+                                            <div>{selectedCreator.platform} • {selectedCreator.followers.toLocaleString()} followers</div>
+                                            <div>Engagement: {selectedCreator.engagement_rate}%</div>
+                                            <div>Typical Rate: ${selectedCreator.typical_rate.toLocaleString()}</div>
+                                            <div>Availability: {selectedCreator.availability}</div>
+                                            {selectedCreator.phone_number && (
+                                                <div className="text-green-600">📞 Call-enabled</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Call Completed Summary */}
+                    {callState === 'completed' && (
+                        <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-6">
+                            <h3 className="text-lg font-semibold text-green-800 mb-3">✅ Call Completed Successfully!</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <strong>Duration:</strong> {formatDuration(currentCall?.duration)}
+                                </div>
+                                <div>
+                                    <strong>Outcome:</strong> {currentDeal.price ? 'Deal Agreed' : 'No Agreement'}
+                                </div>
+                                <div>
+                                    <strong>Next Steps:</strong> Contract generation
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {callState === 'failed' && (
+                        <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-6">
+                            <h3 className="text-lg font-semibold text-red-800 mb-3">❌ Call Failed</h3>
+                            <p className="text-sm text-red-700">The call could not be completed. Please check the phone number and try again.</p>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Main App Component with Navigation
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('live-calls');
+            const [connectionStatus, setConnectionStatus] = useState('checking');
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                checkConnection();
+            }, []);
+
+            const checkConnection = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/health`);
+                    if (response.ok) {
+                        setConnectionStatus('connected');
+                    } else {
+                        setConnectionStatus('error');
+                    }
+                } catch (err) {
+                    setConnectionStatus('error');
+                    setError('Cannot connect to API server. Make sure it\'s running on http://localhost:8000');
+                }
+            };
+
+            const getStatusColor = () => {
+                switch (connectionStatus) {
+                    case 'connected': return 'text-green-500';
+                    case 'error': return 'text-red-500';
+                    default: return 'text-yellow-500';
+                }
+            };
+
+            const getStatusText = () => {
+                switch (connectionStatus) {
+                    case 'connected': return '● API Connected';
+                    case 'error': return '● API Connection Failed';
+                    default: return '● Checking Connection...';
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    {/* Header */}
+                    <div className="gradient-bg text-white p-6">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="flex justify-between items-center mb-4">
+                                <div>
+                                    <h1 className="text-3xl font-bold mb-2">InfluencerFlow AI</h1>
+                                    <p className="text-blue-100">AI-Powered Creator Negotiation Platform</p>
+                                </div>
+                                <div className={`text-sm ${getStatusColor()}`}>
+                                    {getStatusText()}
+                                </div>
+                            </div>
+                            
+                            {/* Navigation Tabs */}
+                            <div className="flex space-x-1">
+                                <button
+                                    onClick={() => setActiveTab('live-calls')}
+                                    className={`px-6 py-3 rounded-t-lg transition-all ${
+                                        activeTab === 'live-calls' 
+                                            ? 'tab-active text-white' 
+                                            : 'text-blue-200 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    📞 Live Calls
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('voice-demo')}
+                                    className={`px-6 py-3 rounded-t-lg transition-all ${
+                                        activeTab === 'voice-demo' 
+                                            ? 'tab-active text-white' 
+                                            : 'text-blue-200 hover:text-white hover:bg-white/10'
+                                    }`}
+                                >
+                                    🎤 Voice Demo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    {connectionStatus === 'connected' ? (
+                        <>
+                            {activeTab === 'live-calls' && <VoiceCallInterface />}
+                            {activeTab === 'voice-demo' && <VoiceNegotiationDemo />}
+                        </>
+                    ) : (
+                        <div className="max-w-6xl mx-auto p-6">
+                            {/* Error Display */}
+                            {error && (
+                                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <strong>Error:</strong> {error}
+                                        </div>
+                                        <button
+                                            onClick={() => setError(null)}
+                                            className="text-red-700 hover:text-red-900 font-bold text-lg"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Connection Error State */}
+                            {connectionStatus === 'error' && (
+                                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                                    <h3 className="font-semibold mb-2">API Server Not Running</h3>
+                                    <p>Please start your FastAPI server:</p>
+                                    <code className="block bg-gray-800 text-green-400 p-2 rounded mt-2 text-sm">
+                                        uvicorn main:app --reload --host 0.0.0.0 --port 8000
+                                    </code>
+                                    <button 
+                                        onClick={checkConnection}
+                                        className="mt-3 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                                    >
+                                        Retry Connection
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>

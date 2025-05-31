@@ -12,6 +12,7 @@
       "last_campaign_date": "2024-10-15",
       "availability": "good",
       "location": "Mumbai, India",
+      "phone_number": "+918806859890",
       "languages": ["English", "Hindi"],
       "specialties": ["smartphone_reviews", "gadget_unboxing", "tech_tutorials"],
       "audience_demographics": {
@@ -63,6 +64,7 @@
       "last_campaign_date": "2024-11-01",
       "availability": "limited",
       "location": "Los Angeles, USA",
+      "phone_number": "+918806859890",
       "languages": ["English", "Spanish"],
       "specialties": ["workout_routines", "supplement_reviews", "fitness_gear"],
       "audience_demographics": {
@@ -114,6 +116,7 @@
       "last_campaign_date": "2024-11-20",
       "availability": "busy",
       "location": "Delhi, India",
+      "phone_number": "+918806859890",
       "languages": ["English", "Hindi", "Punjabi"],
       "specialties": ["makeup_tutorials", "skincare_reviews", "fashion_hauls"],
       "audience_demographics": {
@@ -165,6 +168,7 @@
       "last_campaign_date": "2024-10-30",
       "availability": "good",
       "location": "Toronto, Canada",
+      "phone_number": "+918806859890",
       "languages": ["English", "French"],
       "specialties": ["fps_games", "game_reviews", "tech_hardware"],
       "audience_demographics": {
@@ -216,6 +220,7 @@
       "last_campaign_date": "2024-11-10",
       "availability": "excellent",
       "location": "New York, USA",
+      "phone_number": "+918806859890",
       "languages": ["English"],
       "specialties": ["restaurant_reviews", "recipe_videos", "food_photography"],
       "audience_demographics": {
