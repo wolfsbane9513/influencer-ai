@@ -44,11 +44,20 @@
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **Backend API** | FastAPI + Python | High-performance REST API |
+| **Package Manager** | UV | Fast Python package installer |
 | **AI Engine** | OpenAI GPT-4 | Negotiation strategy and responses |
 | **Voice Processing** | OpenAI Whisper + ElevenLabs | Speech-to-text and text-to-speech |
 | **Data Management** | Pydantic + JSON | Type-safe data models and storage |
 | **Real-Time Processing** | Async/Await | Non-blocking voice and AI operations |
 | **API Documentation** | FastAPI Auto-docs | Interactive API documentation |
+
+### **Why UV Package Manager?**
+
+- **⚡ Speed**: 10-100x faster than pip
+- **🔒 Reliable**: Deterministic dependency resolution
+- **🧹 Clean**: Better virtual environment management
+- **🔄 Compatible**: Works with existing pip workflows
+- **📦 Modern**: Built with Rust for performance
 
 ---
 
@@ -56,27 +65,65 @@
 
 ### **Prerequisites**
 - Python 3.8 or higher
+- [uv package manager](https://github.com/astral-sh/uv) (recommended) or pip
 - OpenAI API key
 - ElevenLabs API key (optional, for voice features)
 
 ### **Quick Start**
 
-1. **Clone the Repository**
+#### **Method 1: Using UV (Recommended)**
+
+1. **Install UV Package Manager**
+   ```bash
+   # Install uv (if not already installed)
+   curl -LsSf https://astral.sh/uv/install.sh | sh  # Linux/Mac
+   # or: pip install uv
+   ```
+
+2. **Clone the Repository**
    ```bash
    git clone https://github.com/your-username/influencerflow-ai.git
    cd influencerflow-ai
    ```
 
-2. **Create Virtual Environment**
+3. **Create Virtual Environment**
    ```bash
+   python -m venv influencer-ai
+   ```
+
+4. **Install Dependencies with UV**
+   ```bash
+   # Core dependencies
+   uv pip install --python influencer-ai\Scripts\python.exe fastapi>=0.105.0
+   uv pip install --python influencer-ai\Scripts\python.exe "uvicorn[standard]>=0.24.0"
+   uv pip install --python influencer-ai\Scripts\python.exe pydantic>=2.5.0
+   uv pip install --python influencer-ai\Scripts\python.exe openai>=1.6.0
+   uv pip install --python influencer-ai\Scripts\python.exe elevenlabs>=0.2.26
+   uv pip install --python influencer-ai\Scripts\python.exe python-decouple>=3.8
+   uv pip install --python influencer-ai\Scripts\python.exe python-multipart>=0.0.6
+   uv pip install --python influencer-ai\Scripts\python.exe aiofiles>=23.2.0
+   uv pip install --python influencer-ai\Scripts\python.exe httpx>=0.25.2
+   ```
+
+   **Or install all at once:**
+   ```bash
+   uv pip install --python influencer-ai\Scripts\python.exe fastapi>=0.105.0 "uvicorn[standard]>=0.24.0" pydantic>=2.5.0 openai>=1.6.0 elevenlabs>=0.2.26 python-decouple>=3.8 python-multipart>=0.0.6 aiofiles>=23.2.0 httpx>=0.25.2
+   ```
+
+#### **Method 2: Using Traditional Pip**
+
+1. **Clone and Create Environment**
+   ```bash
+   git clone https://github.com/your-username/influencerflow-ai.git
+   cd influencerflow-ai
    python -m venv influencer-ai
    source influencer-ai/bin/activate  # Linux/Mac
    # or influencer-ai\Scripts\activate  # Windows
    ```
 
-3. **Install Dependencies**
+2. **Install Dependencies**
    ```bash
-   pip install -r requirements.txt
+   pip install fastapi>=0.105.0 "uvicorn[standard]>=0.24.0" pydantic>=2.5.0 openai>=1.6.0 elevenlabs>=0.2.26 python-decouple>=3.8 python-multipart>=0.0.6 aiofiles>=23.2.0 httpx>=0.25.2
    ```
 
 4. **Environment Configuration**
@@ -85,15 +132,58 @@
    # Edit .env with your API keys
    ```
 
-5. **Start the Server**
+5. **Activate Virtual Environment** (if not already activated)
+   ```bash
+   # Windows
+   influencer-ai\Scripts\activate
+   
+   # Linux/Mac
+   source influencer-ai/bin/activate
+   ```
+
+6. **Start the Server**
    ```bash
    uvicorn main:app --reload --port 8000
    ```
 
-6. **Access the Application**
+7. **Access the Application**
    - **API**: http://localhost:8000
    - **Documentation**: http://localhost:8000/docs
    - **Health Check**: http://localhost:8000/api/health
+
+### **Dependencies List**
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `fastapi` | ≥0.105.0 | Web framework |
+| `uvicorn[standard]` | ≥0.24.0 | ASGI server |
+| `pydantic` | ≥2.5.0 | Data validation |
+| `openai` | ≥1.6.0 | AI integration |
+| `elevenlabs` | ≥0.2.26 | Voice synthesis |
+| `python-decouple` | ≥3.8 | Environment config |
+| `python-multipart` | ≥0.0.6 | File uploads |
+| `aiofiles` | ≥23.2.0 | Async file handling |
+| `httpx` | ≥0.25.2 | HTTP client |
+
+### **Generate Requirements File** (Optional)
+
+If you need a traditional `requirements.txt` for compatibility:
+
+```bash
+# Generate requirements.txt from current environment
+uv pip freeze --python influencer-ai\Scripts\python.exe > requirements.txt
+
+# Or create manually
+echo "fastapi>=0.105.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+openai>=1.6.0
+elevenlabs>=0.2.26
+python-decouple>=3.8
+python-multipart>=0.0.6
+aiofiles>=23.2.0
+httpx>=0.25.2" > requirements.txt
+```
 
 ---
 
@@ -256,8 +346,9 @@ influencerflow-ai/
 ├── data/                       # Static data files
 │   ├── creators.json          # Creator database
 │   └── market_data.json       # Market benchmarks
-├── requirements.txt            # Python dependencies
+├── influencer-ai/              # Virtual environment (ignored by git)
 ├── .env.example               # Environment variables template
+├── .env                       # Environment variables (ignored by git)
 ├── .gitignore                 # Git ignore rules
 └── README.md                  # This file
 ```
