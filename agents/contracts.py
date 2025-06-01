@@ -7,11 +7,7 @@ from typing import Dict, Any, List
 from models.campaign import CampaignData
 from models.negotiation import NegotiationState
 
-# Import settings with fallback
-try:
-    from config.settings import settings
-except ImportError:
-    from config.simple_settings import settings
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 

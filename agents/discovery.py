@@ -9,11 +9,7 @@ from models.creator import Creator, CreatorMatch
 from services.embeddings import EmbeddingService
 from services.pricing import PricingService
 
-# Import settings with fallback
-try:
-    from config.settings import settings
-except ImportError:
-    from config.simple_settings import settings
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +129,7 @@ class InfluencerDiscoveryAgent:
         logger.info(f"Using {len(creators)} mock creators")
         return creators
     
-    async def find_matches(self, campaign_data: CampaignData) -> List[CreatorMatch]:
+    async def find_matches(self, campaign_data: CampaignData, max_results: int = 3) -> List[CreatorMatch]:
         """
         Find top matching influencers for the campaign using vector similarity
         """
@@ -190,7 +186,7 @@ class InfluencerDiscoveryAgent:
             
             # Sort by similarity score and return top matches
             matches.sort(key=lambda x: x.similarity_score, reverse=True)
-            top_matches = matches[:5]  # Get top 5 for selection
+            top_matches = matches[:max_results]  # ✅ CHANGED: Use max_results parameter
             
             logger.info(f"✅ Found {len(top_matches)} matching influencers")
             for i, match in enumerate(top_matches[:3]):
@@ -200,9 +196,8 @@ class InfluencerDiscoveryAgent:
             
         except Exception as e:
             logger.error(f"❌ Error in find_matches: {e}")
-            # Return mock matches for demo
-            return self._get_mock_matches()
-    
+            # Return mock matches for demo    
+
     def _create_campaign_text(self, campaign_data: CampaignData) -> str:
         """Create text representation of campaign for embedding"""
         return f"""

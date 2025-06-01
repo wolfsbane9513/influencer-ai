@@ -4,6 +4,10 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
 
+# ================================
+# CAMPAIGN MODELS
+# ================================
+
 class CampaignStatus(str, Enum):
     ACTIVE = "active"
     DRAFT = "draft"
@@ -20,7 +24,7 @@ class CampaignWebhook(BaseModel):
     campaign_goal: str
     product_niche: str
     total_budget: float
-    
+
 class CampaignData(BaseModel):
     """Internal campaign representation"""
     id: str
@@ -38,7 +42,10 @@ class CampaignData(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
-# models/creator.py
+# ================================
+# CREATOR MODELS
+# ================================
+
 class CreatorTier(str, Enum):
     MICRO = "micro_influencer"      # < 100K followers
     MACRO = "macro_influencer"      # 100K - 1M followers  
@@ -100,7 +107,27 @@ class Creator(BaseModel):
         """Calculate cost per view"""
         return self.typical_rate / self.average_views if self.average_views > 0 else 0
 
-# models/negotiation.py
+class CreatorMatch(BaseModel):
+    """Represents a matched creator with similarity score"""
+    creator: Creator
+    similarity_score: float
+    rate_compatible: bool
+    match_reasons: List[str]
+    estimated_rate: float
+    
+    @property
+    def overall_score(self) -> float:
+        """Combined score for ranking matches"""
+        base_score = self.similarity_score
+        rate_bonus = 0.1 if self.rate_compatible else -0.1
+        availability_bonus = 0.05 if self.creator.availability.value == "excellent" else 0
+        
+        return min(base_score + rate_bonus + availability_bonus, 1.0)
+
+# ================================
+# NEGOTIATION MODELS
+# ================================
+
 class NegotiationStatus(str, Enum):
     PENDING = "pending"
     CALLING = "calling"
@@ -121,14 +148,6 @@ class EmailStatus(str, Enum):
     REPLIED = "replied"
     BOUNCED = "bounced"
 
-class CreatorMatch(BaseModel):
-    """Represents a matched creator with similarity score"""
-    creator: Creator
-    similarity_score: float
-    rate_compatible: bool
-    match_reasons: List[str]
-    estimated_rate: float
-
 class NegotiationState(BaseModel):
     """Tracks the state of a single negotiation"""
     creator_id: str
@@ -136,6 +155,10 @@ class NegotiationState(BaseModel):
     status: NegotiationStatus = NegotiationStatus.PENDING
     call_status: CallStatus = CallStatus.PENDING
     email_status: EmailStatus = EmailStatus.PENDING
+    
+    # ElevenLabs integration fields
+    conversation_id: Optional[str] = None
+    call_id: Optional[str] = None
     
     # Pricing
     initial_offer: Optional[float] = None
@@ -155,6 +178,26 @@ class NegotiationState(BaseModel):
     started_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
     last_contact_date: datetime = Field(default_factory=datetime.now)
+    
+    @property
+    def is_complete(self) -> bool:
+        """Check if negotiation is finished"""
+        return self.status in [NegotiationStatus.SUCCESS, NegotiationStatus.FAILED]
+    
+    @property
+    def success_rate_factor(self) -> float:
+        """Calculate success probability based on current state"""
+        if self.retry_count > 1:
+            return 0.3  # Lower success on retries
+        elif self.initial_offer and self.initial_offer > 0:
+            # Higher success if we made a reasonable offer
+            return 0.8
+        else:
+            return 0.7  # Default probability
+
+# ================================
+# ORCHESTRATION STATE MODEL
+# ================================
 
 class CampaignOrchestrationState(BaseModel):
     """Overall campaign orchestration state"""
@@ -191,16 +234,127 @@ class CampaignOrchestrationState(BaseModel):
         else:
             self.failed_negotiations += 1
     
-    def get_summary(self) -> Dict[str, Any]:
-        """Get campaign execution summary"""
+    def get_progress_summary(self) -> Dict[str, Any]:
+        """Get current progress summary for monitoring"""
+        total_negotiations = len(self.negotiations)
+        
         return {
             "campaign_id": self.campaign_id,
-            "total_negotiations": len(self.negotiations),
+            "current_stage": self.current_stage,
+            "current_influencer": self.current_influencer,
+            "discovered_count": len(self.discovered_influencers),
+            "total_negotiations": total_negotiations,
             "successful": self.successful_negotiations,
             "failed": self.failed_negotiations,
+            "success_rate": self.successful_negotiations / max(total_negotiations, 1),
             "total_cost": self.total_cost,
             "average_cost": self.total_cost / max(self.successful_negotiations, 1),
-            "success_rate": self.successful_negotiations / max(len(self.negotiations), 1),
-            "duration_minutes": (datetime.now() - self.started_at).total_seconds() / 60,
-            "completed": self.completed_at is not None
+            "is_complete": self.completed_at is not None,
+            "duration_minutes": (datetime.now() - self.started_at).total_seconds() / 60
         }
+    
+    def get_campaign_summary(self) -> Dict[str, Any]:
+        """Get final campaign summary for results"""
+        duration = (self.completed_at or datetime.now()) - self.started_at
+        
+        return {
+            "campaign_name": f"{self.campaign_data.brand_name} - {self.campaign_data.product_name}",
+            "total_budget": self.campaign_data.total_budget,
+            "spent_amount": self.total_cost,
+            "budget_utilization": (self.total_cost / self.campaign_data.total_budget) * 100 if self.campaign_data.total_budget > 0 else 0,
+            "creators_contacted": len(self.negotiations),
+            "successful_partnerships": self.successful_negotiations,
+            "success_rate": f"{(self.successful_negotiations / max(len(self.negotiations), 1)) * 100:.1f}%",
+            "average_rate": self.total_cost / max(self.successful_negotiations, 1) if self.successful_negotiations > 0 else 0,
+            "duration": f"{duration.total_seconds() / 60:.1f} minutes",
+            "roi_projection": "TBD - depends on campaign performance"
+        }
+    
+    def get_detailed_summary(self) -> Dict[str, Any]:
+        """Get comprehensive campaign summary with all details"""
+        base_summary = self.get_campaign_summary()
+        
+        # Add detailed negotiation breakdown
+        negotiation_details = []
+        for negotiation in self.negotiations:
+            details = {
+                "creator_id": negotiation.creator_id,
+                "status": negotiation.status.value,
+                "final_rate": negotiation.final_rate,
+                "call_duration_seconds": negotiation.call_duration_seconds,
+                "failure_reason": negotiation.failure_reason,
+                "conversation_id": negotiation.conversation_id,
+                "retry_count": negotiation.retry_count,
+                "started_at": negotiation.started_at.isoformat(),
+                "completed_at": negotiation.completed_at.isoformat() if negotiation.completed_at else None
+            }
+            negotiation_details.append(details)
+        
+        # Add discovered creators info
+        creator_matches = []
+        for match in self.discovered_influencers:
+            creator_info = {
+                "name": match.creator.name,
+                "platform": match.creator.platform.value,
+                "followers": match.creator.followers,
+                "niche": match.creator.niche,
+                "similarity_score": match.similarity_score,
+                "estimated_rate": match.estimated_rate,
+                "rate_compatible": match.rate_compatible,
+                "match_reasons": match.match_reasons,
+                "overall_score": match.overall_score
+            }
+            creator_matches.append(creator_info)
+        
+        # Performance metrics
+        performance_metrics = {
+            "discovery_efficiency": len(self.discovered_influencers) / max(len(self.negotiations), 1),
+            "cost_efficiency": self.total_cost / max(self.successful_negotiations, 1) if self.successful_negotiations > 0 else 0,
+            "time_efficiency": f"{(datetime.now() - self.started_at).total_seconds() / 60:.1f} minutes per successful negotiation" if self.successful_negotiations > 0 else "N/A",
+            "budget_efficiency": f"{(self.total_cost / self.campaign_data.total_budget) * 100:.1f}%" if self.campaign_data.total_budget > 0 else "N/A"
+        }
+        
+        return {
+            **base_summary,
+            "discovered_creators": creator_matches,
+            "negotiation_details": negotiation_details,
+            "performance_metrics": performance_metrics,
+            "campaign_config": {
+                "campaign_id": self.campaign_id,
+                "niche": self.campaign_data.product_niche,
+                "target_audience": self.campaign_data.target_audience,
+                "campaign_goal": self.campaign_data.campaign_goal
+            },
+            "timing": {
+                "started_at": self.started_at.isoformat(),
+                "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+                "current_stage": self.current_stage,
+                "estimated_completion_minutes": self.estimated_completion_minutes
+            }
+        }
+
+# ================================
+# LEGACY COMPATIBILITY
+# ================================
+
+# For backward compatibility, export the models that might be imported elsewhere
+__all__ = [
+    # Campaign models
+    "CampaignStatus",
+    "CampaignWebhook", 
+    "CampaignData",
+    "CampaignOrchestrationState",
+    
+    # Creator models
+    "Creator",
+    "CreatorTier",
+    "Platform", 
+    "Availability",
+    "CreatorMatch",
+    
+    # Negotiation models
+    "NegotiationState",
+    "NegotiationStatus",
+    "CallStatus",
+    "EmailStatus"
+]

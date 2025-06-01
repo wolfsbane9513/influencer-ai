@@ -1,5 +1,4 @@
 # config/settings.py
-import os
 from typing import Optional
 
 # Handle pydantic BaseSettings import correctly
@@ -13,10 +12,15 @@ except ImportError:
         from pydantic import BaseSettings
 
 class Settings(BaseSettings):
-    # API Keys
+    # API Keys - Make ElevenLabs optional so it doesn't fail validation
     groq_api_key: str
-    elevenlabs_api_key: str
+    elevenlabs_api_key: Optional[str] = None  # ✅ FIX: Make optional
     openai_api_key: Optional[str] = None  # Backup LLM
+    
+    # ElevenLabs Configuration
+    elevenlabs_agent_id: Optional[str] = None
+    elevenlabs_phone_number_id: Optional[str] = None
+    elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Default voice
     
     # Database
     database_url: str = "postgresql://localhost:5432/influencerflow"
@@ -35,7 +39,6 @@ class Settings(BaseSettings):
     max_negotiation_duration: int = 45  # seconds for demo
     
     # Voice Configuration
-    elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Default voice
     call_timeout: int = 30  # seconds
     
     # Pricing Configuration
@@ -53,11 +56,24 @@ class Settings(BaseSettings):
 # Create global settings instance
 settings = Settings()
 
+# Debugging helper - Print loaded settings (remove in production)
+def debug_settings():
+    """Debug helper to check what settings are loaded"""
+    print(f"🔍 Debug Settings:")
+    print(f"   GROQ_API_KEY: {'✅ Set' if settings.groq_api_key else '❌ Missing'}")
+    print(f"   ELEVENLABS_API_KEY: {'✅ Set' if settings.elevenlabs_api_key else '❌ Missing'}")
+    print(f"   ELEVENLABS_AGENT_ID: {'✅ Set' if settings.elevenlabs_agent_id else '❌ Missing'}")
+    print(f"   ELEVENLABS_PHONE_NUMBER_ID: {'✅ Set' if settings.elevenlabs_phone_number_id else '❌ Missing'}")
+
 # Environment variables template for .env file
 ENV_TEMPLATE = """
 # API Keys (Required)
 GROQ_API_KEY=your_groq_api_key_here
 ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+
+# ElevenLabs Configuration (Required for real calls)
+ELEVENLABS_AGENT_ID=your_agent_id_here
+ELEVENLABS_PHONE_NUMBER_ID=your_phone_number_id_here
 
 # Database (Optional - uses default if not provided)
 DATABASE_URL=postgresql://localhost:5432/influencerflow
