@@ -197,7 +197,7 @@ class EnhancedNegotiationAgent:
         negotiation_state.call_duration_seconds = duration_seconds
         
         # Extract analysis data
-        analysis_data = conversation_result.get("analysis_data", {})
+        analysis_data = conversation_result.get("analysis_data") or {}
         
         # Store basic conversation data
         negotiation_state.call_transcript = conversation_result.get("transcript", "")

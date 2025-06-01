@@ -355,7 +355,7 @@ async def validate_negotiation_result(conversation_id: str):
         )
         
         # Extract and validate analysis data
-        analysis_data = conversation_result.get("analysis_data", {})
+        analysis_data = conversation_result.get("analysis_data") or {}
         
         # Validate the data structure
         validation_summary = {

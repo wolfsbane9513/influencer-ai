@@ -222,6 +222,7 @@ class CampaignOrchestrationState(BaseModel):
     
     started_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
+    negotiated_terms: Dict[str, Any] = Field(default_factory=dict)
     
     def add_negotiation_result(self, result: NegotiationState):
         """Add a completed negotiation result"""
