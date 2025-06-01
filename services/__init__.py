@@ -1,23 +1,31 @@
 # services/__init__.py
 """
-InfluencerFlow AI Services
+InfluencerFlow AI Services - Enhanced & Legacy Support
 
-This package contains all the service modules that support the AI agents:
+Enhanced Services (Recommended):
+- EnhancedVoiceService: ElevenLabs with dynamic variables
+- Enhanced agents with structured data flow
 
-- EmbeddingService: Text embeddings and similarity matching
-- VoiceService: ElevenLabs voice calls and conversations  
-- DatabaseService: Database operations and syncing
-- PricingService: Market pricing and rate calculations
+Legacy Services (Backward Compatibility):
+- Original services for existing integrations
 """
 
+# Enhanced services (recommended)
+from .enhanced_voice import EnhancedVoiceService
 from .embeddings import EmbeddingService
-from .voice import VoiceService
-from .database import DatabaseService
 from .pricing import PricingService
+from .database import DatabaseService
+
+# Legacy services (backward compatibility)
+from .voice import VoiceService
 
 __all__ = [
+    # Enhanced (recommended)
+    "EnhancedVoiceService",
     "EmbeddingService",
-    "VoiceService", 
+    "PricingService", 
     "DatabaseService",
-    "PricingService"
+    
+    # Legacy (backward compatibility)
+    "VoiceService"
 ]
