@@ -5,8 +5,7 @@ import logging
 from datetime import datetime
 from typing import Optional, Dict, Any
 
-from models.campaign import CampaignOrchestrationState, CampaignData
-from models.negotiation import NegotiationState, NegotiationStatus
+from models.campaign import CampaignOrchestrationState, CampaignData,NegotiationState, NegotiationStatus
 from agents.discovery import InfluencerDiscoveryAgent
 from agents.negotiation import NegotiationAgent
 from agents.contracts import ContractAgent
@@ -45,24 +44,45 @@ class CampaignOrchestrator:
         self._initialize_groq()
     
     def _initialize_groq(self):
-        """🧠 Initialize Groq LLM client for intelligent orchestration"""
-        if not GROQ_AVAILABLE:
-            logger.warning("⚠️  Groq not available - using simple orchestration")
-            return
+            """🧠 Initialize Groq LLM client for intelligent orchestration"""
+            if not GROQ_AVAILABLE:
+                logger.warning("⚠️  Groq not available - using simple orchestration")
+                return
+            
+            # ✅ FIX: Use settings object instead of os.getenv()
+            groq_api_key = settings.groq_api_key
+            
+            if groq_api_key:
+                try:
+                    self.groq_client = Groq(api_key=groq_api_key)
+                    
+                    # ✅ ENHANCED: Test the API key with a simple request
+                    test_response = self.groq_client.chat.completions.create(
+                        model="llama3-8b-8192",
+                        messages=[{"role": "user", "content": "Hello"}],
+                        max_tokens=10
+                    )
+                    
+                    logger.info("✅ Groq LLM initialized and tested successfully")
+                    
+                except Exception as e:
+                    logger.error(f"❌ Groq initialization/test failed: {e}")
+                    
+                    # ✅ ENHANCED: Provide specific error guidance
+                    if "401" in str(e) or "Unauthorized" in str(e):
+                        logger.error("🔑 Groq API key is invalid or expired")
+                        logger.error("💡 Get a new key from: https://console.groq.com/keys")
+                        logger.error("📝 Update your .env file: GROQ_API_KEY=gsk_your_new_key_here")
+                    elif "quota" in str(e).lower() or "limit" in str(e).lower():
+                        logger.error("📊 Groq API quota exceeded or rate limited")
+                    else:
+                        logger.error(f"🔧 Groq API error: {str(e)}")
+                    
+                    self.groq_client = None
+                    logger.info("📋 Continuing with simple orchestration (no AI strategy)")
+            else:
+                logger.warning("⚠️  GROQ_API_KEY not found in settings - using simple orchestration")
         
-        # ✅ FIX: Use settings object instead of os.getenv()
-        groq_api_key = settings.groq_api_key
-        
-        if groq_api_key:
-            try:
-                self.groq_client = Groq(api_key=groq_api_key)
-                logger.info("✅ Groq LLM initialized for intelligent orchestration")
-            except Exception as e:
-                logger.error(f"❌ Groq initialization failed: {e}")
-                self.groq_client = None
-        else:
-            logger.warning("⚠️  GROQ_API_KEY not found in settings - using simple orchestration")
-    
     async def orchestrate_campaign(
         self,
         orchestration_state: CampaignOrchestrationState,
@@ -154,6 +174,11 @@ class CampaignOrchestrator:
     async def _generate_ai_strategy(self, campaign_data: CampaignData) -> Dict[str, Any]:
         """🧠 Generate AI-powered campaign strategy using Groq"""
         
+        # ✅ ENHANCED: Graceful fallback if Groq is not available
+        if not self.groq_client:
+            logger.info("📋 Groq not available - using enhanced default strategy")
+            return self._get_enhanced_default_strategy(campaign_data)
+        
         prompt = f"""
         You are an expert influencer marketing strategist. Analyze this campaign and create an optimal strategy:
         
@@ -194,28 +219,71 @@ class CampaignOrchestrator:
                 # Validate strategy has required fields
                 required_fields = ["creator_tier_priority", "budget_allocation", "negotiation_approach"]
                 if all(field in strategy for field in required_fields):
+                    logger.info("🧠 AI strategy generated successfully")
                     return strategy
                 else:
-                    logger.warning("AI strategy missing required fields, using default")
-                    return self._get_default_strategy()
+                    logger.warning("AI strategy missing required fields, using enhanced default")
+                    return self._get_enhanced_default_strategy(campaign_data)
             except json.JSONDecodeError:
-                logger.warning("AI strategy JSON parsing failed, using default")
-                return self._get_default_strategy()
+                logger.warning("AI strategy JSON parsing failed, using enhanced default")
+                return self._get_enhanced_default_strategy(campaign_data)
             
         except Exception as e:
             logger.error(f"AI strategy generation failed: {e}")
-            return self._get_default_strategy()
-    
-    def _get_default_strategy(self) -> Dict[str, Any]:
-        """📋 Default strategy if Groq is unavailable"""
-        return {
-            "creator_tier_priority": ["macro", "micro", "mega"],
-            "budget_allocation": {"per_creator_max": 0.4, "reserve": 0.2},
-            "success_criteria": {"min_creators": 2, "target_success_rate": 0.6},
+            
+            # ✅ ENHANCED: Handle specific API errors
+            if "401" in str(e) or "Unauthorized" in str(e):
+                logger.error("🔑 Groq API key invalid - disabling AI features for this session")
+                self.groq_client = None
+            
+            return self._get_enhanced_default_strategy(campaign_data)    
+        
+    def _get_enhanced_default_strategy(self, campaign_data: CampaignData) -> Dict[str, Any]:
+        """📋 Enhanced default strategy based on campaign data"""
+        
+        # ✅ ENHANCED: Smart defaults based on campaign characteristics
+        budget = campaign_data.total_budget
+        niche = campaign_data.product_niche.lower()
+        
+        # Determine approach based on budget and niche
+        if budget > 10000:
+            approach = "premium"
+            max_creators = 4
+            tier_priority = ["macro", "mega", "micro"]
+        elif budget > 5000:
+            approach = "collaborative"
+            max_creators = 3
+            tier_priority = ["macro", "micro", "mega"]
+        else:
+            approach = "collaborative"
+            max_creators = 2
+            tier_priority = ["micro", "macro", "mega"]
+        
+        # Niche-specific adjustments
+        if niche in ["tech", "gaming"]:
+            tier_priority = ["macro", "micro", "mega"]  # Tech audiences prefer established creators
+        elif niche in ["beauty", "fashion"]:
+            tier_priority = ["micro", "macro", "mega"]  # Beauty works well with micro-influencers
+        
+        strategy = {
+            "creator_tier_priority": tier_priority,
+            "budget_allocation": {
+                "per_creator_max": 0.4 if budget > 10000 else 0.5,
+                "reserve": 0.2
+            },
+            "success_criteria": {
+                "min_creators": 1,
+                "target_success_rate": 0.6
+            },
             "risk_mitigation": "diversify_across_tiers",
-            "negotiation_approach": "collaborative",
-            "max_creators_to_contact": 3
+            "negotiation_approach": approach,
+            "max_creators_to_contact": max_creators,
+            "strategy_source": "enhanced_default",
+            "budget_tier": "high" if budget > 10000 else "medium" if budget > 5000 else "standard"
         }
+        
+        logger.info(f"📋 Enhanced default strategy: {approach} approach for {niche} niche")
+        return strategy
     
     async def _run_discovery_phase(self, state: CampaignOrchestrationState, strategy: Dict[str, Any]):
         """🔍 Run the influencer discovery phase"""

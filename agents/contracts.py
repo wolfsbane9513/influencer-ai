@@ -4,8 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
-from models.campaign import CampaignData
-from models.negotiation import NegotiationState
+from models.campaign import CampaignData,NegotiationState
 
 from config.settings import settings
 

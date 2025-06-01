@@ -4,8 +4,7 @@ import logging
 from typing import List, Dict, Any
 from pathlib import Path
 
-from models.campaign import CampaignData
-from models.creator import Creator, CreatorMatch
+from models.campaign import CampaignData,Creator, CreatorMatch
 from services.embeddings import EmbeddingService
 from services.pricing import PricingService
 
