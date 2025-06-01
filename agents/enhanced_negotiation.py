@@ -73,7 +73,7 @@ class EnhancedNegotiationAgent:
             # PHASE 4: Wait for completion and extract structured analysis
             conversation_result = await self.voice_service.wait_for_conversation_completion_with_analysis(
                 negotiation_state.conversation_id,
-                max_wait_seconds=180  # 3 minutes max
+                max_wait_seconds=300  # 3 minutes max
             )
             
             # PHASE 5: Process structured analysis data

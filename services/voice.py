@@ -147,7 +147,7 @@ class VoiceService:
     async def wait_for_conversation_completion(
         self, 
         conversation_id: str, 
-        max_wait_seconds: int = 120,
+        max_wait_seconds: int = 360,
         poll_interval: int = 5
     ) -> Dict[str, Any]:
         """

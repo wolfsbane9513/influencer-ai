@@ -1,4 +1,4 @@
-# services/enhanced_voice.py - COMPLETE FIXED VERSION
+# services/enhanced_voice.py - FIXED VERSION
 import asyncio
 import logging
 import requests
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class EnhancedVoiceService:
     """
-    🎯 ENHANCED ELEVENLABS INTEGRATION
+    🎯 ENHANCED ELEVENLABS INTEGRATION - FIXED VERSION
     Complete system with dynamic variables and structured conversation analysis
     """
     
@@ -375,15 +375,199 @@ class EnhancedVoiceService:
     async def wait_for_conversation_completion_with_analysis(
         self, 
         conversation_id: str, 
-        max_wait_seconds: int = 180
+        max_wait_seconds: int = 360
     ) -> Dict[str, Any]:
-        """⏳ Wait for conversation completion with analysis"""
+        """
+        ⏳ FIXED: Wait for conversation completion with proper error handling
+        """
         
         if self.use_mock:
             return await self._mock_conversation_analysis(conversation_id)
         
-        # Real implementation would poll ElevenLabs API
-        return await self._get_conversation_status(conversation_id, max_wait_seconds)
+        if not conversation_id:
+            logger.error("❌ No conversation ID provided")
+            return {
+                "status": "failed",
+                "error": "No conversation ID provided",
+                "analysis_data": {}
+            }
+        
+        try:
+            logger.info(f"⏳ Waiting for conversation {conversation_id} to complete...")
+            
+            start_time = asyncio.get_event_loop().time()
+            poll_interval = 5  # Check every 5 seconds
+            
+            while (asyncio.get_event_loop().time() - start_time) < max_wait_seconds:
+                # Get conversation status
+                status_result = await self._get_conversation_status(conversation_id)
+                
+                if not status_result:
+                    logger.warning("⚠️ No status result from ElevenLabs API")
+                    await asyncio.sleep(poll_interval)
+                    continue
+                
+                conversation_status = status_result.get("status", "unknown")
+                logger.info(f"📞 Conversation status: {conversation_status}")
+                
+                # Check if conversation is complete
+                if conversation_status in ["completed", "ended"]:
+                    logger.info(f"✅ Conversation completed successfully")
+                    
+                    # Return structured result
+                    return {
+                        "status": "completed",
+                        "conversation_id": conversation_id,
+                        "transcript": status_result.get("transcript", ""),
+                        "recording_url": status_result.get("recording_url"),
+                        "analysis_data": self._extract_analysis_from_conversation(status_result)
+                    }
+                
+                elif conversation_status in ["failed", "error"]:
+                    logger.error(f"❌ Conversation failed with status: {conversation_status}")
+                    return {
+                        "status": "failed",
+                        "conversation_id": conversation_id,
+                        "error": f"Conversation failed: {conversation_status}",
+                        "analysis_data": {}
+                    }
+                
+                # Wait before next poll
+                await asyncio.sleep(poll_interval)
+            
+            # Timeout reached
+            logger.warning(f"⏰ Conversation timeout after {max_wait_seconds} seconds")
+            return {
+                "status": "timeout",
+                "conversation_id": conversation_id,
+                "error": f"Conversation did not complete within {max_wait_seconds} seconds",
+                "analysis_data": {}
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Error waiting for conversation completion: {e}")
+            return {
+                "status": "error",
+                "conversation_id": conversation_id,
+                "error": str(e),
+                "analysis_data": {}
+            }
+    
+    async def _get_conversation_status(self, conversation_id: str) -> Optional[Dict[str, Any]]:
+        """Get conversation status from ElevenLabs API with proper error handling"""
+        
+        try:
+            response = requests.get(
+                f"{self.base_url}/v1/convai/conversations/{conversation_id}",
+                headers={"Xi-Api-Key": self.api_key},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result
+            else:
+                logger.error(f"❌ ElevenLabs API error {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ Error getting conversation status: {e}")
+            return None
+    
+    def _extract_analysis_from_conversation(self, conversation_result: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Extract analysis data from ElevenLabs conversation result
+        """
+        
+        # Get transcript for analysis
+        transcript = conversation_result.get("transcript", "")
+        
+        if not transcript:
+            logger.warning("⚠️ No transcript available for analysis")
+            return {}
+        
+        # Simple keyword-based analysis (you can enhance this with your AI)
+        analysis_data = {
+            "negotiation_outcome": self._determine_outcome_from_transcript(transcript),
+            "final_rate_mentioned": self._extract_rate_from_transcript(transcript),
+            "objections_raised": self._extract_objections_from_transcript(transcript),
+            "deliverables_discussed": ["video_review", "instagram_post"],  # Default
+            "timeline_mentioned": "7 days",  # Default
+            "creator_enthusiasm_level": self._estimate_enthusiasm_from_transcript(transcript),
+            "conversation_summary": transcript[:200] + "..." if len(transcript) > 200 else transcript,
+            "analysis_source": "elevenlabs_transcript"
+        }
+        
+        logger.info(f"📊 Analysis extracted: {analysis_data['negotiation_outcome']}")
+        return analysis_data
+    
+    def _determine_outcome_from_transcript(self, transcript: str) -> str:
+        """Determine negotiation outcome from transcript"""
+        
+        transcript_lower = transcript.lower()
+        
+        # Success indicators
+        success_words = ["yes", "accept", "agree", "sounds good", "deal", "interested", "perfect", "great"]
+        failure_words = ["no", "decline", "reject", "not interested", "can't", "busy", "pass"]
+        
+        success_score = sum(1 for word in success_words if word in transcript_lower)
+        failure_score = sum(1 for word in failure_words if word in transcript_lower)
+        
+        if success_score > failure_score:
+            return "accepted"
+        elif failure_score > success_score:
+            return "declined"
+        else:
+            return "unclear"
+    
+    def _extract_rate_from_transcript(self, transcript: str) -> Optional[float]:
+        """Extract mentioned rate from transcript"""
+        
+        import re
+        
+        # Look for dollar amounts in transcript
+        money_pattern = r'\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)'
+        matches = re.findall(money_pattern, transcript)
+        
+        if matches:
+            # Return the last mentioned amount (likely the agreed rate)
+            try:
+                return float(matches[-1].replace(',', ''))
+            except ValueError:
+                pass
+        
+        return None
+    
+    def _extract_objections_from_transcript(self, transcript: str) -> list:
+        """Extract objections from transcript"""
+        
+        transcript_lower = transcript.lower()
+        objections = []
+        
+        if "too low" in transcript_lower or "more money" in transcript_lower:
+            objections.append("price_too_low")
+        if "busy" in transcript_lower or "time" in transcript_lower:
+            objections.append("timeline_tight")
+        if "not a fit" in transcript_lower:
+            objections.append("brand_misalignment")
+        
+        return objections
+    
+    def _estimate_enthusiasm_from_transcript(self, transcript: str) -> int:
+        """Estimate creator enthusiasm level (1-10) from transcript"""
+        
+        transcript_lower = transcript.lower()
+        
+        positive_words = ["excited", "love", "perfect", "amazing", "great", "awesome", "fantastic"]
+        negative_words = ["concerned", "worried", "not sure", "maybe", "hesitant"]
+        
+        positive_score = sum(1 for word in positive_words if word in transcript_lower)
+        negative_score = sum(1 for word in negative_words if word in transcript_lower)
+        
+        base_score = 5  # Neutral
+        enthusiasm = base_score + positive_score - negative_score
+        
+        return max(1, min(10, enthusiasm))  # Clamp between 1-10
     
     async def _mock_enhanced_call(
         self, 
@@ -407,7 +591,7 @@ class EnhancedVoiceService:
         }
     
     async def _mock_conversation_analysis(self, conversation_id: str) -> Dict[str, Any]:
-        """Enhanced mock analysis"""
+        """Enhanced mock analysis with proper structure"""
         
         await asyncio.sleep(random.randint(30, 60))
         
@@ -419,6 +603,7 @@ class EnhancedVoiceService:
                 "status": "completed",
                 "conversation_id": conversation_id,
                 "transcript": f"Enhanced mock conversation - Creator accepted ${final_rate}",
+                "recording_url": f"https://mock-recordings.example.com/{conversation_id}",
                 "analysis_data": {
                     "negotiation_outcome": "accepted",
                     "final_rate_mentioned": final_rate,
@@ -442,6 +627,7 @@ class EnhancedVoiceService:
                 "status": "completed",
                 "conversation_id": conversation_id,
                 "transcript": "Enhanced mock conversation - Creator declined",
+                "recording_url": f"https://mock-recordings.example.com/{conversation_id}",
                 "analysis_data": {
                     "negotiation_outcome": "declined",
                     "objections_raised": objections,
@@ -450,11 +636,6 @@ class EnhancedVoiceService:
                     "analysis_source": "enhanced_mock"
                 }
             }
-    
-    async def _get_conversation_status(self, conversation_id: str, max_wait_seconds: int) -> Dict[str, Any]:
-        """Get real conversation status from ElevenLabs"""
-        # Implementation for real ElevenLabs API polling
-        pass
 
 # Backward compatibility aliases
 ComprehensiveVoiceService = EnhancedVoiceService
