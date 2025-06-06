@@ -9,9 +9,7 @@ from .enhanced_negotiation import EnhancedNegotiationAgent, NegotiationResultVal
 from .enhanced_contracts import EnhancedContractAgent, ContractStatusManager
 
 # Legacy agents (backward compatibility)  
-from .orchestrator import CampaignOrchestrator
-from .negotiation import NegotiationAgent
-from .contracts import ContractAgent
+
 from .discovery import InfluencerDiscoveryAgent
 
 __all__ = [

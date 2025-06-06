@@ -16,8 +16,6 @@ from .embeddings import EmbeddingService
 from .pricing import PricingService
 from .database import DatabaseService
 
-# Legacy services (backward compatibility)
-from .voice import VoiceService
 
 __all__ = [
     # Enhanced (recommended)

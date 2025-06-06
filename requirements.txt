@@ -1,36 +1,90 @@
-# InfluencerFlow AI Platform Dependencies
-# Use this if UV doesn't work on your system
+# InfluencerFlow AI Platform - Complete Dependencies
+# Updated version with email, notifications, and enhanced features
 
-# Core FastAPI
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
-python-dotenv==1.0.0
+# Core FastAPI Framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+python-multipart==0.0.20
 
-# Pydantic (try both versions)
-pydantic==2.4.2
-pydantic-settings==2.0.3
+# Pydantic for Data Validation
+pydantic==2.11.5
+pydantic-settings==2.9.1
+
+# Environment and Configuration
+python-dotenv==1.1.0
 
 # AI/ML Dependencies
-groq==0.4.1
-openai==1.3.8
-elevenlabs==0.2.26
-sentence-transformers==2.2.2
-numpy==1.24.3
-scikit-learn==1.3.0
+groq==0.26.0
+openai>=1.82.1
+elevenlabs>=2.1.0
+sentence-transformers>=4.1.0
+numpy>=2.2.6
+scikit-learn>=1.6.1
 
 # Database
-sqlalchemy==2.0.23
-psycopg2-binary==2.9.9
+sqlalchemy>=2.0.41
+psycopg2-binary>=2.9.10
 
-# Async/HTTP
-aiohttp==3.9.1
-requests==2.31.0
-
-# Development
-pytest==7.4.3
-black==23.11.0
-flake8==6.1.0
-
-groq>=0.26.0
+# HTTP and Async
+aiohttp>=3.12.6
 requests>=2.32.3
+httpx>=0.25.0
+
+# Email and Notifications
+# SMTP email sending
+smtplib-ssl>=1.0.0  # Enhanced SMTP with SSL
+email-validator>=2.1.0
+
+# PDF Generation for Contracts
+reportlab>=4.0.7
+weasyprint>=61.2  # HTML to PDF conversion
+jinja2>=3.1.2     # Template engine for contracts
+
+# File Processing
+openpyxl>=3.1.2    # Excel file processing
+python-docx>=0.8.11  # Word document processing
+
+# Scheduling and Background Tasks
+celery>=5.3.4       # Background task processing
+redis>=5.0.1        # Redis for Celery backend
+apscheduler>=3.10.4 # Task scheduling
+
+# Monitoring and Logging
+structlog>=23.2.0   # Structured logging
+prometheus-client>=0.19.0  # Metrics collection
+
+# Security and Authentication
+cryptography>=41.0.7
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+
+# Data Processing and Utilities
+pandas>=2.1.4      # Data manipulation for analytics
+matplotlib>=3.8.2  # Charts and graphs
+pillow>=10.1.0     # Image processing
+
+# Testing and Development
+pytest>=8.3.5
+pytest-asyncio>=0.23.2
+pytest-cov>=4.0.0
+black>=25.1.0
+flake8>=7.2.0
+mypy>=1.8.0
+
+# Production Dependencies
+gunicorn>=21.2.0   # WSGI server for production
+sentry-sdk>=1.38.0 # Error tracking
+
+# Optional Dependencies for Enhanced Features
+twilio>=8.10.0     # SMS notifications (optional)
+slack-sdk>=3.26.0  # Slack integration (optional)
+discord.py>=2.3.2  # Discord integration (optional)
+
+# Environment Specific
+# For development
+ipython>=8.18.1
+jupyter>=1.0.0
+
+# For production monitoring
+newrelic>=9.2.0    # Performance monitoring (optional)
+datadog>=0.48.0    # Infrastructure monitoring (optional)
