@@ -566,6 +566,99 @@ async def get_enhanced_system_status():
                 "message": "System status check failed"
             }
         )
+    
+# Add this to your enhanced_webhooks.py to test the fixes
+
+@enhanced_webhook_router.get("/test-timeout-fixes")
+async def test_timeout_fixes():
+    """
+    🧪 Test the timeout and JSON parsing fixes
+    """
+    try:
+        from services.enhanced_voice import EnhancedVoiceService
+        from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
+        from models.campaign import CampaignData
+        
+        logger.info("🧪 Testing timeout and JSON fixes...")
+        
+        # Test 1: Enhanced Voice Service with timeout fixes
+        voice_service = EnhancedVoiceService()
+        voice_test = await voice_service.test_credentials()
+        
+        # Test 2: Enhanced Orchestrator with Groq fixes
+        orchestrator = EnhancedCampaignOrchestrator()
+        
+        test_campaign = CampaignData(
+            id="test_fixes_001",
+            product_name="Test Product",
+            brand_name="Test Brand",
+            product_description="Testing timeout and JSON fixes",
+            target_audience="Test audience",
+            campaign_goal="Test the fixes",
+            product_niche="fitness",
+            total_budget=10000.0
+        )
+        
+        # Test Groq strategy generation
+        try:
+            strategy = await orchestrator._generate_enhanced_ai_strategy(test_campaign)
+            groq_test = {
+                "status": "success",
+                "strategy_generated": True,
+                "approach": strategy.get("negotiation_approach", "default")
+            }
+        except Exception as e:
+            groq_test = {
+                "status": "fallback", 
+                "error": str(e),
+                "strategy_generated": False
+            }
+        
+        return {
+            "message": "🧪 Timeout and JSON parsing fixes tested",
+            "voice_service_test": voice_test,
+            "groq_strategy_test": groq_test,
+            "fixes_applied": [
+                "✅ Increased ElevenLabs timeout from 30s to 60s",
+                "✅ Added retry logic for failed requests", 
+                "✅ Enhanced fallback to mock mode on persistent timeouts",
+                "✅ Fixed Groq JSON parsing with better extraction",
+                "✅ Simplified dynamic variables to avoid JSON issues",
+                "✅ Added graceful error handling throughout"
+            ],
+            "recommendations": [
+                "Run test-enhanced-campaign again to see improvements",
+                "Monitor logs for timeout and JSON issues",
+                "Consider increasing timeout further if needed"
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Test fixes failed: {e}")
+        return {
+            "error": str(e),
+            "message": "Test failed - check logs for details"
+        }
+
+@enhanced_webhook_router.post("/test-enhanced-campaign-with-fixes")
+async def test_enhanced_campaign_with_fixes(background_tasks: BackgroundTasks):
+    """
+    🧪 Test enhanced campaign with all fixes applied
+    """
+    test_campaign = CampaignWebhook(
+        campaign_id=str(uuid.uuid4()),
+        product_name="SmartFit Pro Tracker (Fixed)",
+        brand_name="TechFit Solutions",
+        product_description="Advanced fitness tracking device with AI-powered workout recommendations - testing with timeout fixes and improved error handling",
+        target_audience="Fitness enthusiasts, athletes, and health-conscious individuals aged 22-40",
+        campaign_goal="Test enhanced system with timeout fixes and JSON parsing improvements",
+        product_niche="fitness",
+        total_budget=18000.0
+    )
+    
+    logger.info("🧪 Enhanced test campaign with fixes created")
+    
+    return await handle_enhanced_campaign_created(test_campaign, background_tasks)    
 
 # Helper functions
 def _validate_campaign_webhook(webhook: CampaignWebhook) -> Dict[str, Any]:
