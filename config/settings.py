@@ -21,7 +21,35 @@ class Settings(BaseSettings):
     elevenlabs_agent_id: Optional[str] = None
     elevenlabs_phone_number_id: Optional[str] = None
     elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Default voice
+
+    # NEW: Enhanced workflow settings
+    default_selection_strategy: str = "budget_optimized"
+    max_parallel_negotiations: int = 2
+    auto_approve_threshold: float = 0.85
     
+    # NEW: Email service
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+    
+    # NEW: File upload
+    max_upload_size: str = "50MB"
+    upload_directory: str = "uploads"
+    
+    # NEW: Contract generation
+    contract_template_path: str = "data/templates"
+    auto_send_contracts: bool = True
+    
+    # NEW: Human workflow
+    human_review_timeout_hours: int = 24
+    sponsor_approval_timeout_hours: int = 48
+    
+    # NEW: Advanced integrations
+    docusign_api_key: Optional[str] = None
+    hellosign_api_key: Optional[str] = None
+    conversation_monitoring_enabled: bool = True
+        
     # Database
     database_url: str = "postgresql://localhost:5432/influencerflow"
     

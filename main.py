@@ -30,16 +30,7 @@ def load_enhanced_endpoints():
         print(f"⚠️  Enhanced endpoints not available: {e}")
         return None, None
 
-def load_legacy_endpoints():
-    """Load legacy endpoints with graceful fallback"""
-    try:
-        from api.webhooks import webhook_router
-        from api.monitoring import monitoring_router
-        print("✅ Legacy endpoints loaded")
-        return webhook_router, monitoring_router
-    except ImportError as e:
-        print(f"⚠️  Legacy endpoints not available: {e}")
-        return None, None
+
 
 # Load settings
 settings = load_settings()
@@ -92,16 +83,6 @@ try:
 except ImportError as e:
     print(f"⚠️  Enhanced endpoints not available: {e}")
 
-# Try to include legacy routers
-try:
-    from api.webhooks import webhook_router
-    from api.monitoring import monitoring_router
-    
-    app.include_router(webhook_router, prefix="/api/webhook", tags=["webhooks"])
-    app.include_router(monitoring_router, prefix="/api/monitor", tags=["monitoring"])
-    print("✅ Legacy endpoints loaded")
-except ImportError as e:
-    print(f"⚠️  Legacy endpoints not available: {e}")
 
 @app.get("/")
 async def root():

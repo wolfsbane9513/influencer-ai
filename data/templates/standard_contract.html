@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Influencer Partnership Agreement</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .section { margin: 20px 0; }
+        .signature { margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>INFLUENCER PARTNERSHIP AGREEMENT</h1>
+        <p>Contract ID: {{ contract.contract_id }}</p>
+        <p>Date: {{ signature_date }}</p>
+    </div>
+    
+    <div class="section">
+        <h2>PARTIES</h2>
+        <p><strong>Brand:</strong> {{ brand.company_name }}</p>
+        <p><strong>Influencer:</strong> {{ creator.full_name }}</p>
+    </div>
+    
+    <div class="section">
+        <h2>CAMPAIGN DETAILS</h2>
+        <p><strong>Product:</strong> {{ brand.product_name }}</p>
+        <p><strong>Total Compensation:</strong> ${{ "%.2f"|format(contract.final_rate) }}</p>
+        <p><strong>Timeline:</strong> {{ contract.timeline }}</p>
+    </div>
+    
+    <div class="section">
+        <h2>DELIVERABLES</h2>
+        {% for deliverable in deliverables %}
+        <div>
+            <h3>{{ deliverable.name }}</h3>
+            <p>{{ deliverable.description }}</p>
+            <p><em>{{ deliverable.specifications }}</em></p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="section">
+        <h2>PAYMENT SCHEDULE</h2>
+        {% for payment in payment_schedule %}
+        <div>
+            <p><strong>{{ payment.milestone }}:</strong> ${{ "%.2f"|format(payment.amount) }} ({{ payment.percentage }}%)</p>
+            <p>Due: {{ payment.due_date }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="signature">
+        <p>Brand Representative: _________________ Date: _______</p>
+        <p>Influencer: _________________ Date: _______</p>
+    </div>
+</body>
+</html>
