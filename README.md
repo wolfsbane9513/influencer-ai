@@ -5,65 +5,104 @@
 [![ElevenLabs](https://img.shields.io/badge/ElevenLabs-API-purple.svg)](https://elevenlabs.io/)
 [![Groq](https://img.shields.io/badge/Groq-AI-orange.svg)](https://groq.com/)
 
-> **AI-Powered Influencer Marketing Campaign Automation Platform**
+> **🤖 Next-Generation AI-Powered Influencer Marketing Automation Platform**
 
-InfluencerFlow is a comprehensive AI platform that automates the entire influencer marketing workflow - from creator discovery to contract generation - using advanced AI agents, voice-based negotiations, and intelligent matching algorithms.
+InfluencerFlow is the most advanced AI platform for automating influencer marketing campaigns - from intelligent creator discovery to contract execution - using cutting-edge AI agents, voice-based negotiations, and human-in-the-loop workflows.
 
-## 🎯 Key Features
+## 🌟 What's New in v2.0
+
+### 🔥 **Enhanced AI Features**
+- **Real-time Voice Negotiations**: ElevenLabs integration with dynamic variables and structured analysis
+- **AI Strategy Generation**: Groq-powered campaign optimization and creator-specific strategies
+- **Conversation Monitoring**: Live tracking of negotiations with automatic workflow continuation
+- **Human-in-the-Loop**: Approval workflows with sponsor oversight and human review
+- **Smart Contract Generation**: Multi-template system with automated delivery
+
+### 📈 **Advanced Workflows**
+- **Unified Campaign Orchestrator**: Complete end-to-end automation
+- **Multi-Data Collection**: Manual, file upload, conversational AI, and API integration
+- **Enhanced Monitoring**: Real-time analytics and comprehensive reporting
+- **Legacy Compatibility**: Backward compatibility for existing integrations
+
+## 🎯 Core Features
 
 ### 🤖 **AI-Powered Automation**
 - **Intelligent Creator Discovery**: Vector similarity matching with sentence transformers
-- **AI Strategy Generation**: Groq-powered campaign optimization
-- **Automated Negotiations**: ElevenLabs voice calls with dynamic variables
-- **Smart Contract Generation**: Comprehensive legal agreements with structured terms
+- **AI Strategy Generation**: Groq-powered campaign optimization with creator-specific approaches
+- **Automated Negotiations**: ElevenLabs voice calls with dynamic variables and real-time analysis
+- **Smart Contract Generation**: Multi-template system (Premium, Standard, Micro-Influencer)
+- **Conversation Monitoring**: Real-time call tracking with automatic workflow continuation
 
 ### 📞 **Voice-Based Negotiations**
-- **Real-time Phone Calls**: ElevenLabs conversational AI integration
+- **Real-time Phone Calls**: ElevenLabs conversational AI with timeout handling and retry logic
 - **Dynamic Variables**: Personalized conversation context for each creator
-- **Structured Analysis**: Extract negotiation outcomes, rates, and terms
-- **Live Monitoring**: Real-time progress tracking during calls
+- **Structured Analysis**: Extract negotiation outcomes, rates, and terms automatically
+- **Live Monitoring**: Real-time progress tracking during calls with conversation status polling
+- **Fallback Systems**: Mock mode for testing and graceful error handling
 
 ### 🎛️ **Multi-Agent Orchestration**
-- **Campaign Orchestrator**: Master coordinator managing entire workflow
-- **Discovery Agent**: AI-powered creator matching and scoring
-- **Negotiation Agent**: Voice-based deal closing with market intelligence
-- **Contract Agent**: Automated legal document generation
+- **Enhanced Campaign Orchestrator**: Master coordinator with conversation monitoring integration
+- **Discovery Agent**: AI-powered creator matching and scoring with budget optimization
+- **Negotiation Agent**: Voice-based deal closing with structured data extraction
+- **Contract Agent**: Automated legal document generation with multiple templates
+- **Email Service**: Contract delivery and notification system
 
-### 📊 **Advanced Analytics**
-- **Real-time Monitoring**: Live campaign progress tracking
-- **Performance Metrics**: Success rates, cost efficiency, ROI analysis
-- **Validation Systems**: Data quality checks and error handling
-- **Comprehensive Reporting**: Detailed campaign summaries and insights
+### 📊 **Advanced Analytics & Monitoring**
+- **Real-time Monitoring**: Live campaign progress tracking with WebSocket-style updates
+- **Performance Metrics**: Success rates, cost efficiency, ROI analysis with trend tracking
+- **Validation Systems**: Comprehensive data quality checks and error handling
+- **Human Review Queue**: Approval workflow management with escalation
+- **Comprehensive Reporting**: Detailed campaign summaries and business insights
+
+### 🔄 **Workflow Management**
+- **Enhanced Workflows**: Full automation with AI decision-making
+- **Legacy Workflows**: Backward compatibility for existing integrations
+- **Data Collection**: Multiple methods (manual, file upload, conversational, API)
+- **Approval Processes**: Human review and sponsor approval workflows
+- **Contract Delivery**: Automated email delivery with multiple signing options
 
 ## 🏗️ Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    InfluencerFlow AI Platform                │
-├─────────────────────────────────────────────────────────────┤
-│  FastAPI Backend (main.py)                                 │
-│  ├── Webhook Endpoints (/api/webhook/)                     │
-│  ├── Monitoring Endpoints (/api/monitor/)                  │
-│  └── Enhanced Endpoints (/api/webhook/enhanced-*)          │
-├─────────────────────────────────────────────────────────────┤
-│  AI Agents (/agents/)                                      │
-│  ├── CampaignOrchestrator (Master Coordinator)             │
-│  ├── InfluencerDiscoveryAgent (Creator Matching)           │
-│  ├── NegotiationAgent (Voice Negotiations)                 │
-│  └── ContractAgent (Legal Document Generation)             │
-├─────────────────────────────────────────────────────────────┤
-│  Services (/services/)                                     │
-│  ├── EnhancedVoiceService (ElevenLabs Integration)         │
-│  ├── EmbeddingService (Vector Similarity)                  │
-│  ├── PricingService (Market Data & Rates)                  │
-│  └── DatabaseService (Data Persistence)                    │
-├─────────────────────────────────────────────────────────────┤
-│  External Integrations                                     │
-│  ├── ElevenLabs API (Voice Conversations)                  │
-│  ├── Groq API (AI Strategy & Analysis)                     │
-│  ├── Sentence Transformers (ML Embeddings)                 │
-│  └── PostgreSQL (Data Storage)                             │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    InfluencerFlow AI Platform v2.0                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  FastAPI Backend (main.py)                                                 │
+│  ├── Enhanced API (/api/enhanced/) - Full AI automation                    │
+│  ├── Legacy API (/api/legacy/) - Backward compatibility                    │
+│  ├── Webhook Endpoints (/api/webhook/) - Campaign triggers                 │
+│  └── Monitoring Endpoints (/api/monitor/) - Real-time tracking             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Enhanced AI Agents (/agents/)                                             │
+│  ├── UnifiedCampaignOrchestrator - Complete workflow automation            │
+│  ├── EnhancedCampaignOrchestrator - AI strategy with conversation monitor  │
+│  ├── EnhancedInfluencerMatcher - Budget-optimized selection               │
+│  ├── EnhancedNegotiationManager - Human-in-the-loop workflows             │
+│  ├── EnhancedContractGenerator - Multi-template system                     │
+│  └── CampaignDataCollector - Multi-source data collection                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Enhanced Services (/services/)                                            │
+│  ├── EnhancedVoiceService - ElevenLabs with dynamic variables & monitoring │
+│  ├── ConversationMonitor - Real-time call status tracking                  │
+│  ├── EmailService - Contract delivery and notifications                    │
+│  ├── EmbeddingService - Vector similarity matching                         │
+│  ├── PricingService - Market intelligence and rate optimization            │
+│  └── DatabaseService - Comprehensive data persistence                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Advanced Features                                                         │
+│  ├── Multi-Template Contracts (Premium, Standard, Micro-Influencer)       │
+│  ├── Human Approval Workflows (Review, Sponsor, Escalation)               │
+│  ├── Real-time Conversation Monitoring with Auto-continuation             │
+│  ├── Enhanced Analytics and Reporting                                      │
+│  └── Legacy Compatibility Layer                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  External Integrations                                                     │
+│  ├── ElevenLabs API (Voice Conversations + Real-time Status)              │
+│  ├── Groq API (AI Strategy & Analysis)                                     │
+│  ├── Sentence Transformers (ML Embeddings)                                 │
+│  ├── SMTP Email (Contract Delivery)                                        │
+│  └── PostgreSQL (Data Storage)                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 🚀 Quick Start
@@ -71,9 +110,10 @@ InfluencerFlow is a comprehensive AI platform that automates the entire influenc
 ### Prerequisites
 
 - **Python 3.13+**
-- **UV Package Manager** (or pip)
-- **ElevenLabs Account** with API key
-- **Groq Account** with API key
+- **UV Package Manager** (recommended) or pip
+- **ElevenLabs Account** with API key (for voice features)
+- **Groq Account** with API key (for AI strategy)
+- **SMTP Email Account** (for contract delivery)
 - **PostgreSQL** (optional, uses mock by default)
 
 ### Installation
@@ -104,11 +144,17 @@ nano .env
 
 4. **Required Environment Variables**
 ```bash
-# API Keys (Required)
+# Core API Keys (Required for full functionality)
 GROQ_API_KEY=gsk_your_groq_key_here
 ELEVENLABS_API_KEY=sk_your_elevenlabs_key_here
 ELEVENLABS_AGENT_ID=your_agent_id_here
 ELEVENLABS_PHONE_NUMBER_ID=your_phone_number_here
+
+# Email Configuration (Optional but recommended)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
 
 # Configuration
 DEMO_MODE=true
@@ -132,175 +178,220 @@ curl http://localhost:8000/health
 
 ## 🔧 Configuration Guide
 
-### ElevenLabs Setup
+### ElevenLabs Setup (Voice Negotiations)
 
 1. **Create Account**: Sign up at [ElevenLabs](https://elevenlabs.io/)
 2. **Get API Key**: Navigate to Settings → API Keys
 3. **Create Agent**: Go to Conversational AI → Create New Agent
-4. **Configure Dynamic Variables**: Add the following variables in your agent:
+4. **Configure Dynamic Variables**: Add these variables in your agent:
 
 ```json
 {
-  "InfluencerProfile": "name:Creator, niche:fitness, followers:250K, engagement:5.8%",
-  "campaignBrief": "brand_name:TechFit, product_name:Fitness Tracker",
-  "negotiationStrategy": "approach:collaborative, matchReasons:[...]",
-  "budgetStrategy": "initialOffer:4200, maxOffer:5500"
+  "InfluencerProfile": "Creator profile with engagement metrics",
+  "campaignBrief": "Brand and product information",
+  "negotiationStrategy": "AI-generated approach and tactics",
+  "budgetStrategy": "Pricing strategy with flexibility ranges"
 }
 ```
 
-5. **Phone Integration**: Set up Twilio phone number in ElevenLabs
+5. **Phone Integration**: Set up Twilio phone number in ElevenLabs dashboard
+6. **Test Setup**: Use `/api/webhook/test-enhanced-elevenlabs` endpoint
 
-### Groq Configuration
+### Groq Configuration (AI Strategy)
 
 1. **Create Account**: Sign up at [Groq](https://groq.com/)
 2. **Get API Key**: Navigate to API Keys section
-3. **Choose Model**: Platform uses `llama3-70b-8192` for strategy, `llama3-8b-8192` for quick decisions
+3. **Model Selection**: Platform uses `llama3-70b-8192` for strategy, `llama3-8b-8192` for decisions
+
+### Email Configuration (Contract Delivery)
+
+1. **SMTP Setup**: Configure your email provider (Gmail, Outlook, etc.)
+2. **App Password**: Generate app-specific password for security
+3. **Test Configuration**: Use email service test endpoint
 
 ### Data Setup
 
-1. **Creator Database**: Place `creators.json` in `/data/` folder
-2. **Market Data**: Place `market_data.json` in `/data/` folder
-3. **Sample files are provided in the repository**
+1. **Creator Database**: Ensure `data/creators.json` exists (sample provided)
+2. **Market Data**: Ensure `data/market_data.json` exists (sample provided)
+3. **Contract Templates**: Templates in `data/templates/` (Premium, Standard, Micro-Influencer)
 
 ## 📡 API Reference
 
-### Webhook Endpoints
+### Enhanced API Endpoints (v2.0)
 
-#### Start Enhanced Campaign
+#### Unified Workflow Management
 ```http
-POST /api/webhook/enhanced-campaign
+POST /api/enhanced/start-enhanced-workflow
 Content-Type: application/json
 
 {
-  "campaign_id": "unique-id",
-  "product_name": "FitPro Tracker",
-  "brand_name": "TechFit Solutions",
-  "product_description": "AI-powered fitness tracking device",
-  "target_audience": "Fitness enthusiasts aged 18-35",
-  "campaign_goal": "Launch new product",
-  "product_niche": "fitness",
-  "total_budget": 15000.0
+  "data_collection_method": "manual",
+  "selection_strategy": "budget_optimized",
+  "max_influencers": 3,
+  "require_human_review": true,
+  "require_sponsor_approval": true,
+  "initial_data": {
+    "product_name": "AI Fitness Tracker",
+    "brand_name": "TechFit Pro",
+    "total_budget": 15000.0
+  }
 }
 ```
 
-#### Monitor Campaign Progress
+#### Campaign Data Collection
 ```http
-GET /api/monitor/enhanced-campaign/{task_id}
+POST /api/enhanced/start-file-upload-workflow
+POST /api/enhanced/start-conversational-workflow
 ```
 
-#### Test Endpoints
+#### Real-time Monitoring
 ```http
-POST /api/webhook/test-enhanced-campaign     # Create test campaign
-GET  /api/webhook/test-enhanced-elevenlabs   # Test ElevenLabs setup
-POST /api/webhook/test-enhanced-call         # Test actual phone call
-GET  /api/webhook/system-status              # System health check
+GET /api/enhanced/workflow/{workflow_id}/status
+GET /api/enhanced/workflow/{workflow_id}/analytics
+GET /api/enhanced/workflows
 ```
 
-### Response Examples
-
-#### Campaign Started Response
-```json
-{
-  "message": "🎯 Enhanced AI campaign workflow started",
-  "task_id": "uuid-task-id",
-  "campaign_id": "campaign-id",
-  "estimated_duration_minutes": 8,
-  "monitor_url": "/api/monitor/enhanced-campaign/uuid-task-id",
-  "status": "started",
-  "enhancements": [
-    "ElevenLabs dynamic variables integration",
-    "Structured conversation analysis",
-    "AI-powered negotiation strategies"
-  ]
-}
+#### Human Review & Approval
+```http
+GET  /api/enhanced/human-reviews
+POST /api/enhanced/human-review/{negotiation_id}/decision
+GET  /api/enhanced/sponsor-approvals
+POST /api/enhanced/sponsor-approval/{campaign_id}/{decision}
 ```
 
-#### Progress Monitoring Response
-```json
-{
-  "task_id": "uuid-task-id",
-  "current_stage": "negotiations",
-  "progress": {
-    "overall_percentage": 45.0,
-    "discovered_influencers": 3,
-    "completed_negotiations": 1,
-    "successful_negotiations": 1
-  },
-  "real_time_analytics": {
-    "success_rate": 100.0,
-    "average_final_rate": 4800.0,
-    "budget_utilization": 32.0
-  },
-  "live_updates": [
-    "✅ Successful negotiation: mike_fitness - $4,800",
-    "📞 Enhanced call in progress: sarah_tech"
-  ]
-}
+#### Contract Management
+```http
+GET  /api/enhanced/contracts
+GET  /api/enhanced/contracts/{contract_id}
+GET  /api/enhanced/contracts/{contract_id}/download
+POST /api/enhanced/contracts/{contract_id}/mark-signed
 ```
 
-## 🎭 Usage Examples
+### Enhanced Webhook Endpoints
 
-### Basic Campaign Workflow
-
-1. **Start Campaign**
-```bash
-curl -X POST http://localhost:8000/api/webhook/test-enhanced-campaign
+#### Campaign Creation
+```http
+POST /api/webhook/enhanced-campaign
+POST /api/webhook/test-enhanced-campaign
+POST /api/webhook/test-enhanced-beauty-campaign
 ```
 
-2. **Monitor Progress**
-```bash
-curl -X GET http://localhost:8000/api/monitor/enhanced-campaign/{task_id}
+#### System Testing
+```http
+GET  /api/webhook/test-enhanced-elevenlabs
+POST /api/webhook/test-enhanced-call
+GET  /api/webhook/validate-negotiation/{conversation_id}
+GET  /api/webhook/system-status
 ```
 
-3. **Get Final Results**
-```bash
-curl -X GET http://localhost:8000/api/monitor/enhanced-campaign/{task_id}/detailed-summary
+### Legacy API Endpoints (Backward Compatibility)
+
+#### Basic Workflows
+```http
+POST /api/legacy/webhook/campaign-created
+POST /api/legacy/webhook/test-campaign
+GET  /api/legacy/webhook/status
 ```
 
-### Custom Campaign
+#### Basic Monitoring
+```http
+GET /api/legacy/monitor/campaign/{task_id}
+GET /api/legacy/monitor/campaigns
+GET /api/legacy/monitor/campaign/{task_id}/summary
+```
+
+## 📚 Usage Examples
+
+### 1. Enhanced Workflow with File Upload
+
 ```python
 import requests
 
-campaign_data = {
-    "campaign_id": "custom-campaign-001",
-    "product_name": "Smart Water Bottle",
-    "brand_name": "HydroTech",
-    "product_description": "IoT-enabled water bottle with hydration tracking",
-    "target_audience": "Health-conscious millennials and athletes",
-    "campaign_goal": "Drive pre-orders for product launch",
-    "product_niche": "fitness",
-    "total_budget": 12000.0
+# Upload campaign data file
+files = {'file': open('campaign_brief.csv', 'rb')}
+data = {
+    'selection_strategy': 'engagement_focused',
+    'max_influencers': 4,
+    'require_human_review': True
 }
 
 response = requests.post(
-    "http://localhost:8000/api/webhook/enhanced-campaign",
-    json=campaign_data
+    "http://localhost:8000/api/enhanced/start-file-upload-workflow",
+    files=files,
+    data=data
 )
 
-task_id = response.json()["task_id"]
-print(f"Campaign started: {task_id}")
+workflow_id = response.json()["workflow_id"]
+print(f"Workflow started: {workflow_id}")
 ```
 
-### Real-time Monitoring
+### 2. Real-time Monitoring
+
 ```python
 import requests
 import time
 
-def monitor_campaign(task_id):
+def monitor_workflow(workflow_id):
     while True:
-        response = requests.get(f"http://localhost:8000/api/monitor/enhanced-campaign/{task_id}")
+        response = requests.get(
+            f"http://localhost:8000/api/enhanced/workflow/{workflow_id}/status"
+        )
         data = response.json()
         
-        print(f"Stage: {data['current_stage']}")
-        print(f"Progress: {data['progress']['overall_percentage']:.1f}%")
+        print(f"Phase: {data['current_phase']}")
+        print(f"Progress: {data['progress_percentage']:.1f}%")
+        print(f"Influencers: {data['influencer_status']}")
         
         if data['is_complete']:
-            print("Campaign completed!")
+            print("Workflow completed!")
             break
             
-        time.sleep(30)  # Check every 30 seconds
+        time.sleep(30)
 
-monitor_campaign("your-task-id")
+monitor_workflow("your-workflow-id")
+```
+
+### 3. Human Review Process
+
+```python
+# Get pending reviews
+reviews = requests.get("http://localhost:8000/api/enhanced/human-reviews").json()
+
+for review in reviews["reviews"]:
+    print(f"Review: {review['creator_name']}")
+    print(f"AI Recommendation: {review['ai_recommendation']}")
+    
+    # Submit decision
+    decision_data = {
+        "decision": "approve",  # or "reject", "request_changes"
+        "notes": "Looks good for brand alignment"
+    }
+    
+    requests.post(
+        f"http://localhost:8000/api/enhanced/human-review/{review['negotiation_id']}/decision",
+        json=decision_data
+    )
+```
+
+### 4. Contract Management
+
+```python
+# Get all contracts
+contracts = requests.get("http://localhost:8000/api/enhanced/contracts").json()
+
+for contract in contracts["contracts"]:
+    print(f"Contract: {contract['contract_id']}")
+    print(f"Status: {contract['status']}")
+    print(f"Value: ${contract['final_rate']:,}")
+    
+    # Download contract
+    if contract['status'] == 'sent':
+        pdf_response = requests.get(
+            f"http://localhost:8000/api/enhanced/contracts/{contract['contract_id']}/download"
+        )
+        
+        with open(f"contract_{contract['contract_id']}.pdf", 'wb') as f:
+            f.write(pdf_response.content)
 ```
 
 ## 🛠️ Development Guide
@@ -308,307 +399,336 @@ monitor_campaign("your-task-id")
 ### Project Structure
 ```
 influencer-ai-backend/
-├── main.py                 # FastAPI application entry point
+├── main.py                           # FastAPI application entry point
 ├── config/
-│   ├── settings.py         # Configuration management
-│   └── simple_settings.py  # Fallback configuration
+│   ├── settings.py                   # Configuration management
+│   └── simple_settings.py            # Fallback configuration
 ├── models/
-│   └── campaign.py         # Data models and schemas
-├── agents/                 # AI agent implementations
-│   ├── orchestrator.py     # Master campaign coordinator
-│   ├── discovery.py        # Creator discovery and matching
-│   ├── negotiation.py      # Voice-based negotiations
-│   └── contracts.py        # Contract generation
-├── services/               # External service integrations
-│   ├── enhanced_voice.py   # ElevenLabs integration
-│   ├── embeddings.py       # ML embeddings service
-│   ├── pricing.py          # Market pricing logic
-│   └── database.py         # Data persistence
-├── api/                    # API route handlers
-│   ├── webhooks.py         # Campaign webhook endpoints
-│   └── monitoring.py       # Progress monitoring endpoints
-├── data/                   # Static data files
-│   ├── creators.json       # Creator database
-│   └── market_data.json    # Market pricing data
-└── tests/                  # Test files
+│   ├── campaign.py                   # Core data models
+│   └── workflow.py                   # Workflow management models
+├── agents/                           # AI agent implementations
+│   ├── enhanced_orchestrator.py     # Enhanced campaign coordinator
+│   ├── unified_campaign_orchestrator.py # Complete automation
+│   ├── enhanced_influencer_matcher.py   # Budget-optimized selection
+│   ├── enhanced_negotiation_manager.py  # Human-in-the-loop negotiations
+│   ├── enhanced_contract_generator.py   # Multi-template contracts
+│   ├── campaign_data_collector.py    # Multi-source data collection
+│   └── discovery.py                  # Creator discovery and matching
+├── services/                         # External service integrations
+│   ├── enhanced_voice.py             # ElevenLabs integration
+│   ├── conversation_monitor.py       # Real-time call tracking
+│   ├── email_service.py              # Contract delivery system
+│   ├── embeddings.py                 # ML embeddings service
+│   ├── pricing.py                    # Market pricing intelligence
+│   └── database.py                   # Data persistence
+├── api/                              # API route handlers
+│   ├── enhanced_campaign_endpoints.py # Enhanced workflow APIs
+│   ├── enhanced_webhooks.py          # Enhanced webhook handlers
+│   ├── enhanced_monitoring.py        # Real-time monitoring APIs
+│   ├── webhooks.py                   # Legacy webhook handlers
+│   └── monitoring.py                 # Legacy monitoring APIs
+├── data/                             # Static data and templates
+│   ├── creators.json                 # Creator database
+│   ├── market_data.json              # Market pricing data
+│   └── templates/                    # Contract templates
+│       ├── premium_contract.html
+│       ├── standard_contract.html
+│       └── micro_influencer_contract.html
+└── tests/                            # Test files
 ```
 
-### Adding New Features
+### Adding Enhanced Features
 
-#### 1. Create New Agent
+#### 1. Create New Enhanced Agent
 ```python
-# agents/my_new_agent.py
+# agents/my_enhanced_agent.py
 import logging
 from typing import Dict, Any
+from models.campaign import CampaignData
 
 logger = logging.getLogger(__name__)
 
-class MyNewAgent:
-    """Custom agent for specialized functionality"""
+class MyEnhancedAgent:
+    """Enhanced agent with AI capabilities"""
     
     def __init__(self):
-        self.initialized = True
+        self.ai_enabled = True
+        self.monitoring_enabled = True
     
-    async def process(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process data according to agent logic"""
-        logger.info("Processing with MyNewAgent")
-        # Your logic here
-        return {"status": "processed", "result": data}
+    async def process_with_ai(self, data: CampaignData) -> Dict[str, Any]:
+        """Process with AI enhancement"""
+        logger.info("Processing with enhanced AI capabilities")
+        
+        # AI processing logic here
+        return {
+            "status": "enhanced_processing_complete",
+            "ai_insights": {"confidence": 0.95},
+            "result": data
+        }
 ```
 
-#### 2. Add Service Integration
+#### 2. Add Enhanced Service Integration
 ```python
-# services/my_service.py
-import requests
-from config.settings import settings
+# services/my_enhanced_service.py
+import asyncio
+from typing import Dict, Any
 
-class MyService:
-    """Integration with external service"""
+class MyEnhancedService:
+    """Enhanced service with real-time capabilities"""
     
     def __init__(self):
-        self.api_key = settings.my_service_api_key
-        self.base_url = "https://api.myservice.com"
+        self.real_time_enabled = True
+        self.monitoring_active = False
     
-    async def call_api(self, data):
-        """Make API call to external service"""
-        response = requests.post(
-            f"{self.base_url}/endpoint",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json=data
-        )
-        return response.json()
+    async def start_enhanced_monitoring(self, callback):
+        """Start real-time monitoring"""
+        self.monitoring_active = True
+        
+        while self.monitoring_active:
+            # Real-time monitoring logic
+            status = await self.check_status()
+            if callback:
+                await callback(status)
+            await asyncio.sleep(10)
+    
+    async def check_status(self) -> Dict[str, Any]:
+        """Enhanced status checking"""
+        return {"status": "operational", "enhanced": True}
 ```
 
-#### 3. Extend Orchestrator
+#### 3. Extend Enhanced Orchestrator
 ```python
-# In agents/orchestrator.py, add new phase
-async def _run_my_new_phase(self, state):
-    """Add custom processing phase"""
-    logger.info("🔄 Starting my new phase...")
+# In agents/enhanced_orchestrator.py
+async def _run_my_enhanced_phase(self, state):
+    """Add custom enhanced phase"""
+    logger.info("🔄 Starting my enhanced phase...")
     
-    my_agent = MyNewAgent()
-    result = await my_agent.process(state.campaign_data)
+    my_agent = MyEnhancedAgent()
+    result = await my_agent.process_with_ai(state.campaign_data)
     
-    # Update state with results
-    state.my_new_data = result
+    # Update state with AI insights
+    state.ai_insights = result["ai_insights"]
     
-    logger.info("✅ My new phase completed")
+    logger.info("✅ Enhanced phase completed with AI")
 ```
 
-### Testing
+### Enhanced Testing
 
-#### Run Tests
+#### Run Comprehensive Tests
 ```bash
-# Run all tests
-python -m pytest
+# Test enhanced features
+python -m pytest tests/test_enhanced_agents.py
 
-# Run specific test file
-python -m pytest tests/test_agents.py
-
-# Run with coverage
-python -m pytest --cov=.
-```
-
-#### Test Campaign
-```bash
-# Quick system test
-python test_setup.py
+# Test voice integration
+curl -X GET http://localhost:8000/api/webhook/test-enhanced-elevenlabs
 
 # Test enhanced workflow
-curl -X POST http://localhost:8000/api/webhook/test-enhanced-campaign
+curl -X POST http://localhost:8000/api/enhanced/demo/fitness-campaign
 
-# Test ElevenLabs integration
-curl -X GET http://localhost:8000/api/webhook/test-enhanced-elevenlabs
+# Test human review system
+curl -X GET http://localhost:8000/api/enhanced/human-reviews
 ```
 
-### Performance Optimization
+#### Performance Testing
+```bash
+# Load test enhanced endpoints
+python tests/load_test_enhanced.py
 
-#### Database Optimization
-```python
-# Use connection pooling
-from sqlalchemy.pool import QueuePool
-
-engine = create_engine(
-    database_url,
-    poolclass=QueuePool,
-    pool_size=10,
-    max_overflow=20
-)
-```
-
-#### Async Processing
-```python
-# Use asyncio for concurrent operations
-import asyncio
-
-async def process_multiple_creators(creators):
-    tasks = [
-        negotiate_with_creator(creator) 
-        for creator in creators
-    ]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    return results
+# Monitor real-time performance
+curl -X GET http://localhost:8000/api/enhanced/system-status
 ```
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
 
-#### 1. ElevenLabs Connection Failed
+#### 1. ElevenLabs Connection Issues
 ```bash
-# Check credentials
+# Test credentials and setup
 curl -X GET http://localhost:8000/api/webhook/test-enhanced-elevenlabs
 
-# Verify environment variables
-python debug_env.py
+# Check configuration
+python -c "from config.settings import settings; print('ElevenLabs:', bool(settings.elevenlabs_api_key))"
 ```
 
 **Solutions:**
 - Verify API keys in `.env` file
-- Check ElevenLabs account status
-- Ensure agent is properly configured
-- Verify phone number setup
+- Check ElevenLabs agent configuration
+- Ensure dynamic variables are set up
+- Test with mock mode first
 
-#### 2. Groq API Errors
+#### 2. Groq AI Strategy Issues
 ```bash
 # Test Groq connection
-python -c "from config.settings import settings; print(settings.groq_api_key[:10])"
+curl -X POST http://localhost:8000/api/enhanced/demo/fitness-campaign
 ```
 
 **Solutions:**
-- Check API key validity
-- Verify model availability
-- Check rate limits
-- Ensure sufficient credits
+- Verify Groq API key
+- Check model availability and credits
+- Review rate limits
+- Test with fallback strategies
 
-#### 3. Import Errors
+#### 3. Enhanced Workflow Failures
 ```bash
-# Fix dependencies
-python fix_imports.py
+# Check workflow status
+curl -X GET http://localhost:8000/api/enhanced/workflow/{id}/status
 
-# Check Python version
-python --version  # Should be 3.13+
+# Review system status
+curl -X GET http://localhost:8000/api/enhanced/system-status
 ```
 
 **Solutions:**
-- Run `uv sync` or `pip install -r requirements.txt`
-- Check Python version compatibility
-- Verify virtual environment activation
+- Check all service dependencies
+- Verify conversation monitoring setup
+- Review human approval queues
+- Test individual components
 
-#### 4. Mock Mode Issues
+#### 4. Contract Generation Issues
 ```bash
-# Check system status
-curl http://localhost:8000/api/webhook/system-status
+# Test contract system
+curl -X GET http://localhost:8000/api/enhanced/contracts
+
+# Check email service
+python -c "from services.email_service import EmailService; svc = EmailService(); print(svc.test_email_configuration())"
 ```
 
 **Solutions:**
-- Set `MOCK_CALLS=true` in `.env` for testing
-- Verify creator data files exist in `/data/`
-- Check demo mode configuration
+- Verify email SMTP configuration
+- Check contract template files
+- Test PDF generation
+- Review delivery settings
 
 ### Debug Mode
 
-Enable detailed logging:
+Enable comprehensive logging:
 ```python
 # In config/settings.py
 DEBUG=true
 
-# Or set environment variable
+# Or environment variable
 export DEBUG=true
+export LOG_LEVEL=debug
 ```
 
-### Health Checks
+### Enhanced Health Checks
 
 ```bash
-# System health
+# Comprehensive system health
 curl http://localhost:8000/health
 
-# Service status
-curl http://localhost:8000/api/webhook/system-status
+# Enhanced feature status
+curl http://localhost:8000/api-status
 
-# Test endpoints
-curl -X POST http://localhost:8000/api/webhook/test-enhanced-campaign
+# Service-specific status
+curl http://localhost:8000/api/enhanced/system-status
 ```
 
 ## 📊 Monitoring & Analytics
 
-### Real-time Monitoring
+### Real-time Enhanced Monitoring
 
-The platform provides comprehensive real-time monitoring:
+#### Campaign Progress Tracking
+- **Enhanced Discovery**: AI-powered matching with confidence scores
+- **Live Negotiations**: Real-time call monitoring with automatic continuation
+- **Human Review**: Queue management with escalation and approval tracking
+- **Contract Pipeline**: Multi-template generation with delivery confirmation
 
-#### Campaign Progress
-- **Discovery Phase**: Creator matching and scoring
-- **Negotiation Phase**: Live phone call progress
-- **Contract Phase**: Document generation
-- **Completion**: Final results and analytics
+#### Advanced Performance Metrics
+- **AI Strategy Effectiveness**: Success rate by strategy type and creator segment
+- **Conversation Quality**: Call success rates, duration analysis, outcome prediction
+- **Human Review Efficiency**: Approval times, escalation rates, decision quality
+- **Contract Completion**: Signing rates, delivery success, follow-up effectiveness
 
-#### Performance Metrics
-- **Success Rate**: Percentage of successful negotiations
-- **Cost Efficiency**: Budget utilization and ROI
-- **Time Efficiency**: Average campaign completion time
-- **Quality Score**: Data completeness and validation
-
-#### Live Updates
-- Real-time progress notifications
-- Call status updates
-- Error tracking and alerts
-- Performance trend analysis
-
-### Analytics Dashboard
-
-Access comprehensive analytics:
+#### Enhanced Analytics Dashboard
 ```bash
-# Campaign summary
-GET /api/monitor/enhanced-campaign/{task_id}/detailed-summary
+# Workflow analytics
+GET /api/enhanced/workflow/{id}/analytics
 
 # System-wide metrics
-GET /api/monitor/campaigns
+GET /api/enhanced/workflows
 
-# Export data
-GET /api/monitor/enhanced-campaign/{task_id}/export
+# Contract analytics
+GET /api/enhanced/contracts
+
+# Human review metrics
+GET /api/enhanced/human-reviews
+```
+
+## 🎮 Demo & Testing
+
+### Enhanced Demo Campaigns
+
+```bash
+# Fitness campaign with enhanced features
+curl -X POST http://localhost:8000/api/enhanced/demo/fitness-campaign
+
+# Beauty campaign with file upload simulation
+curl -X POST http://localhost:8000/api/enhanced/demo/beauty-campaign
+
+# Test enhanced ElevenLabs integration
+curl -X POST http://localhost:8000/api/webhook/test-enhanced-call
+```
+
+### Testing Enhanced Features
+
+```bash
+# Test conversation monitoring
+curl -X GET http://localhost:8000/api/webhook/test-timeout-fixes
+
+# Test enhanced workflow with fixes
+curl -X POST http://localhost:8000/api/webhook/test-enhanced-campaign-with-fixes
+
+# Test human review system
+curl -X GET http://localhost:8000/api/enhanced/human-reviews
+
+# Test contract generation
+curl -X POST http://localhost:8000/api/webhook/generate-enhanced-contract
 ```
 
 ## 🤝 Contributing
 
 ### Development Setup
 
-1. **Fork the Repository**
-2. **Create Feature Branch**
+1. **Fork Repository & Create Feature Branch**
 ```bash
-git checkout -b feature/your-feature-name
+git checkout -b feature/enhanced-feature-name
 ```
 
-3. **Install Development Dependencies**
+2. **Install Development Dependencies**
 ```bash
-uv add --dev pytest black flake8
+uv add --dev pytest black flake8 mypy
 ```
 
-4. **Follow Code Style**
+3. **Enhanced Development Guidelines**
+- Follow existing enhanced agent patterns
+- Include comprehensive error handling
+- Add real-time monitoring capabilities
+- Implement human-in-the-loop where appropriate
+- Include AI strategy integration
+
+4. **Testing Requirements**
 ```bash
+# Test enhanced features
+pytest tests/test_enhanced_*.py
+
+# Test legacy compatibility
+pytest tests/test_legacy_*.py
+
 # Format code
 black .
 
-# Check linting
-flake8 .
-
-# Run tests
-pytest
+# Type checking
+mypy .
 ```
 
-### Contribution Guidelines
+### Enhanced Contribution Guidelines
 
-- **Code Quality**: Follow PEP 8 standards
-- **Documentation**: Add docstrings and comments
-- **Testing**: Include unit tests for new features
-- **Logging**: Use structured logging with appropriate levels
-- **Error Handling**: Implement proper exception handling
-
-### Pull Request Process
-
-1. **Update Documentation**: Include README updates if needed
-2. **Add Tests**: Ensure new features have test coverage
-3. **Check CI**: Verify all tests pass
-4. **Review**: Submit PR for review
+- **Enhanced Features**: Follow the enhanced agent pattern with AI integration
+- **Real-time Capabilities**: Include monitoring and live updates
+- **Human Workflows**: Consider approval and review processes
+- **Legacy Compatibility**: Ensure backward compatibility where needed
+- **Documentation**: Update README and add endpoint documentation
 
 ## 📄 License
 
@@ -616,25 +736,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **ElevenLabs** for conversational AI technology
-- **Groq** for high-performance LLM inference
-- **FastAPI** for the robust web framework
-- **Sentence Transformers** for semantic similarity
-- **The Open Source Community** for various tools and libraries
+- **ElevenLabs** for conversational AI and real-time voice technology
+- **Groq** for high-performance LLM inference and AI strategy generation
+- **FastAPI** for the robust and fast web framework
+- **Sentence Transformers** for semantic similarity and creator matching
+- **The Open Source Community** for tools, libraries, and inspiration
 
-## 📞 Support
+## 📞 Support & Documentation
 
-### Documentation
+### Enhanced Documentation
 - **API Documentation**: `/docs` (when server is running)
 - **Interactive API**: `/redoc` (when server is running)
+- **Enhanced Features Guide**: See API documentation for detailed enhanced endpoints
 
-### Community
+### Community & Support
 - **Issues**: [GitHub Issues](https://github.com/your-org/influencer-ai-backend/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-org/influencer-ai-backend/discussions)
+- **Enhanced Features**: Check `/api/enhanced/system-status` for feature availability
 
-### Enterprise Support
-For enterprise support and custom implementations, contact: [support@influencerflow.ai](mailto:support@influencerflow.ai)
+### Enterprise & Custom Solutions
+For enterprise support, custom enhanced features, and professional services:
+- **Email**: [support@influencerflow.ai](mailto:support@influencerflow.ai)
+- **Enhanced Features**: Custom AI strategies, advanced integrations, white-label solutions
 
 ---
 
-**Built with ❤️ by the InfluencerFlow Team**
+**Built with ❤️ and 🤖 AI by the InfluencerFlow Team**
+
+*Transforming influencer marketing through intelligent automation and human-AI collaboration.*
