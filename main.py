@@ -1,45 +1,21 @@
-# main.py - FIXED VERSION with Better Import Handling
-import asyncio
+# main.py - Clean Production Version
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-# Global state to track active campaigns
+# Global state to track active campaigns (used by monitoring)
 active_campaigns = {}
 
 def load_settings():
-    """Load settings with fallback"""
+    """Load settings with clean error handling"""
     try:
         from config.settings import settings
-        print("✅ Using SimpleSettings fallback")
         return settings
-    except ImportError as e2:
-        print(f"❌ Both settings failed: {e2}")
-        print("📋 Please run: python fix_imports.py")
+    except ImportError as e:
+        print(f"❌ Settings import failed: {e}")
+        print("📋 Please ensure config/settings.py exists")
         exit(1)
-
-def load_enhanced_endpoints():
-    """Load enhanced endpoints with graceful fallback"""
-    try:
-        from api.enhanced_webhooks import enhanced_webhook_router
-        from api.enhanced_monitoring import enhanced_monitoring_router
-        print("✅ Enhanced endpoints loaded")
-        return enhanced_webhook_router, enhanced_monitoring_router
-    except ImportError as e:
-        print(f"⚠️  Enhanced endpoints not available: {e}")
-        return None, None
-
-def load_legacy_endpoints():
-    """Load legacy endpoints with graceful fallback"""
-    try:
-        from api.webhooks import webhook_router
-        from api.monitoring import monitoring_router
-        print("✅ Legacy endpoints loaded")
-        return webhook_router, monitoring_router
-    except ImportError as e:
-        print(f"⚠️  Legacy endpoints not available: {e}")
-        return None, None
 
 # Load settings
 settings = load_settings()
@@ -50,25 +26,17 @@ async def lifespan(app: FastAPI):
     print("🚀 InfluencerFlow AI Platform starting up...")
     print(f"🔧 Debug mode: {settings.debug}")
     print(f"🎯 Demo mode: {settings.demo_mode}")
-    
-    # Try to load enhanced features
-    enhanced_webhook_router, enhanced_monitoring_router = load_enhanced_endpoints()
-    if enhanced_webhook_router and enhanced_monitoring_router:
-        print("🔥 Enhanced features available!")
-    
-    # Try to load legacy features
-    legacy_webhook_router, legacy_monitoring_router = load_legacy_endpoints()
-    if legacy_webhook_router and legacy_monitoring_router:
-        print("📋 Legacy endpoints available!")
+    print(f"🔥 Enhanced features enabled")
     
     yield
+    
     print("👋 InfluencerFlow AI Platform shutting down...")
 
 # Create FastAPI app
 app = FastAPI(
     title="InfluencerFlow AI Platform",
-    description="AI-powered influencer marketing campaign automation",
-    version="2.0.0",
+    description="AI-powered influencer marketing campaign automation with conversational interface",
+    version="2.1.0-production",
     lifespan=lifespan
 )
 
@@ -81,68 +49,93 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Try to include enhanced routers
+# Load Enhanced Endpoints (Production Ready)
 try:
     from api.enhanced_webhooks import enhanced_webhook_router
     from api.enhanced_monitoring import enhanced_monitoring_router
     
-    app.include_router(enhanced_webhook_router, prefix="/api/webhook", tags=["enhanced-webhooks"])
-    app.include_router(enhanced_monitoring_router, prefix="/api/monitor", tags=["enhanced-monitoring"])
-    print("✅ Enhanced endpoints loaded")
-except ImportError as e:
-    print(f"⚠️  Enhanced endpoints not available: {e}")
-
-# Try to include legacy routers
-try:
-    from api.webhooks import webhook_router
-    from api.monitoring import monitoring_router
+    app.include_router(
+        enhanced_webhook_router, 
+        prefix="/api/webhook", 
+        tags=["enhanced-webhooks"]
+    )
+    app.include_router(
+        enhanced_monitoring_router, 
+        prefix="/api/monitor", 
+        tags=["enhanced-monitoring"]
+    )
+    print("✅ Enhanced production endpoints loaded")
     
-    app.include_router(webhook_router, prefix="/api/webhook", tags=["webhooks"])
-    app.include_router(monitoring_router, prefix="/api/monitor", tags=["monitoring"])
-    print("✅ Legacy endpoints loaded")
 except ImportError as e:
-    print(f"⚠️  Legacy endpoints not available: {e}")
+    print(f"❌ Enhanced endpoints failed to load: {e}")
+    print("📋 Please ensure api/enhanced_*.py files exist")
+    exit(1)
 
+try:
+    from api.whatsapp import whatsapp_router
+    
+    app.include_router(whatsapp_router, prefix="/api/whatsapp", tags=["whatsapp"])
+    print("✅ WhatsApp endpoints loaded")
+except ImportError as e:
+    print(f"⚠️  WhatsApp endpoints not available: {e}")
+    print("📋 Run after setting up WhatsApp integration") 
+
+# Core Health Endpoints
 @app.get("/")
 async def root():
-    """Health check endpoint"""
+    """Root health check endpoint"""
     return {
-        "message": "InfluencerFlow AI Platform is running",
-        "version": "2.0.0",
+        "message": "InfluencerFlow AI Platform - Production Ready",
+        "version": "2.1.0-production",
         "status": "healthy",
+        "features": [
+            "Enhanced AI-powered campaign orchestration",
+            "ElevenLabs voice negotiations with dynamic variables", 
+            "Real-time conversation monitoring",
+            "Comprehensive contract generation",
+            "Advanced analytics and validation"
+        ],
         "demo_mode": settings.demo_mode,
         "active_campaigns": len(active_campaigns)
     }
 
 @app.get("/health")
 async def health_check():
-    """Detailed health check"""
+    """Comprehensive health check"""
     
     # Check service availability
     services = {
         "api": "running",
-        "database": "connected",  # TODO: Add actual DB health check
+        "database": "connected",  # TODO: Add actual DB health check when needed
     }
     
-    # Check API keys
+    # Check API integrations
     if hasattr(settings, 'groq_api_key') and settings.groq_api_key:
-        services["groq"] = "configured"
+        services["groq_llm"] = "configured"
     else:
-        services["groq"] = "missing_key"
+        services["groq_llm"] = "missing_key"
     
     if hasattr(settings, 'elevenlabs_api_key') and settings.elevenlabs_api_key:
-        services["elevenlabs"] = "configured"
+        services["elevenlabs_voice"] = "configured"
     else:
-        services["elevenlabs"] = "missing_key"
+        services["elevenlabs_voice"] = "missing_key"
     
     return {
         "status": "healthy",
+        "version": "2.1.0-production",
         "services": services,
         "active_campaigns": len(active_campaigns),
-        "settings": {
+        "configuration": {
             "demo_mode": settings.demo_mode,
             "mock_calls": getattr(settings, 'mock_calls', False),
-            "max_negotiation_duration": getattr(settings, 'max_negotiation_duration', 45)
+            "enhanced_features": True,
+            "conversation_monitoring": True
+        },
+        "endpoints": {
+            "enhanced_campaigns": "/api/webhook/enhanced-campaign",
+            "campaign_monitoring": "/api/monitor/enhanced-campaign/{task_id}",
+            "test_elevenlabs": "/api/webhook/test-enhanced-elevenlabs",
+            "system_status": "/api/webhook/system-status"
         }
     }
 
@@ -152,48 +145,51 @@ async def debug_info():
     
     debug_info = {
         "python_version": "3.13+",
-        "fastapi_version": "0.115+",
+        "fastapi_version": "0.115+", 
+        "platform_version": "2.1.0-production",
         "settings_loaded": True,
         "active_campaigns": len(active_campaigns)
     }
     
-    # Check imports
+    # Test core imports
     import_status = {}
     
-    # Test core imports
     try:
-        from models.campaign import CampaignWebhook
+        from models.campaign import CampaignData
         import_status["models"] = "✅ Available"
     except ImportError as e:
         import_status["models"] = f"❌ Failed: {e}"
     
     try:
-        from agents.orchestrator import CampaignOrchestrator
-        import_status["orchestrator"] = "✅ Available"
+        from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
+        import_status["enhanced_orchestrator"] = "✅ Available"
     except ImportError as e:
-        import_status["orchestrator"] = f"❌ Failed: {e}"
+        import_status["enhanced_orchestrator"] = f"❌ Failed: {e}"
     
     try:
-        from agents.negotiation import NegotiationAgent
-        import_status["negotiation_agent"] = "✅ Available"
+        from agents.enhanced_negotiation import EnhancedNegotiationAgent
+        import_status["enhanced_negotiation"] = "✅ Available"
     except ImportError as e:
-        import_status["negotiation_agent"] = f"❌ Failed: {e}"
+        import_status["enhanced_negotiation"] = f"❌ Failed: {e}"
     
     try:
-        from services.voice import VoiceService
-        import_status["voice_service"] = "✅ Available"
+        from services.enhanced_voice import EnhancedVoiceService
+        import_status["enhanced_voice"] = "✅ Available"
     except ImportError as e:
-        import_status["voice_service"] = f"❌ Failed: {e}"
+        import_status["enhanced_voice"] = f"❌ Failed: {e}"
     
     debug_info["import_status"] = import_status
+    debug_info["cleanup_status"] = "Legacy files removed - production ready"
     
     return debug_info
 
+# Production startup
 if __name__ == "__main__":
-    print("🚀 Starting InfluencerFlow AI Platform...")
+    print("🚀 Starting InfluencerFlow AI Platform (Production Mode)...")
     print(f"🔧 Host: {settings.host}")
     print(f"🔧 Port: {settings.port}")
     print(f"🔧 Debug: {settings.debug}")
+    print(f"🔥 Enhanced features: Enabled")
     
     uvicorn.run(
         "main:app",

@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     elevenlabs_agent_id: Optional[str] = None
     elevenlabs_phone_number_id: Optional[str] = None
     elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Default voice
+
+    whatsapp_access_token: Optional[str] = None
+    whatsapp_phone_number_id: Optional[str] = None
+    whatsapp_app_secret: Optional[str] = None
+    whatsapp_verify_token: str = "influencerflow_verify_token"
     
     # Database
     database_url: str = "postgresql://localhost:5432/influencerflow"
