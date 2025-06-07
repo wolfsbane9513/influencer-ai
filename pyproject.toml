@@ -1,30 +1,197 @@
 [project]
-name = "influencer-ai"
-version = "0.1.0"
-description = "Add your description here"
+name = "influencerflow-ai"
+version = "2.1.0"
+description = "AI-Native Conversational Influencer Marketing Platform with WhatsApp Business API Integration"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "InfluencerFlow Team", email = "dev@influencerflow.ai" }
+]
+keywords = [
+    "influencer-marketing", 
+    "ai", 
+    "conversational-ai", 
+    "whatsapp-business", 
+    "voice-ai", 
+    "elevenlabs", 
+    "groq"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Chat",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 requires-python = ">=3.13"
+
 dependencies = [
+    # Core FastAPI Framework
     "fastapi>=0.115.12",
-    "pydantic-settings>=2.9.1",
-    "pydantic>=2.11.5",
-    "python-dotenv>=1.1.0",
-    "python-multipart>=0.0.20",
     "uvicorn[standard]>=0.34.2",
-    "groq>=0.26.0",
-    "openai>=1.82.1",
-    "elevenlabs>=2.1.0",
-    "sentence-transformers>=4.1.0",
-    "numpy>=2.2.6",
-    "scikit-learn>=1.6.1",
-    "sqlalchemy>=2.0.41",
-    "psycopg2-binary>=2.9.10",
-    "aiohttp>=3.12.6",
-    "requests>=2.32.3",
+    "python-multipart>=0.0.20",
+    "python-dotenv>=1.1.0",
+    
+    # Data Models and Validation
+    "pydantic>=2.11.5",
+    "pydantic-settings>=2.9.1",
+    
+    # AI and Machine Learning - Enhanced System
+    "groq>=0.26.0",                    # LLM for natural language processing
+    "elevenlabs>=2.1.0",              # Voice conversations with dynamic variables  
+    "openai>=1.82.1",                 # Backup LLM service
+    "sentence-transformers>=4.1.0",   # Vector similarity for creator matching
+    "numpy>=2.2.6",                   # Numerical computing for embeddings
+    "scikit-learn>=1.6.1",            # Machine learning for similarity calculations
+    
+    # WhatsApp Business API Integration
+    "aiohttp>=3.12.6",                # Async HTTP client for WhatsApp API
+    "requests>=2.32.3",               # HTTP client for API integrations
+    
+    # Database and Persistence (Optional)
+    "sqlalchemy>=2.0.41",             # Database ORM
+    "psycopg2-binary>=2.9.10",        # PostgreSQL adapter
+    
+    # Security and Utilities
+    "cryptography>=41.0.0",           # Webhook signature verification
+    "pytz>=2023.3",                   # Timezone handling
 ]
 
 [dependency-groups]
 dev = [
-    "black>=25.1.0",
-    "flake8>=7.2.0",
+    # Testing
     "pytest>=8.3.5",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    
+    # Code Quality
+    "black>=25.1.0",
+    "flake8>=7.2.0", 
+    "mypy>=1.8.0",
+    "pre-commit>=3.6.0",
+    
+    # Development Tools
+    "python-jose[cryptography]>=3.3.0",
+    "httpx>=0.24.0",                  # For testing HTTP endpoints
+]
+
+production = [
+    # Performance and Monitoring
+    "redis>=4.5.0",                   # Conversation state persistence
+    "celery>=5.3.0",                  # Background task processing
+    "sentry-sdk[fastapi]>=1.40.0",    # Error monitoring
+    "prometheus-client>=0.19.0",      # Metrics collection
+]
+
+whatsapp = [
+    # WhatsApp-specific dependencies (if you want to make it optional)
+    "aiohttp>=3.12.6",
+    "cryptography>=41.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/your-org/influencerflow-ai"
+"Bug Tracker" = "https://github.com/your-org/influencerflow-ai/issues"
+"Documentation" = "https://github.com/your-org/influencerflow-ai#readme"
+"Repository" = "https://github.com/your-org/influencerflow-ai.git"
+
+[project.scripts]
+influencerflow = "main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agents", "api", "config", "models", "services"]
+
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__", 
+    "dist",
+    "build",
+    "*.egg-info",
+]
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "groq.*",
+    "elevenlabs.*", 
+    "sentence_transformers.*",
+    "sklearn.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "whatsapp: marks tests that require WhatsApp API credentials",
+    "elevenlabs: marks tests that require ElevenLabs API credentials",
+]
+
+[tool.coverage.run]
+source = ["agents", "api", "config", "models", "services"]
+omit = [
+    "tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
 ]

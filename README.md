@@ -1,68 +1,75 @@
-# InfluencerFlow AI Platform
+# InfluencerFlow AI Platform - Production Ready
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
 [![ElevenLabs](https://img.shields.io/badge/ElevenLabs-API-purple.svg)](https://elevenlabs.io/)
 [![Groq](https://img.shields.io/badge/Groq-AI-orange.svg)](https://groq.com/)
+[![WhatsApp](https://img.shields.io/badge/WhatsApp-Business-25D366.svg)](https://developers.facebook.com/docs/whatsapp)
 
-> **AI-Powered Influencer Marketing Campaign Automation Platform**
+> **AI-Native Conversational Influencer Marketing Platform**
 
-InfluencerFlow is a comprehensive AI platform that automates the entire influencer marketing workflow - from creator discovery to contract generation - using advanced AI agents, voice-based negotiations, and intelligent matching algorithms.
+InfluencerFlow is a next-generation AI platform that runs complete influencer marketing campaigns through natural conversation. Users simply message their requirements via WhatsApp, and our AI handles everything from creator discovery to contract generation - no buttons, no forms, just outcomes.
 
 ## 🎯 Key Features
 
-### 🤖 **AI-Powered Automation**
-- **Intelligent Creator Discovery**: Vector similarity matching with sentence transformers
-- **AI Strategy Generation**: Groq-powered campaign optimization
-- **Automated Negotiations**: ElevenLabs voice calls with dynamic variables
-- **Smart Contract Generation**: Comprehensive legal agreements with structured terms
+### 🤖 **Conversational AI Interface**
+- **WhatsApp Business Integration**: Complete campaigns via natural conversation
+- **LLM-Powered Parsing**: Groq-based natural language understanding
+- **Multi-Turn Conversations**: Smart clarifying questions when needed
+- **Real-Time Updates**: Live progress notifications during campaign execution
 
 ### 📞 **Voice-Based Negotiations**
-- **Real-time Phone Calls**: ElevenLabs conversational AI integration
-- **Dynamic Variables**: Personalized conversation context for each creator
-- **Structured Analysis**: Extract negotiation outcomes, rates, and terms
-- **Live Monitoring**: Real-time progress tracking during calls
+- **ElevenLabs Integration**: Automated voice calls with dynamic variables
+- **Structured Conversation Analysis**: Extract negotiation outcomes and terms
+- **Real-Time Monitoring**: Live call progress tracking
+- **Enhanced Voice Service**: Professional AI negotiator with market intelligence
 
-### 🎛️ **Multi-Agent Orchestration**
-- **Campaign Orchestrator**: Master coordinator managing entire workflow
-- **Discovery Agent**: AI-powered creator matching and scoring
-- **Negotiation Agent**: Voice-based deal closing with market intelligence
-- **Contract Agent**: Automated legal document generation
+### 🎛️ **Enhanced AI Orchestration**
+- **Enhanced Campaign Orchestrator**: Master coordinator with conversation monitoring
+- **Enhanced Negotiation Agent**: Voice-based deal closing with structured analysis
+- **Enhanced Contract Agent**: Comprehensive legal document generation
+- **Discovery Agent**: AI-powered creator matching with vector similarity
 
-### 📊 **Advanced Analytics**
-- **Real-time Monitoring**: Live campaign progress tracking
+### 📊 **Production-Ready Analytics**
+- **Real-Time Campaign Monitoring**: Live progress tracking via WhatsApp and API
+- **Enhanced Validation Systems**: Comprehensive data quality checks
+- **Structured Data Flow**: Complete audit trail from conversation to contract
 - **Performance Metrics**: Success rates, cost efficiency, ROI analysis
-- **Validation Systems**: Data quality checks and error handling
-- **Comprehensive Reporting**: Detailed campaign summaries and insights
 
 ## 🏗️ Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    InfluencerFlow AI Platform                │
+│                InfluencerFlow AI Platform v2.1               │
 ├─────────────────────────────────────────────────────────────┤
-│  FastAPI Backend (main.py)                                 │
-│  ├── Webhook Endpoints (/api/webhook/)                     │
-│  ├── Monitoring Endpoints (/api/monitor/)                  │
-│  └── Enhanced Endpoints (/api/webhook/enhanced-*)          │
+│  FastAPI Backend (main.py) - Production Ready              │
+│  ├── Enhanced Webhook Endpoints (/api/webhook/)            │
+│  ├── Enhanced Monitoring (/api/monitor/)                   │
+│  └── WhatsApp Business API (/api/whatsapp/)                │
 ├─────────────────────────────────────────────────────────────┤
-│  AI Agents (/agents/)                                      │
-│  ├── CampaignOrchestrator (Master Coordinator)             │
-│  ├── InfluencerDiscoveryAgent (Creator Matching)           │
-│  ├── NegotiationAgent (Voice Negotiations)                 │
-│  └── ContractAgent (Legal Document Generation)             │
+│  Enhanced AI Agents (/agents/) - Production Only           │
+│  ├── EnhancedCampaignOrchestrator (Master Coordinator)     │
+│  ├── EnhancedNegotiationAgent (Voice + Analysis)           │
+│  ├── EnhancedContractAgent (Comprehensive Legal Docs)      │
+│  └── InfluencerDiscoveryAgent (Vector Similarity)          │
 ├─────────────────────────────────────────────────────────────┤
-│  Services (/services/)                                     │
-│  ├── EnhancedVoiceService (ElevenLabs Integration)         │
-│  ├── EmbeddingService (Vector Similarity)                  │
-│  ├── PricingService (Market Data & Rates)                  │
-│  └── DatabaseService (Data Persistence)                    │
+│  Enhanced Services (/services/) - Production Ready         │
+│  ├── EnhancedVoiceService (ElevenLabs + Dynamic Variables) │
+│  ├── ConversationMonitor (Real-time Status Tracking)       │
+│  ├── EmbeddingService (Vector Similarity Matching)         │
+│  └── PricingService (Market Intelligence)                  │
+├─────────────────────────────────────────────────────────────┤
+│  WhatsApp Integration (/api/whatsapp/) - NEW               │
+│  ├── WhatsApp Business API (Message Handling)              │
+│  ├── LLM Parser (Groq Natural Language Processing)         │
+│  ├── Conversation State Management                         │
+│  └── Orchestration Bridge (Triggers Enhanced Workflows)    │
 ├─────────────────────────────────────────────────────────────┤
 │  External Integrations                                     │
-│  ├── ElevenLabs API (Voice Conversations)                  │
-│  ├── Groq API (AI Strategy & Analysis)                     │
-│  ├── Sentence Transformers (ML Embeddings)                 │
-│  └── PostgreSQL (Data Storage)                             │
+│  ├── WhatsApp Business API (Conversational Interface)      │
+│  ├── ElevenLabs API (Voice Conversations + Analysis)       │
+│  ├── Groq API (LLM Strategy + Natural Language)            │
+│  └── Sentence Transformers (ML Embeddings)                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -72,9 +79,10 @@ InfluencerFlow is a comprehensive AI platform that automates the entire influenc
 
 - **Python 3.13+**
 - **UV Package Manager** (or pip)
-- **ElevenLabs Account** with API key
+- **WhatsApp Business Account** with API access
+- **ElevenLabs Account** with API key and agent setup
 - **Groq Account** with API key
-- **PostgreSQL** (optional, uses mock by default)
+- **Meta Developer Account** for WhatsApp Business API
 
 ### Installation
 
@@ -104,11 +112,17 @@ nano .env
 
 4. **Required Environment Variables**
 ```bash
-# API Keys (Required)
+# AI Services (Required)
 GROQ_API_KEY=gsk_your_groq_key_here
 ELEVENLABS_API_KEY=sk_your_elevenlabs_key_here
 ELEVENLABS_AGENT_ID=your_agent_id_here
 ELEVENLABS_PHONE_NUMBER_ID=your_phone_number_here
+
+# WhatsApp Business API (Required for Conversational Interface)
+WHATSAPP_ACCESS_TOKEN=your_whatsapp_access_token_here
+WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id_here
+WHATSAPP_APP_SECRET=your_app_secret_here
+WHATSAPP_VERIFY_TOKEN=influencerflow_verify_token
 
 # Configuration
 DEMO_MODE=true
@@ -130,41 +144,68 @@ python main.py
 curl http://localhost:8000/health
 ```
 
-## 🔧 Configuration Guide
+## 💬 WhatsApp Integration Setup
 
-### ElevenLabs Setup
+### Meta Developer Console Setup
 
-1. **Create Account**: Sign up at [ElevenLabs](https://elevenlabs.io/)
-2. **Get API Key**: Navigate to Settings → API Keys
-3. **Create Agent**: Go to Conversational AI → Create New Agent
-4. **Configure Dynamic Variables**: Add the following variables in your agent:
+1. **Create WhatsApp Business App**
+   - Go to https://developers.facebook.com/
+   - Create App → Business → WhatsApp Business Platform
+   - Add WhatsApp Product to your app
 
-```json
-{
-  "InfluencerProfile": "name:Creator, niche:fitness, followers:250K, engagement:5.8%",
-  "campaignBrief": "brand_name:TechFit, product_name:Fitness Tracker",
-  "negotiationStrategy": "approach:collaborative, matchReasons:[...]",
-  "budgetStrategy": "initialOffer:4200, maxOffer:5500"
-}
+2. **Configure Webhook**
+   - URL: `https://yourdomain.com/api/whatsapp/webhook`
+   - Verify Token: `influencerflow_verify_token`
+   - Subscribe to: `messages`
+
+3. **Get Credentials**
+   - Access Token (from WhatsApp > API Setup)
+   - Phone Number ID (from WhatsApp > API Setup)
+   - App Secret (from App Settings > Basic)
+
+4. **Test Webhook**
+```bash
+# Verify webhook endpoint
+curl "https://yourdomain.com/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=influencerflow_verify_token&hub.challenge=test"
 ```
 
-5. **Phone Integration**: Set up Twilio phone number in ElevenLabs
+### Using ngrok for Development
 
-### Groq Configuration
+```bash
+# Start your server
+python main.py
 
-1. **Create Account**: Sign up at [Groq](https://groq.com/)
-2. **Get API Key**: Navigate to API Keys section
-3. **Choose Model**: Platform uses `llama3-70b-8192` for strategy, `llama3-8b-8192` for quick decisions
+# In another terminal, expose to internet
+ngrok http 8000
 
-### Data Setup
-
-1. **Creator Database**: Place `creators.json` in `/data/` folder
-2. **Market Data**: Place `market_data.json` in `/data/` folder
-3. **Sample files are provided in the repository**
+# Use the ngrok URL in Meta Developer Console
+# Webhook URL: https://abc123.ngrok.io/api/whatsapp/webhook
+```
 
 ## 📡 API Reference
 
-### Webhook Endpoints
+### WhatsApp Conversational Interface
+
+**Natural Language Campaign Creation:**
+```
+User: "Get me 20 fitness creators, budget $15K for protein powder launch"
+AI: "Got it! What's your target audience?"
+User: "Gym enthusiasts aged 18-35, focus on muscle building"
+AI: "Perfect! Launching your campaign now..."
+```
+
+**Campaign Status:**
+```
+User: "status"
+AI: "📊 Campaign Status
+🎯 Nike AF1 Campaign
+📍 Stage: negotiations  
+👥 Discovered: 8 creators
+✅ Successful: 3 negotiations
+💰 Cost so far: $12,400"
+```
+
+### Enhanced API Endpoints
 
 #### Start Enhanced Campaign
 ```http
@@ -188,427 +229,295 @@ Content-Type: application/json
 GET /api/monitor/enhanced-campaign/{task_id}
 ```
 
-#### Test Endpoints
+#### WhatsApp Webhook
 ```http
-POST /api/webhook/test-enhanced-campaign     # Create test campaign
-GET  /api/webhook/test-enhanced-elevenlabs   # Test ElevenLabs setup
-POST /api/webhook/test-enhanced-call         # Test actual phone call
-GET  /api/webhook/system-status              # System health check
-```
+POST /api/whatsapp/webhook
+Content-Type: application/json
 
-### Response Examples
-
-#### Campaign Started Response
-```json
 {
-  "message": "🎯 Enhanced AI campaign workflow started",
-  "task_id": "uuid-task-id",
-  "campaign_id": "campaign-id",
-  "estimated_duration_minutes": 8,
-  "monitor_url": "/api/monitor/enhanced-campaign/uuid-task-id",
-  "status": "started",
-  "enhancements": [
-    "ElevenLabs dynamic variables integration",
-    "Structured conversation analysis",
-    "AI-powered negotiation strategies"
-  ]
-}
-```
-
-#### Progress Monitoring Response
-```json
-{
-  "task_id": "uuid-task-id",
-  "current_stage": "negotiations",
-  "progress": {
-    "overall_percentage": 45.0,
-    "discovered_influencers": 3,
-    "completed_negotiations": 1,
-    "successful_negotiations": 1
-  },
-  "real_time_analytics": {
-    "success_rate": 100.0,
-    "average_final_rate": 4800.0,
-    "budget_utilization": 32.0
-  },
-  "live_updates": [
-    "✅ Successful negotiation: mike_fitness - $4,800",
-    "📞 Enhanced call in progress: sarah_tech"
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "entry_id",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "phone_number_id": "your_phone_number_id"
+            },
+            "messages": [
+              {
+                "from": "user_phone_number",
+                "type": "text",
+                "text": {
+                  "body": "Get me 20 fitness creators, budget $15K"
+                }
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
   ]
 }
 ```
 
 ## 🎭 Usage Examples
 
-### Basic Campaign Workflow
+### Conversational Campaign Creation
 
-1. **Start Campaign**
-```bash
-curl -X POST http://localhost:8000/api/webhook/test-enhanced-campaign
+**Fitness Campaign:**
+```
+User: "I need creators for my new protein powder launch"
+AI: "Great! I can help you find fitness creators. What's your budget and target audience?"
+User: "Budget is $15K, targeting gym-goers aged 20-35"  
+AI: "Perfect! How many creators are you looking for?"
+User: "Around 20 creators"
+AI: "🚀 Launching your campaign: Protein Powder Launch, $15K budget, 20 fitness creators targeting gym-goers 20-35..."
 ```
 
-2. **Monitor Progress**
-```bash
-curl -X GET http://localhost:8000/api/monitor/enhanced-campaign/{task_id}
+**Tech Campaign:**
+```
+User: "Find me tech reviewers for iPhone campaign, budget $25K, target Gen-Z"
+AI: "🚀 Got it! Launching tech reviewer campaign:
+📱 iPhone Campaign  
+💰 Budget: $25,000
+🎯 Target: Gen-Z
+🔍 Finding tech reviewers now..."
 ```
 
-3. **Get Final Results**
-```bash
-curl -X GET http://localhost:8000/api/monitor/enhanced-campaign/{task_id}/detailed-summary
+### Real-Time Updates
+
 ```
-
-### Custom Campaign
-```python
-import requests
-
-campaign_data = {
-    "campaign_id": "custom-campaign-001",
-    "product_name": "Smart Water Bottle",
-    "brand_name": "HydroTech",
-    "product_description": "IoT-enabled water bottle with hydration tracking",
-    "target_audience": "Health-conscious millennials and athletes",
-    "campaign_goal": "Drive pre-orders for product launch",
-    "product_niche": "fitness",
-    "total_budget": 12000.0
-}
-
-response = requests.post(
-    "http://localhost:8000/api/webhook/enhanced-campaign",
-    json=campaign_data
-)
-
-task_id = response.json()["task_id"]
-print(f"Campaign started: {task_id}")
-```
-
-### Real-time Monitoring
-```python
-import requests
-import time
-
-def monitor_campaign(task_id):
-    while True:
-        response = requests.get(f"http://localhost:8000/api/monitor/enhanced-campaign/{task_id}")
-        data = response.json()
-        
-        print(f"Stage: {data['current_stage']}")
-        print(f"Progress: {data['progress']['overall_percentage']:.1f}%")
-        
-        if data['is_complete']:
-            print("Campaign completed!")
-            break
-            
-        time.sleep(30)  # Check every 30 seconds
-
-monitor_campaign("your-task-id")
+AI: "🔍 Discovery Phase: Found 12 potential creators in your niche..."
+AI: "💬 Negotiation Phase: Starting outreach to top 8 creators..."
+AI: "📋 Approval Needed: 5 creators responded positively:
+1. TechReviewer_Sarah (500K followers) - $4,500
+2. Mike_Fitness (300K followers) - $3,200
+...
+Reply with numbers to approve (e.g., '1,3,5')"
+User: "1,2,4,5"
+AI: "✅ Approved! Proceeding with 4 creators. Generating contracts..."
+AI: "🎉 Campaign Complete! 4 successful partnerships, $14,200 total cost"
 ```
 
 ## 🛠️ Development Guide
 
-### Project Structure
+### Project Structure (Post-Cleanup)
 ```
 influencer-ai-backend/
-├── main.py                 # FastAPI application entry point
+├── main.py                          # FastAPI application - production ready
 ├── config/
-│   ├── settings.py         # Configuration management
-│   └── simple_settings.py  # Fallback configuration
+│   └── settings.py                  # Environment configuration
 ├── models/
-│   └── campaign.py         # Data models and schemas
-├── agents/                 # AI agent implementations
-│   ├── orchestrator.py     # Master campaign coordinator
-│   ├── discovery.py        # Creator discovery and matching
-│   ├── negotiation.py      # Voice-based negotiations
-│   └── contracts.py        # Contract generation
-├── services/               # External service integrations
-│   ├── enhanced_voice.py   # ElevenLabs integration
-│   ├── embeddings.py       # ML embeddings service
-│   ├── pricing.py          # Market pricing logic
-│   └── database.py         # Data persistence
-├── api/                    # API route handlers
-│   ├── webhooks.py         # Campaign webhook endpoints
-│   └── monitoring.py       # Progress monitoring endpoints
-├── data/                   # Static data files
-│   ├── creators.json       # Creator database
-│   └── market_data.json    # Market pricing data
-└── tests/                  # Test files
+│   ├── campaign.py                  # Core data models
+│   └── whatsapp.py                  # WhatsApp message models
+├── agents/                          # Enhanced AI Agents (Production Only)
+│   ├── enhanced_orchestrator.py     # Master campaign coordinator
+│   ├── enhanced_negotiation.py      # Voice negotiations + analysis
+│   ├── enhanced_contracts.py        # Comprehensive contract generation
+│   └── discovery.py                 # Creator discovery and matching
+├── services/                        # Enhanced Services (Production Only)
+│   ├── enhanced_voice.py            # ElevenLabs with dynamic variables
+│   ├── conversation_monitor.py      # Real-time conversation tracking
+│   ├── embeddings.py                # ML similarity matching
+│   ├── pricing.py                   # Market pricing intelligence
+│   └── database.py                  # Data persistence
+├── api/                             # Enhanced API Endpoints
+│   ├── enhanced_webhooks.py         # Campaign webhook endpoints
+│   ├── enhanced_monitoring.py       # Real-time progress monitoring
+│   └── whatsapp/                    # WhatsApp Business Integration
+│       ├── webhooks.py              # WhatsApp webhook handling
+│       ├── enhanced_message_handler.py # LLM conversation logic
+│       ├── llm_parser.py            # Groq natural language processing
+│       ├── response_service.py      # Send WhatsApp messages
+│       ├── conversation_state.py    # Track conversation state
+│       └── orchestration_bridge.py  # Connect to enhanced workflows
+└── data/                            # Static data files
+    ├── creators.json                # Creator database
+    └── market_data.json             # Market pricing data
 ```
 
-### Adding New Features
+### Adding New Conversational Features
 
-#### 1. Create New Agent
+#### 1. Extend LLM Parser
 ```python
-# agents/my_new_agent.py
-import logging
-from typing import Dict, Any
-
-logger = logging.getLogger(__name__)
-
-class MyNewAgent:
-    """Custom agent for specialized functionality"""
-    
-    def __init__(self):
-        self.initialized = True
-    
-    async def process(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process data according to agent logic"""
-        logger.info("Processing with MyNewAgent")
-        # Your logic here
-        return {"status": "processed", "result": data}
+# api/whatsapp/llm_parser.py
+async def parse_campaign_request(self, user_message: str):
+    # Add new parameter extraction logic
+    # Update system prompt for new campaign types
 ```
 
-#### 2. Add Service Integration
+#### 2. Add Conversation State
 ```python
-# services/my_service.py
-import requests
-from config.settings import settings
-
-class MyService:
-    """Integration with external service"""
-    
-    def __init__(self):
-        self.api_key = settings.my_service_api_key
-        self.base_url = "https://api.myservice.com"
-    
-    async def call_api(self, data):
-        """Make API call to external service"""
-        response = requests.post(
-            f"{self.base_url}/endpoint",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json=data
-        )
-        return response.json()
+# api/whatsapp/conversation_state.py  
+@dataclass
+class ConversationState:
+    # Add new conversation stages
+    stage: str  # "campaign_input", "approval_pending", "new_stage"
 ```
 
-#### 3. Extend Orchestrator
+#### 3. Extend Message Handler
 ```python
-# In agents/orchestrator.py, add new phase
-async def _run_my_new_phase(self, state):
-    """Add custom processing phase"""
-    logger.info("🔄 Starting my new phase...")
-    
-    my_agent = MyNewAgent()
-    result = await my_agent.process(state.campaign_data)
-    
-    # Update state with results
-    state.my_new_data = result
-    
-    logger.info("✅ My new phase completed")
+# api/whatsapp/enhanced_message_handler.py
+async def process_message(self, message, phone_number_id):
+    # Add new conversation flow handling
 ```
 
 ### Testing
 
-#### Run Tests
+#### Test Conversational Interface
 ```bash
-# Run all tests
-python -m pytest
+# Test LLM parsing
+python -c "
+import asyncio
+from api.whatsapp.llm_parser import WhatsAppCampaignParser
 
-# Run specific test file
-python -m pytest tests/test_agents.py
+async def test():
+    parser = WhatsAppCampaignParser()
+    result = await parser.parse_campaign_request(
+        'Get me 20 fitness creators, budget \$15K for protein powder'
+    )
+    print(result)
 
-# Run with coverage
-python -m pytest --cov=.
+asyncio.run(test())
+"
+
+# Test WhatsApp webhook
+curl -X POST http://localhost:8000/api/whatsapp/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"test": "message"}'
 ```
 
-#### Test Campaign
+#### Test Enhanced Campaigns
 ```bash
-# Quick system test
-python test_setup.py
-
-# Test enhanced workflow
+# Test enhanced campaign endpoint
 curl -X POST http://localhost:8000/api/webhook/test-enhanced-campaign
 
 # Test ElevenLabs integration
 curl -X GET http://localhost:8000/api/webhook/test-enhanced-elevenlabs
-```
 
-### Performance Optimization
-
-#### Database Optimization
-```python
-# Use connection pooling
-from sqlalchemy.pool import QueuePool
-
-engine = create_engine(
-    database_url,
-    poolclass=QueuePool,
-    pool_size=10,
-    max_overflow=20
-)
-```
-
-#### Async Processing
-```python
-# Use asyncio for concurrent operations
-import asyncio
-
-async def process_multiple_creators(creators):
-    tasks = [
-        negotiate_with_creator(creator) 
-        for creator in creators
-    ]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    return results
+# Test system status
+curl -X GET http://localhost:8000/api/webhook/system-status
 ```
 
 ## 🔍 Troubleshooting
 
-### Common Issues
+### WhatsApp Integration Issues
 
-#### 1. ElevenLabs Connection Failed
+#### Webhook Verification Failed
 ```bash
-# Check credentials
-curl -X GET http://localhost:8000/api/webhook/test-enhanced-elevenlabs
+# Check webhook endpoint
+curl "http://localhost:8000/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=influencerflow_verify_token&hub.challenge=test"
 
-# Verify environment variables
-python debug_env.py
+# Should return the challenge value
+```
+
+**Solutions:**
+- Verify `WHATSAPP_VERIFY_TOKEN` matches Meta Developer Console
+- Ensure webhook URL is publicly accessible (use ngrok for development)
+- Check webhook endpoint is responding to GET requests
+
+#### WhatsApp Messages Not Received
+**Solutions:**
+- Verify webhook is subscribed to `messages` in Meta Developer Console
+- Check `WHATSAPP_APP_SECRET` for signature verification
+- Ensure phone number is added to WhatsApp Business API
+- Check server logs for webhook processing errors
+
+#### LLM Parsing Issues
+**Solutions:**
+- Verify `GROQ_API_KEY` is valid and has sufficient credits
+- Check Groq API rate limits
+- Review LLM parser system prompts for accuracy
+- Test with simpler campaign requests first
+
+### Enhanced Integration Issues
+
+#### ElevenLabs Connection Failed
+```bash
+# Test credentials
+curl -X GET http://localhost:8000/api/webhook/test-enhanced-elevenlabs
 ```
 
 **Solutions:**
 - Verify API keys in `.env` file
-- Check ElevenLabs account status
-- Ensure agent is properly configured
-- Verify phone number setup
+- Check ElevenLabs agent configuration
+- Ensure dynamic variables are set up in ElevenLabs dashboard
+- Verify phone number configuration
 
-#### 2. Groq API Errors
-```bash
-# Test Groq connection
-python -c "from config.settings import settings; print(settings.groq_api_key[:10])"
-```
-
+#### Enhanced Orchestrator Errors
 **Solutions:**
-- Check API key validity
-- Verify model availability
-- Check rate limits
-- Ensure sufficient credits
-
-#### 3. Import Errors
-```bash
-# Fix dependencies
-python fix_imports.py
-
-# Check Python version
-python --version  # Should be 3.13+
-```
-
-**Solutions:**
-- Run `uv sync` or `pip install -r requirements.txt`
-- Check Python version compatibility
-- Verify virtual environment activation
-
-#### 4. Mock Mode Issues
-```bash
-# Check system status
-curl http://localhost:8000/api/webhook/system-status
-```
-
-**Solutions:**
-- Set `MOCK_CALLS=true` in `.env` for testing
-- Verify creator data files exist in `/data/`
-- Check demo mode configuration
-
-### Debug Mode
-
-Enable detailed logging:
-```python
-# In config/settings.py
-DEBUG=true
-
-# Or set environment variable
-export DEBUG=true
-```
-
-### Health Checks
-
-```bash
-# System health
-curl http://localhost:8000/health
-
-# Service status
-curl http://localhost:8000/api/webhook/system-status
-
-# Test endpoints
-curl -X POST http://localhost:8000/api/webhook/test-enhanced-campaign
-```
+- Check import statements use enhanced versions only
+- Verify cleanup removed legacy files
+- Test with simple campaign first
+- Check logs for specific error details
 
 ## 📊 Monitoring & Analytics
 
 ### Real-time Monitoring
 
-The platform provides comprehensive real-time monitoring:
+**WhatsApp Conversation Tracking:**
+- User message received and parsed
+- LLM processing and parameter extraction
+- Campaign launch and orchestration progress
+- Real-time updates sent back to user
 
-#### Campaign Progress
-- **Discovery Phase**: Creator matching and scoring
-- **Negotiation Phase**: Live phone call progress
-- **Contract Phase**: Document generation
-- **Completion**: Final results and analytics
+**Enhanced Campaign Analytics:**
+- Discovery phase: creator matching scores
+- Negotiation phase: call success rates and analysis
+- Contract phase: agreement generation and validation
+- Completion: comprehensive campaign summary
 
-#### Performance Metrics
-- **Success Rate**: Percentage of successful negotiations
-- **Cost Efficiency**: Budget utilization and ROI
-- **Time Efficiency**: Average campaign completion time
-- **Quality Score**: Data completeness and validation
+### Performance Metrics
 
-#### Live Updates
-- Real-time progress notifications
-- Call status updates
-- Error tracking and alerts
-- Performance trend analysis
+**Conversational Interface:**
+- Message processing time
+- LLM parsing accuracy
+- Conversation completion rates
+- User satisfaction scores
 
-### Analytics Dashboard
-
-Access comprehensive analytics:
-```bash
-# Campaign summary
-GET /api/monitor/enhanced-campaign/{task_id}/detailed-summary
-
-# System-wide metrics
-GET /api/monitor/campaigns
-
-# Export data
-GET /api/monitor/enhanced-campaign/{task_id}/export
-```
+**Enhanced Workflows:**
+- Campaign success rates
+- Cost efficiency metrics
+- Time to completion
+- Contract generation quality
 
 ## 🤝 Contributing
 
 ### Development Setup
 
-1. **Fork the Repository**
-2. **Create Feature Branch**
+1. **Fork and Clone**
 ```bash
-git checkout -b feature/your-feature-name
+git clone https://github.com/your-username/influencer-ai-backend.git
+cd influencer-ai-backend
 ```
 
-3. **Install Development Dependencies**
+2. **Install Development Dependencies**
 ```bash
-uv add --dev pytest black flake8
+uv add --dev pytest black flake8 mypy
 ```
 
-4. **Follow Code Style**
+3. **Set Up Pre-commit Hooks**
 ```bash
-# Format code
-black .
-
-# Check linting
-flake8 .
-
-# Run tests
-pytest
+pre-commit install
 ```
 
-### Contribution Guidelines
+4. **Run Tests**
+```bash
+pytest tests/
+python test_cleanup.py  # Test post-cleanup functionality
+```
 
-- **Code Quality**: Follow PEP 8 standards
-- **Documentation**: Add docstrings and comments
-- **Testing**: Include unit tests for new features
+### Code Standards
+
+- **Enhanced Only**: Use only enhanced/production agents and services
+- **Type Hints**: Add type annotations for new functions
+- **Documentation**: Include docstrings for public methods
+- **Testing**: Add tests for new conversational features
 - **Logging**: Use structured logging with appropriate levels
-- **Error Handling**: Implement proper exception handling
-
-### Pull Request Process
-
-1. **Update Documentation**: Include README updates if needed
-2. **Add Tests**: Ensure new features have test coverage
-3. **Check CI**: Verify all tests pass
-4. **Review**: Submit PR for review
 
 ## 📄 License
 
@@ -616,11 +525,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+- **Meta/WhatsApp** for WhatsApp Business API
 - **ElevenLabs** for conversational AI technology
 - **Groq** for high-performance LLM inference
 - **FastAPI** for the robust web framework
 - **Sentence Transformers** for semantic similarity
-- **The Open Source Community** for various tools and libraries
 
 ## 📞 Support
 
@@ -637,4 +546,4 @@ For enterprise support and custom implementations, contact: [support@influencerf
 
 ---
 
-**Built with ❤️ by the InfluencerFlow Team**
+**Built with ❤️ by the InfluencerFlow Team - AI-Native, Conversation-First, Outcome-Driven**

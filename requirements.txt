@@ -1,36 +1,46 @@
-# InfluencerFlow AI Platform Dependencies
-# Use this if UV doesn't work on your system
+# InfluencerFlow AI Platform - Production Dependencies
+# Enhanced system with WhatsApp Business API integration
 
 # Core FastAPI
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
-python-dotenv==1.0.0
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+python-multipart==0.0.20
+python-dotenv==1.1.0
 
-# Pydantic (try both versions)
-pydantic==2.4.2
-pydantic-settings==2.0.3
+# Pydantic for data models and settings
+pydantic==2.11.5
+pydantic-settings==2.9.1
 
-# AI/ML Dependencies
-groq==0.4.1
-openai==1.3.8
-elevenlabs==0.2.26
-sentence-transformers==2.2.2
-numpy==1.24.3
-scikit-learn==1.3.0
+# AI/ML Dependencies - Enhanced System
+groq==0.26.0                    # LLM for natural language processing and strategy
+elevenlabs==2.1.0              # Voice conversations with dynamic variables
+openai==1.82.1                 # Backup LLM service
+sentence-transformers==4.1.0   # Vector similarity for creator matching
+numpy==2.2.6                   # Numerical computing for embeddings
+scikit-learn==1.6.1            # Machine learning for similarity calculations
 
-# Database
-sqlalchemy==2.0.23
-psycopg2-binary==2.9.9
+# WhatsApp Business API Integration
+aiohttp==3.12.6                # Async HTTP client for WhatsApp API calls
+requests==2.32.3               # HTTP client for API integrations
 
-# Async/HTTP
-aiohttp==3.9.1
-requests==2.31.0
+# Database and Persistence
+sqlalchemy==2.0.41             # Database ORM (optional - currently using mock)
+psycopg2-binary==2.9.10        # PostgreSQL adapter (optional)
 
-# Development
-pytest==7.4.3
-black==23.11.0
-flake8==6.1.0
+# Development and Testing
+pytest==8.3.5                  # Testing framework
+black==25.1.0                  # Code formatting
+flake8==7.2.0                  # Code linting
 
-groq>=0.26.0
-requests>=2.32.3
+# Additional Production Dependencies
+cryptography>=41.0.0           # Security for webhook signature verification
+pytz>=2023.3                   # Timezone handling
+python-jose[cryptography]>=3.3.0  # JWT handling (if needed for auth)
+
+# Performance and Monitoring
+redis>=4.5.0                   # Optional: for conversation state persistence
+celery>=5.3.0                  # Optional: for background task processing
+
+# Note: Install with either:
+# pip install -r requirements.txt
+# or use pyproject.toml with: uv sync
