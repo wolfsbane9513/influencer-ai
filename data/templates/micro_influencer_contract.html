@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro-Influencer Partnership Agreement</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 30px;
+            color: #333;
+            background-color: #fff;
+            font-size: 14px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #6c5ce7;
+        }
+        
+        .header h1 {
+            color: #6c5ce7;
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        .contract-info {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border-left: 3px solid #6c5ce7;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .contract-info .info-item {
+            display: flex;
+        }
+        
+        .contract-info .label {
+            font-weight: 600;
+            color: #6c5ce7;
+            width: 120px;
+            flex-shrink: 0;
+        }
+        
+        .section {
+            margin: 25px 0;
+            page-break-inside: avoid;
+        }
+        
+        .section h2 {
+            color: #6c5ce7;
+            font-size: 18px;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+        
+        .section h3 {
+            color: #495057;
+            font-size: 15px;
+            margin: 15px 0 8px 0;
+            font-weight: 600;
+        }
+        
+        .parties-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .party-info {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+        }
+        
+        .party-info h4 {
+            color: #6c5ce7;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .party-info div {
+            margin: 4px 0;
+            font-size: 13px;
+        }
+        
+        .compensation-box {
+            background: linear-gradient(135deg, #6c5ce7 0%, #5a4fcf 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .compensation-box .amount {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .compensation-box .schedule {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .simple-list {
+            margin: 15px 0;
+        }
+        
+        .simple-list .list-item {
+            margin: 8px 0;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 3px solid #6c5ce7;
+        }
+        
+        .deliverable-simple {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .deliverable-simple h4 {
+            color: #6c5ce7;
+            margin: 0 0 8px 0;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .deliverable-simple .description {
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        
+        .deliverable-simple .specs {
+            color: #6c757d;
+            font-size: 12px;
+            font-style: italic;
+        }
+        
+        .payment-simple {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: #f1f3f4;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .payment-simple .milestone {
+            font-weight: 600;
+            color: #6c5ce7;
+        }
+        
+        .payment-simple .amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: #28a745;
+        }
+        
+        .payment-simple .date {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        .timeline-simple {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .timeline-step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #6c5ce7;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #6c5ce7;
+            margin-bottom: 3px;
+            font-size: 14px;
+        }
+        
+        .step-description {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        .important-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .important-box h3 {
+            color: #856404;
+            margin-top: 0;
+            font-size: 15px;
+        }
+        
+        .important-box .highlight {
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 8px 0;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .signature-area {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .signature-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .signature-block {
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-bottom: 2px solid #6c5ce7;
+            height: 40px;
+            margin: 15px 0 8px 0;
+        }
+        
+        .signature-label {
+            font-weight: 600;
+            color: #6c5ce7;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .signature-date {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 11px;
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+        }
+        
+        .quick-reference {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 15px 0;
+        }
+        
+        .quick-reference h4 {
+            color: #1976d2;
+            margin: 0 0 8px 0;
+            font-size: 14px;
+        }
+        
+        @media print {
+            body { padding: 15px; font-size: 12px; }
+            .parties-container { grid-template-columns: 1fr; }
+            .signature-row { grid-template-columns: 1fr; }
+            .contract-info { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            .parties-container { grid-template-columns: 1fr; }
+            .signature-row { grid-template-columns: 1fr; }
+            .contract-info { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MICRO-INFLUENCER PARTNERSHIP AGREEMENT</h1>
+        <div class="subtitle">Creator Collaboration Contract</div>
+    </div>
+
+    <div class="contract-info">
+        <div class="info-item">
+            <div class="label">Contract ID:</div>
+            <div><strong>{{ contract.contract_id }}</strong></div>
+        </div>
+        <div class="info-item">
+            <div class="label">Campaign:</div>
+            <div><strong>{{ campaign_name }}</strong></div>
+        </div>
+        <div class="info-item">
+            <div class="label">Date:</div>
+            <div>{{ contract_date }}</div>
+        </div>
+        <div class="info-item">
+            <div class="label">Completion:</div>
+            <div>{{ completion_date }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>COLLABORATION PARTNERS</h2>
+        <div class="parties-container">
+            <div class="party-info">
+                <h4>BRAND</h4>
+                <div><strong>{{ brand.company_name }}</strong></div>
+                <div>{{ brand.address }}</div>
+                <div>{{ brand.contact_email }}</div>
+            </div>
+            <div class="party-info">
+                <h4>CREATOR</h4>
+                <div><strong>{{ creator.full_name }}</strong></div>
+                <div>@{{ creator.handle }}</div>
+                <div>{{ creator.platform }} • {{ "{:,}".format(creator.followers) }} followers</div>
+                <div>{{ creator.email }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>CAMPAIGN DETAILS</h2>
+        <div class="quick-reference">
+            <h4>{{ brand.product_name }}</h4>
+            <div><strong>What:</strong> {{ brand.campaign_description }}</div>
+            <div><strong>Who:</strong> {{ brand.target_audience }}</div>
+            <div><strong>Goal:</strong> {{ brand.campaign_goal }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>COMPENSATION</h2>
+        <div class="compensation-box">
+            <div class="amount">${{ "%.2f"|format(contract.final_rate) }}</div>
+            <div class="schedule">{{ contract.payment_schedule }}</div>
+        </div>
+        
+        <h3>Payment Schedule</h3>
+        {% for payment in payment_schedule %}
+        <div class="payment-simple">
+            <div>
+                <div class="milestone">{{ payment.milestone }}</div>
+                <div class="date">{{ payment.due_date }}</div>
+            </div>
+            <div class="amount">${{ "%.2f"|format(payment.amount) }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="section">
+        <h2>WHAT YOU'LL CREATE</h2>
+        {% for deliverable in deliverables %}
+        <div class="deliverable-simple">
+            <h4>{{ deliverable.name }}</h4>
+            <div class="description">{{ deliverable.description }}</div>
+            <div class="specs">{{ deliverable.specifications }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="section">
+        <h2>TIMELINE & PROCESS</h2>
+        <div class="timeline-simple">
+            <div class="timeline-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Contract Signed</div>
+                    <div class="step-description">Both parties sign this agreement</div>
+                </div>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Product & Brief Received</div>
+                    <div class="step-description">Brand sends product and creative guidelines</div>
+                </div>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">Content Creation</div>
+                    <div class="step-description">You create content: {{ contract.timeline }}</div>
+                </div>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">Review & Approval</div>
+                    <div class="step-description">Brand reviews and approves content</div>
+                </div>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="step-title">Go Live!</div>
+                    <div class="step-description">Content published and payment processed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>CONTENT GUIDELINES</h2>
+        <div class="simple-list">
+            <div class="list-item">
+                <strong>Be Authentic:</strong> Create content that feels natural to your audience and matches your usual style.
+            </div>
+            <div class="list-item">
+                <strong>Quality Standards:</strong> Use good lighting, clear audio, and maintain your usual production quality.
+            </div>
+            <div class="list-item">
+                <strong>Brand Guidelines:</strong> Follow any specific brand colors, messaging, or requirements provided.
+            </div>
+            <div class="list-item">
+                <strong>Disclosure Required:</strong> Include #ad, #sponsored, or #partnership in captions and mention it in videos.
+            </div>
+            <div class="list-item">
+                <strong>Revisions:</strong> Up to 2 minor revisions included if needed.
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>USAGE RIGHTS</h2>
+        <div class="quick-reference">
+            <h4>{{ contract.usage_rights|title }} Rights</h4>
+            <div>The brand can use your content for {{ usage_rights_details }} with proper credit to you.</div>
+        </div>
+        
+        <div class="simple-list">
+            <div class="list-item">You keep ownership of your original content</div>
+            <div class="list-item">Brand gets the usage rights specified above</div>
+            <div class="list-item">Brand will credit you when using your content</div>
+            <div class="list-item">Duration: 12 months from posting date</div>
+        </div>
+    </div>
+
+    <div class="important-box">
+        <h3>Important Legal & Compliance Information</h3>
+        
+        <div class="highlight">
+            <strong>FTC Disclosure:</strong> You must clearly disclose this is a paid partnership using #ad, #sponsored, or similar. This is required by law.
+        </div>
+        
+        <div class="highlight">
+            <strong>Content Standards:</strong> All content must be family-friendly and follow platform community guidelines.
+        </div>
+        
+        <div class="highlight">
+            <strong>Cancellation:</strong> Either party can cancel with 48 hours notice. You get paid for completed work.
+        </div>
+        
+        <div class="highlight">
+            <strong>Communication:</strong> Questions? Contact {{ brand.contact_email }} - we typically respond within 24 hours.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>ADDITIONAL TERMS</h2>
+        <div class="simple-list">
+            <div class="list-item">This agreement covers the specific campaign mentioned above</div>
+            <div class="list-item">Payment processed within 5 business days of completion</div>
+            <div class="list-item">Product samples provided at no cost to you</div>
+            <div class="list-item">Performance data shared after campaign completion</div>
+            <div class="list-item">Opportunity for future collaborations based on performance</div>
+            <div class="list-item">Any changes to this agreement must be in writing</div>
+        </div>
+    </div>
+
+    <div class="signature-area">
+        <h2>AGREEMENT SIGNATURES</h2>
+        <p>By signing below, both parties agree to all terms outlined in this micro-influencer partnership agreement.</p>
+        
+        <div class="signature-row">
+            <div class="signature-block">
+                <div class="signature-label">BRAND REPRESENTATIVE</div>
+                <div class="signature-line"></div>
+                <div>{{ brand.company_name }}</div>
+                <div class="signature-date">Date: _____________</div>
+            </div>
+            <div class="signature-block">
+                <div class="signature-label">CREATOR</div>
+                <div class="signature-line"></div>
+                <div>{{ creator.full_name }}</div>
+                <div class="signature-date">Date: _____________</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Contract ID:</strong> {{ contract.contract_id }} | <strong>Generated:</strong> {{ generation_timestamp }}</p>
+        <p>This agreement was generated by InfluencerFlow AI Platform | Micro-Influencer Template</p>
+        <p>Questions about this contract? Contact {{ brand.contact_email }}</p>
+    </div>
+</body>
+</html>
