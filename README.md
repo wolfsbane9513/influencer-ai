@@ -381,7 +381,7 @@ class MyService:
 
 #### 3. Extend Orchestrator
 ```python
-# In agents/orchestrator.py, add new phase
+# In agents/campaign_orchestrator.py, add new phase
 async def _run_my_new_phase(self, state):
     """Add custom processing phase"""
     logger.info("🔄 Starting my new phase...")

@@ -151,7 +151,7 @@ async def debug_info():
         import_status["models"] = f"❌ Failed: {e}"
     
     try:
-        from agents.orchestrator import CampaignOrchestrator
+        from agents.campaign_orchestrator import CampaignOrchestrator
         import_status["orchestrator"] = "✅ Available"
     except ImportError as e:
         import_status["orchestrator"] = f"❌ Failed: {e}"

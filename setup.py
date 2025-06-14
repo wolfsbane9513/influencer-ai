@@ -203,7 +203,7 @@ def test_installation():
         # Test imports
         from config.settings import settings
         from models.campaign import CampaignWebhook
-        from agents.orchestrator import CampaignOrchestrator
+        from agents.campaign_orchestrator import CampaignOrchestrator
         
         print("✅ Core imports successful")
         

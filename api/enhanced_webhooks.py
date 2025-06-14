@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from typing import Dict, Any, Optional, List
 
 from models.campaign import CampaignWebhook, CampaignData, CampaignOrchestrationState
-from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
+from agents.campaign_orchestrator import CampaignOrchestrator
 from services.elevenlabs_voice_service import VoiceServiceFactory
 from core.exceptions import (
     InfluencerFlowException,
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 enhanced_webhook_router = APIRouter()
 
 # Initialize enhanced services
-enhanced_orchestrator = EnhancedCampaignOrchestrator()
+enhanced_orchestrator = CampaignOrchestrator()
 enhanced_voice_service = VoiceServiceFactory.create_voice_service(
     api_key=settings.elevenlabs_api_key,
     agent_id=settings.elevenlabs_agent_id,
@@ -592,7 +592,7 @@ async def test_timeout_fixes():
     🧪 Test the timeout and JSON parsing fixes
     """
     try:
-        from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
+        from agents.campaign_orchestrator import CampaignOrchestrator
         from models.campaign import CampaignData
         
         logger.info("🧪 Testing timeout and JSON fixes...")
@@ -607,7 +607,7 @@ async def test_timeout_fixes():
         voice_test = await voice_service.test_credentials()
         
         # Test 2: Enhanced Orchestrator with Groq fixes
-        orchestrator = EnhancedCampaignOrchestrator()
+        orchestrator = CampaignOrchestrator()
         
         test_campaign = CampaignData(
             id="test_fixes_001",
