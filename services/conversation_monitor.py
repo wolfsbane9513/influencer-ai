@@ -26,7 +26,7 @@ class ConversationMonitor:
     🔄 CONVERSATION MONITOR - Polls ElevenLabs API and manages conversation lifecycle
     
     Key Features:
-    - Configurable polling intervals (10-20 seconds)
+    - Poll interval configurable via `self.poll_interval_seconds` (default 15s)
     - Automatic status detection and transition
     - Callback system for status changes
     - Proper error handling and timeouts
