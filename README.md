@@ -53,7 +53,7 @@ InfluencerFlow is a comprehensive AI platform that automates the entire influenc
 │  └── ContractAgent (Legal Document Generation)             │
 ├─────────────────────────────────────────────────────────────┤
 │  Services (/services/)                                     │
-│  ├── EnhancedVoiceService (ElevenLabs Integration)         │
+│  ├── VoiceService (ElevenLabs Integration)                 │
 │  ├── EmbeddingService (Vector Similarity)                  │
 │  ├── PricingService (Market Data & Rates)                  │
 │  └── DatabaseService (Data Persistence)                    │
@@ -320,7 +320,7 @@ influencer-ai-backend/
 │   ├── negotiation.py      # Voice-based negotiations
 │   └── contracts.py        # Contract generation
 ├── services/               # External service integrations
-│   ├── enhanced_voice.py   # ElevenLabs integration
+│   ├── elevenlabs_voice_service.py   # ElevenLabs integration
 │   ├── embeddings.py       # ML embeddings service
 │   ├── pricing.py          # Market pricing logic
 │   └── database.py         # Data persistence

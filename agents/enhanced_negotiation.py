@@ -8,8 +8,9 @@ from models.campaign import (
     CampaignData, CreatorMatch, NegotiationState, 
     NegotiationStatus, CallStatus
 )
-from services.enhanced_voice import ComprehensiveVoiceService as EnhancedVoiceService
+from services.elevenlabs_voice_service import VoiceServiceFactory
 from services.pricing import PricingService
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,12 @@ class EnhancedNegotiationAgent:
     """
     
     def __init__(self):
-        self.voice_service = EnhancedVoiceService()
+        self.voice_service = VoiceServiceFactory.create_voice_service(
+            api_key=settings.elevenlabs_api_key,
+            agent_id=settings.elevenlabs_agent_id,
+            phone_number_id=settings.elevenlabs_phone_number_id,
+            use_mock=settings.mock_calls,
+        )
         self.pricing_service = PricingService()
     
     async def negotiate(
