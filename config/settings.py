@@ -13,7 +13,7 @@ except ImportError:
 
 class Settings(BaseSettings):
     # API Keys - Make ElevenLabs optional so it doesn't fail validation
-    groq_api_key: str
+    groq_api_key: Optional[str] = None
     elevenlabs_api_key: Optional[str] = None  # ✅ FIX: Make optional
     openai_api_key: Optional[str] = None  # Backup LLM
     

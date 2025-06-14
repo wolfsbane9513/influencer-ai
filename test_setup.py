@@ -11,8 +11,8 @@ from pathlib import Path
 # Test imports
 try:
     from config.settings import settings
-    from models.campaign import CampaignWebhook, CampaignData,Creator
-    from agents.orchestrator import CampaignOrchestrator
+    from models.campaign import CampaignWebhook, CampaignData, Creator
+    from agents.campaign_orchestrator import CampaignOrchestrator
     print("✅ All imports successful")
 except ImportError as e:
     print(f"❌ Import error: {e}")

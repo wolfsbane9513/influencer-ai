@@ -4,6 +4,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from core.exceptions import ErrorMonitoringService
 
 # Global state to track active campaigns
 active_campaigns = {}
@@ -116,34 +117,16 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Detailed health check"""
-    
-    # Check service availability
-    services = {
-        "api": "running",
-        "database": "connected",  # TODO: Add actual DB health check
-    }
-    
-    # Check API keys
-    if hasattr(settings, 'groq_api_key') and settings.groq_api_key:
-        services["groq"] = "configured"
-    else:
-        services["groq"] = "missing_key"
-    
-    if hasattr(settings, 'elevenlabs_api_key') and settings.elevenlabs_api_key:
-        services["elevenlabs"] = "configured"
-    else:
-        services["elevenlabs"] = "missing_key"
-    
+    """Detailed health check with error metrics"""
+
+    monitoring = ErrorMonitoringService()
+    health = monitoring.get_system_health()
+
     return {
-        "status": "healthy",
-        "services": services,
+        "status": health["status"],
+        "health_score": health["health_score"],
+        "error_metrics": health["error_metrics"],
         "active_campaigns": len(active_campaigns),
-        "settings": {
-            "demo_mode": settings.demo_mode,
-            "mock_calls": getattr(settings, 'mock_calls', False),
-            "max_negotiation_duration": getattr(settings, 'max_negotiation_duration', 45)
-        }
     }
 
 @app.get("/debug")
@@ -168,7 +151,7 @@ async def debug_info():
         import_status["models"] = f"❌ Failed: {e}"
     
     try:
-        from agents.orchestrator import CampaignOrchestrator
+        from agents.campaign_orchestrator import CampaignOrchestrator
         import_status["orchestrator"] = "✅ Available"
     except ImportError as e:
         import_status["orchestrator"] = f"❌ Failed: {e}"

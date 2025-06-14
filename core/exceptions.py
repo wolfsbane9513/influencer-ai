@@ -814,6 +814,23 @@ def groq_service():
 global_error_handler = ErrorHandler()
 
 
+class ErrorMonitoringService:
+    """Service to expose system health based on error metrics"""
+
+    def __init__(self, handler: ErrorHandler = global_error_handler):
+        self.handler = handler
+
+    def get_system_health(self) -> Dict[str, Any]:
+        metrics = self.handler.get_error_metrics()
+        health_score = max(0, 100 - metrics["total_errors"] * 5)
+        status = "healthy" if health_score >= 80 else "degraded"
+        return {
+            "status": status,
+            "health_score": health_score,
+            "error_metrics": metrics,
+        }
+
+
 # Helper function for easy error handling
 async def handle_and_log_error(error: Exception, context: Optional[ErrorContext] = None) -> Dict[str, Any]:
     """Convenience function for error handling"""

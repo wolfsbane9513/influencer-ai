@@ -21,6 +21,12 @@ from agents.discovery import InfluencerDiscoveryAgent
 from agents.contracts import ContractAgent
 from services.database import DatabaseService
 from services.elevenlabs_voice_service import VoiceServiceFactory, ConversationResult, CallResult
+from core.exceptions import (
+    InfluencerFlowException,
+    BusinessLogicError,
+    CampaignValidationError,
+    create_error_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +59,7 @@ class OrchestrationStrategy(str, Enum):
     ADAPTIVE = "adaptive"     # Adapts based on results
 
 
-class CampaignValidationError(Exception):
-    """Campaign validation failure"""
-    def __init__(self, message: str, validation_errors: List[str]):
-        super().__init__(message)
-        self.validation_errors = validation_errors
-
-
-class OrchestrationError(Exception):
+class OrchestrationError(BusinessLogicError):
     """General orchestration failure"""
     pass
 
@@ -482,9 +481,16 @@ class CampaignOrchestrator:
         """
         Main orchestration method - unified entry point for all campaign types
         """
+        strategy_type = strategy_type or self.default_strategy
+        logger.info(f"🚀 Starting {strategy_type.value} campaign orchestration")
+
+        context = create_error_context(
+            operation="orchestrate_campaign",
+            component="CampaignOrchestrator",
+            campaign_id=orchestration_state.campaign_id,
+        )
+
         try:
-            strategy_type = strategy_type or self.default_strategy
-            logger.info(f"🚀 Starting {strategy_type.value} campaign orchestration")
             
             # Set up progress tracking
             self.progress_tracker.state_updater = lambda state: self._update_external_state(task_id, state)
@@ -515,11 +521,18 @@ class CampaignOrchestrator:
             
             logger.info("🎉 Campaign orchestration completed successfully")
             return orchestration_state
-            
+
+        except InfluencerFlowException as e:
+            logger.error(f"❌ Campaign orchestration failed: {e.message}")
+            await self._handle_orchestration_failure(orchestration_state, e.message)
+            raise
         except Exception as e:
             logger.error(f"❌ Campaign orchestration failed: {e}")
             await self._handle_orchestration_failure(orchestration_state, str(e))
-            raise OrchestrationError(f"Campaign orchestration failed: {e}")
+            raise OrchestrationError(
+                message=f"Campaign orchestration failed: {e}",
+                context=context,
+            )
     
     async def _phase_initialization(self, state: CampaignOrchestrationState) -> None:
         """Phase 1: Initialize and validate campaign"""
@@ -529,8 +542,13 @@ class CampaignOrchestrator:
         validation_result = self._validate_campaign_data(state.campaign_data)
         if not validation_result["is_valid"]:
             raise CampaignValidationError(
-                "Campaign validation failed",
-                validation_result["errors"]
+                message="Campaign validation failed",
+                validation_errors=validation_result["errors"],
+                context=create_error_context(
+                    operation="_phase_initialization",
+                    component="CampaignOrchestrator",
+                    campaign_id=state.campaign_id,
+                ),
             )
         
         logger.info("✅ Campaign validation passed")
@@ -576,12 +594,16 @@ class CampaignOrchestrator:
     async def _phase_negotiations(self, state: CampaignOrchestrationState) -> None:
         """Phase 4: Conduct negotiations"""
         self.progress_tracker.update_progress(state, WorkflowStage.NEGOTIATIONS)
-        
+
         strategy = state.negotiated_terms.get("campaign_strategy", {})
-        
+
         # Handle negotiations
-        negotiations = await self.negotiation_handler.handle_negotiations(state, strategy)
-        
+        try:
+            negotiations = await self.negotiation_handler.handle_negotiations(state, strategy)
+        except InfluencerFlowException as e:
+            logger.error(f"Negotiation handler failed: {e.message}")
+            raise
+
         # Update state
         state.negotiations = negotiations
         state.successful_negotiations = len([n for n in negotiations if n.status == NegotiationStatus.SUCCESS])
@@ -627,8 +649,14 @@ class CampaignOrchestrator:
                 negotiation.negotiated_terms["contract_id"] = contract["contract_id"]
                 contracts_generated += 1
                 
+            except InfluencerFlowException as e:
+                logger.error(
+                    f"Contract generation failed for {negotiation.creator_id}: {e.message}"
+                )
             except Exception as e:
-                logger.error(f"Contract generation failed for {negotiation.creator_id}: {e}")
+                logger.error(
+                    f"Contract generation failed for {negotiation.creator_id}: {e}"
+                )
         
         logger.info(f"📝 Generated {contracts_generated} contracts")
     
@@ -639,6 +667,8 @@ class CampaignOrchestrator:
         try:
             await self.database_service.sync_campaign_results(state)
             logger.info("💾 Database sync completed")
+        except InfluencerFlowException as e:
+            logger.error(f"Database sync failed: {e.message}")
         except Exception as e:
             logger.error(f"Database sync failed: {e}")
             # Don't fail the entire orchestration for DB issues

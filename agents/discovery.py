@@ -5,12 +5,23 @@ from typing import List, Dict, Any
 from pathlib import Path
 
 from models.campaign import CampaignData,Creator, CreatorMatch
+from core.exceptions import (
+    InfluencerFlowException,
+    ValidationError,
+    BusinessLogicError,
+    create_error_context,
+)
 from services.embeddings import EmbeddingService
 from services.pricing import PricingService
 
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
+
+
+class DiscoveryError(BusinessLogicError):
+    """Discovery process failure"""
+    pass
 
 class InfluencerDiscoveryAgent:
     """
@@ -127,12 +138,42 @@ class InfluencerDiscoveryAgent:
         
         logger.info(f"Using {len(creators)} mock creators")
         return creators
+
+    def _validate_campaign_data(self, campaign_data: CampaignData) -> None:
+        """Validate basic campaign data before matching"""
+        errors: Dict[str, List[str]] = {}
+
+        if campaign_data.total_budget <= 0:
+            errors.setdefault("total_budget", []).append("Budget must be positive")
+
+        if not campaign_data.product_name:
+            errors.setdefault("product_name", []).append("Product name required")
+
+        if errors:
+            raise ValidationError(
+                message="Invalid campaign data",
+                field_errors=errors,
+                context=create_error_context(
+                    operation="validate_campaign_data",
+                    component="InfluencerDiscoveryAgent",
+                    campaign_id=getattr(campaign_data, "id", None),
+                ),
+            )
     
     async def find_matches(self, campaign_data: CampaignData, max_results: int = 3) -> List[CreatorMatch]:
         """
         Find top matching influencers for the campaign using vector similarity
         """
         logger.info(f"🔍 Finding matches for campaign: {campaign_data.product_name}")
+
+        # Validate campaign data
+        self._validate_campaign_data(campaign_data)
+
+        context = create_error_context(
+            operation="find_matches",
+            component="InfluencerDiscoveryAgent",
+            campaign_id=getattr(campaign_data, "id", None),
+        )
         
         try:
             # Generate campaign embedding
@@ -195,7 +236,10 @@ class InfluencerDiscoveryAgent:
             
         except Exception as e:
             logger.error(f"❌ Error in find_matches: {e}")
-            # Return mock matches for demo    
+            raise DiscoveryError(
+                message=str(e),
+                context=context,
+            )
 
     def _create_campaign_text(self, campaign_data: CampaignData) -> str:
         """Create text representation of campaign for embedding"""

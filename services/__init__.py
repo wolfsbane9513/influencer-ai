@@ -24,7 +24,8 @@ from .pricing import PricingService
 from .database import DatabaseService
 
 # Legacy services (backward compatibility)
-from .voice import VoiceService
+from .elevenlabs_voice_service import ElevenLabsVoiceService
+VoiceService = ElevenLabsVoiceService
 
 __all__ = [
     # Enhanced (recommended)

@@ -8,8 +8,14 @@ from fastapi.responses import JSONResponse
 from typing import Dict, Any, Optional, List
 
 from models.campaign import CampaignWebhook, CampaignData, CampaignOrchestrationState
-from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
-from services.enhanced_voice import EnhancedVoiceService
+from agents.campaign_orchestrator import CampaignOrchestrator
+from services.elevenlabs_voice_service import VoiceServiceFactory
+from core.exceptions import (
+    InfluencerFlowException,
+    ValidationError,
+    create_error_context,
+    handle_and_log_error,
+)
 from agents.enhanced_negotiation import NegotiationResultValidator
 from agents.enhanced_contracts import ContractStatusManager
 
@@ -20,8 +26,13 @@ logger = logging.getLogger(__name__)
 enhanced_webhook_router = APIRouter()
 
 # Initialize enhanced services
-enhanced_orchestrator = EnhancedCampaignOrchestrator()
-enhanced_voice_service = EnhancedVoiceService()
+enhanced_orchestrator = CampaignOrchestrator()
+enhanced_voice_service = VoiceServiceFactory.create_voice_service(
+    api_key=settings.elevenlabs_api_key,
+    agent_id=settings.elevenlabs_agent_id,
+    phone_number_id=settings.elevenlabs_phone_number_id,
+    use_mock=settings.mock_calls,
+)
 negotiation_validator = NegotiationResultValidator()
 contract_manager = ContractStatusManager()
 
@@ -113,16 +124,22 @@ async def handle_enhanced_campaign_created(
         
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"❌ Enhanced webhook processing failed: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "error": "Enhanced campaign workflow failed to start",
-                "message": str(e),
-                "support": "Check logs and verify all services are running"
-            }
+    except (InfluencerFlowException, ValidationError) as e:
+        context = create_error_context(
+            operation="handle_enhanced_campaign_created",
+            component="EnhancedWebhookHandler",
+            campaign_id=campaign_webhook.campaign_id,
         )
+        error = await handle_and_log_error(e, context)
+        raise HTTPException(status_code=422 if isinstance(e, ValidationError) else 500, detail=error)
+    except Exception as e:
+        context = create_error_context(
+            operation="handle_enhanced_campaign_created",
+            component="EnhancedWebhookHandler",
+            campaign_id=campaign_webhook.campaign_id,
+        )
+        error = await handle_and_log_error(InfluencerFlowException(str(e)), context)
+        raise HTTPException(status_code=500, detail=error)
 
 @enhanced_webhook_router.post("/test-enhanced-campaign")
 async def create_test_enhanced_campaign(background_tasks: BackgroundTasks):
@@ -575,18 +592,22 @@ async def test_timeout_fixes():
     🧪 Test the timeout and JSON parsing fixes
     """
     try:
-        from services.enhanced_voice import EnhancedVoiceService
-        from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
+        from agents.campaign_orchestrator import CampaignOrchestrator
         from models.campaign import CampaignData
         
         logger.info("🧪 Testing timeout and JSON fixes...")
         
         # Test 1: Enhanced Voice Service with timeout fixes
-        voice_service = EnhancedVoiceService()
+        voice_service = VoiceServiceFactory.create_voice_service(
+            api_key=settings.elevenlabs_api_key,
+            agent_id=settings.elevenlabs_agent_id,
+            phone_number_id=settings.elevenlabs_phone_number_id,
+            use_mock=settings.mock_calls,
+        )
         voice_test = await voice_service.test_credentials()
         
         # Test 2: Enhanced Orchestrator with Groq fixes
-        orchestrator = EnhancedCampaignOrchestrator()
+        orchestrator = CampaignOrchestrator()
         
         test_campaign = CampaignData(
             id="test_fixes_001",
