@@ -7,8 +7,14 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 
 from models.campaign import CampaignWebhook, CampaignData, CampaignOrchestrationState
-from agents.orchestrator import CampaignOrchestrator
-from services.voice import VoiceService
+from agents.campaign_orchestrator import CampaignOrchestrator
+from services.elevenlabs_voice_service import VoiceServiceFactory
+from core.exceptions import (
+    InfluencerFlowException,
+    ValidationError,
+    create_error_context,
+    handle_and_log_error,
+)
 
 from config.settings import settings
 logger = logging.getLogger(__name__)
@@ -17,7 +23,12 @@ webhook_router = APIRouter()
 
 # Initialize orchestrator and voice service
 orchestrator = CampaignOrchestrator()
-voice_service = VoiceService()
+voice_service = VoiceServiceFactory.create_voice_service(
+    api_key=settings.elevenlabs_api_key,
+    agent_id=settings.elevenlabs_agent_id,
+    phone_number_id=settings.elevenlabs_phone_number_id,
+    use_mock=settings.mock_calls,
+)
 
 @webhook_router.post("/campaign-created")
 async def handle_campaign_created(
@@ -85,12 +96,22 @@ async def handle_campaign_created(
             }
         )
         
-    except Exception as e:
-        logger.error(f"❌ Webhook processing failed: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start campaign workflow: {str(e)}"
+    except (InfluencerFlowException, ValidationError) as e:
+        context = create_error_context(
+            operation="handle_campaign_created",
+            component="WebhookHandler",
+            campaign_id=campaign_webhook.campaign_id,
         )
+        error = await handle_and_log_error(e, context)
+        raise HTTPException(status_code=422 if isinstance(e, ValidationError) else 500, detail=error)
+    except Exception as e:
+        context = create_error_context(
+            operation="handle_campaign_created",
+            component="WebhookHandler",
+            campaign_id=campaign_webhook.campaign_id,
+        )
+        error = await handle_and_log_error(InfluencerFlowException(str(e)), context)
+        raise HTTPException(status_code=500, detail=error)
 
 @webhook_router.post("/test-campaign")
 async def create_test_campaign(background_tasks: BackgroundTasks):
@@ -162,15 +183,20 @@ async def test_elevenlabs_setup():
             }
         )
         
-    except Exception as e:
-        logger.error(f"❌ ElevenLabs test failed: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": str(e),
-                "message": "ElevenLabs test failed - check your setup"
-            }
+    except InfluencerFlowException as e:
+        context = create_error_context(
+            operation="test_elevenlabs_setup",
+            component="WebhookHandler",
         )
+        error = await handle_and_log_error(e, context)
+        return JSONResponse(status_code=400, content=error)
+    except Exception as e:
+        context = create_error_context(
+            operation="test_elevenlabs_setup",
+            component="WebhookHandler",
+        )
+        error = await handle_and_log_error(InfluencerFlowException(str(e)), context)
+        return JSONResponse(status_code=500, content=error)
 
 @webhook_router.post("/test-call")
 async def test_single_call():
@@ -208,41 +234,48 @@ async def test_single_call():
         logger.info(f"   FROM: +1 320 383 8447 (Twilio US)")
         logger.info(f"   TO: {test_phone} (Your phone)")
         
-        # Initiate call
-        call_result = await voice_service.initiate_negotiation_call(
-            creator_phone=test_phone,
-            creator_profile=test_creator,
-            campaign_brief=test_campaign_brief,
-            price_range="2000-4000"
+        # Initiate call using the structured voice service
+        conversation_id = await voice_service.initiate_call(
+            phone_number=test_phone,
+            conversation_context={
+                "creator_profile": test_creator,
+                "campaign_data": {"campaign_brief": test_campaign_brief},
+                "pricing_strategy": {"initial_offer": 2000, "max_offer": 4000},
+            },
         )
         
         return JSONResponse(
             status_code=200,
             content={
-                "test_call_result": call_result,
+                "conversation_id": conversation_id,
                 "message": f"Test call initiated! Check your phone {test_phone}",
                 "call_flow": {
                     "from_number": "+1 320 383 8447 (Twilio US)",
                     "to_number": test_phone,
-                    "expected": "Your phone should ring in a few seconds"
+                    "expected": "Your phone should ring in a few seconds",
                 },
                 "troubleshooting": {
                     "if_no_ring": "Check Twilio console logs",
                     "if_call_fails": "Verify ElevenLabs agent configuration",
-                    "international_calls": "Ensure Twilio account can make international calls to India"
-                }
-            }
+                    "international_calls": "Ensure Twilio account can make international calls to India",
+                },
+            },
         )
         
-    except Exception as e:
-        logger.error(f"❌ Test call failed: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": str(e),
-                "message": "Test call failed"
-            }
+    except InfluencerFlowException as e:
+        context = create_error_context(
+            operation="test_single_call",
+            component="WebhookHandler",
         )
+        error = await handle_and_log_error(e, context)
+        return JSONResponse(status_code=400, content=error)
+    except Exception as e:
+        context = create_error_context(
+            operation="test_single_call",
+            component="WebhookHandler",
+        )
+        error = await handle_and_log_error(InfluencerFlowException(str(e)), context)
+        return JSONResponse(status_code=500, content=error)
 
 @webhook_router.get("/status")
 async def webhook_status():
