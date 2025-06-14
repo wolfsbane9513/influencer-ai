@@ -620,9 +620,9 @@ async def test_timeout_fixes():
             total_budget=10000.0
         )
         
-        # Test Groq strategy generation
+        # Test Groq strategy generation using public strategy generator
         try:
-            strategy = await orchestrator._generate_enhanced_ai_strategy(test_campaign)
+            strategy = await orchestrator.strategy_generator.generate_strategy(test_campaign)
             groq_test = {
                 "status": "success",
                 "strategy_generated": True,
