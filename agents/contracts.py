@@ -5,10 +5,21 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
 from models.campaign import CampaignData,NegotiationState
+from core.exceptions import (
+    InfluencerFlowException,
+    ValidationError,
+    BusinessLogicError,
+    create_error_context,
+)
 
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
+
+
+class ContractGenerationError(BusinessLogicError):
+    """Raised when contract generation fails"""
+    pass
 
 class ContractAgent:
     """
@@ -71,6 +82,24 @@ PREMIUM INFLUENCER MARKETING AGREEMENT
 [Similar structure but with more detailed terms for high-value creators]
 """
         }
+
+    def _validate_negotiation(self, negotiation_state: NegotiationState) -> None:
+        """Validate negotiation state before contract creation"""
+        errors: Dict[str, List[str]] = {}
+
+        if negotiation_state.final_rate <= 0:
+            errors.setdefault("final_rate", []).append("Final rate must be positive")
+
+        if errors:
+            raise ValidationError(
+                message="Invalid negotiation state",
+                field_errors=errors,
+                context=create_error_context(
+                    operation="validate_negotiation",
+                    component="ContractAgent",
+                    creator_id=negotiation_state.creator_id,
+                ),
+            )
     
     async def generate_contract(
         self,
@@ -82,6 +111,16 @@ PREMIUM INFLUENCER MARKETING AGREEMENT
         """
         try:
             logger.info(f"📝 Generating contract for {negotiation_state.creator_id}")
+
+            # Validate negotiation state
+            self._validate_negotiation(negotiation_state)
+
+            context = create_error_context(
+                operation="generate_contract",
+                component="ContractAgent",
+                campaign_id=campaign_data.id,
+                creator_id=negotiation_state.creator_id,
+            )
             
             # Generate contract ID
             contract_id = str(uuid.uuid4())[:8].upper()
@@ -116,7 +155,10 @@ PREMIUM INFLUENCER MARKETING AGREEMENT
             
         except Exception as e:
             logger.error(f"❌ Contract generation failed: {e}")
-            raise
+            raise ContractGenerationError(
+                message=str(e),
+                context=context,
+            )
     
     def _prepare_contract_data(
         self,
@@ -271,7 +313,16 @@ PREMIUM INFLUENCER MARKETING AGREEMENT
                     break
             
             if not milestone_payment:
-                raise ValueError(f"Milestone '{milestone}' not found in payment schedule")
+                raise ValidationError(
+                    message="Invalid milestone",
+                    field_errors={"milestone": ["not found"]},
+                    context=create_error_context(
+                        operation="generate_payment_invoice",
+                        component="ContractAgent",
+                        campaign_id=contract_record.get("campaign_id"),
+                        creator_id=contract_record.get("creator_id"),
+                    ),
+                )
             
             # Generate invoice
             invoice_id = str(uuid.uuid4())[:8].upper()
@@ -293,6 +344,14 @@ PREMIUM INFLUENCER MARKETING AGREEMENT
             
             return invoice
             
+        except InfluencerFlowException:
+            raise
         except Exception as e:
             logger.error(f"❌ Invoice generation failed: {e}")
-            raise
+            context = create_error_context(
+                operation="generate_payment_invoice",
+                component="ContractAgent",
+                campaign_id=contract_record.get("campaign_id"),
+                creator_id=contract_record.get("creator_id"),
+            )
+            raise ContractGenerationError(message=str(e), context=context)
