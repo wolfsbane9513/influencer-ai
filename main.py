@@ -163,7 +163,7 @@ async def debug_info():
         import_status["negotiation_agent"] = f"❌ Failed: {e}"
     
     try:
-        from services.voice import VoiceService
+        from services import VoiceService
         import_status["voice_service"] = "✅ Available"
     except ImportError as e:
         import_status["voice_service"] = f"❌ Failed: {e}"
