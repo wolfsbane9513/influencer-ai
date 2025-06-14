@@ -97,10 +97,19 @@ def test_creator_data_loading():
 async def test_orchestrator_initialization():
     """Test orchestrator agent initialization"""
     print("\n🎯 Testing Orchestrator Initialization...")
-    
+
     try:
         orchestrator = CampaignOrchestrator()
         print("  Orchestrator created successfully")
+
+        # Verify core dependencies were initialized
+        assert orchestrator.discovery_agent is not None, "Discovery agent missing"
+        assert getattr(orchestrator, "negotiation_agent", None) is not None, "Negotiation agent missing"
+        assert orchestrator.contract_agent is not None, "Contract agent missing"
+
+        if hasattr(orchestrator, "database_service"):
+            assert orchestrator.database_service is not None, "Database service missing"
+
         print("✅ Orchestrator test passed")
     except Exception as e:
         print(f"❌ Orchestrator initialization failed: {e}")
