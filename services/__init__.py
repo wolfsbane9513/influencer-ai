@@ -11,8 +11,15 @@ Legacy Services (Backward Compatibility):
 """
 
 # Enhanced services (recommended)
-from .enhanced_voice import EnhancedVoiceService
-from .embeddings import EmbeddingService
+try:
+    from .enhanced_voice import EnhancedVoiceService
+except Exception:  # pragma: no cover - optional dependency may be missing
+    EnhancedVoiceService = None
+
+try:
+    from .embeddings import EmbeddingService
+except Exception:  # pragma: no cover - optional dependency may be missing
+    EmbeddingService = None
 from .pricing import PricingService
 from .database import DatabaseService
 
@@ -21,11 +28,14 @@ from .voice import VoiceService
 
 __all__ = [
     # Enhanced (recommended)
-    "EnhancedVoiceService",
-    "EmbeddingService",
-    "PricingService", 
+    "PricingService",
     "DatabaseService",
-    
+
     # Legacy (backward compatibility)
-    "VoiceService"
+    "VoiceService",
 ]
+
+if EnhancedVoiceService is not None:
+    __all__.insert(0, "EnhancedVoiceService")
+if EmbeddingService is not None:
+    __all__.insert(1 if EnhancedVoiceService is not None else 0, "EmbeddingService")
