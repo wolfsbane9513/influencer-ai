@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional, Callable
 from enum import Enum
 
 from config.settings import settings
+from models.campaign import NegotiationStatus
 
 logger = logging.getLogger(__name__)
 
@@ -345,7 +346,7 @@ class ConversationEventHandler:
                 # Find and update the failed negotiation
                 for negotiation in state.negotiations:
                     if negotiation.conversation_id == conversation_id:
-                        negotiation.status = "failed"
+                        negotiation.status = NegotiationStatus.FAILED
                         negotiation.failure_reason = error_message
                         negotiation.completed_at = datetime.now()
                         break
