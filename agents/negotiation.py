@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 
 from models.campaign import CampaignData, CreatorMatch, NegotiationState, NegotiationStatus, CallStatus
-from services.voice import VoiceService
+from services import VoiceService
 from services.pricing import PricingService
 
 from config.settings import settings
