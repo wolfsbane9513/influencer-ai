@@ -87,19 +87,19 @@ def update_imports_in_file(file_path):
         # Define import replacements
         replacements = [
             # Agent imports
-            (r'from agents\.enhanced_orchestrator import EnhancedCampaignOrchestrator',
+            (r'from agents\.enhanced_orchestrator import CampaignOrchestrator',
              'from agents.orchestrator import CampaignOrchestrator'),
-            (r'EnhancedCampaignOrchestrator', 'CampaignOrchestrator'),
+            (r'CampaignOrchestrator', 'CampaignOrchestrator'),
             
             # Service imports
-            (r'from services\.enhanced_voice import EnhancedVoiceService',
+            (r'from services\.enhanced_voice import VoiceService',
              'from services.voice import VoiceService'),
-            (r'EnhancedVoiceService', 'VoiceService'),
+            (r'VoiceService', 'VoiceService'),
             
             # API imports
-            (r'from api\.enhanced_webhooks import enhanced_webhook_router',
+            (r'from api\.enhanced_webhooks import webhook_router',
              'from api.webhooks import webhook_router'),
-            (r'enhanced_webhook_router', 'webhook_router'),
+            (r'webhook_router', 'webhook_router'),
             
             # Remove redundant imports
             (r'from agents\.enhanced_negotiation import.*\n', ''),
@@ -220,7 +220,7 @@ def update_main_app():
         
         # Update router includes
         content = re.sub(
-            r'app\.include_router\(enhanced_webhook_router.*?\)',
+            r'app\.include_router\(webhook_router.*?\)',
             'app.include_router(webhook_router, prefix="/api/webhook", tags=["Webhooks"])',
             content
         )

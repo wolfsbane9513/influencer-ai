@@ -1,28 +1,19 @@
 # agents/__init__.py
 """
-InfluencerFlow AI Agents - Enhanced & Legacy Support
 """
 
-# Enhanced agents (recommended)
-from .enhanced_orchestrator import EnhancedCampaignOrchestrator
-from .enhanced_negotiation import EnhancedNegotiationAgent, NegotiationResultValidator
-from .enhanced_contracts import EnhancedContractAgent, ContractStatusManager
+from .enhanced_orchestrator import CampaignOrchestrator
 
-# Legacy agents (backward compatibility)  
 from .orchestrator import CampaignOrchestrator
 from .negotiation import NegotiationAgent
 from .contracts import ContractAgent
 from .discovery import InfluencerDiscoveryAgent
 
 __all__ = [
-    # Enhanced (recommended)
-    "EnhancedCampaignOrchestrator",
-    "EnhancedNegotiationAgent",
+    "CampaignOrchestrator",
     "NegotiationResultValidator",
-    "EnhancedContractAgent", 
     "ContractStatusManager",
     
-    # Legacy & shared
     "CampaignOrchestrator",  # Backward compatibility wrapper
     "NegotiationAgent",
     "ContractAgent",

@@ -204,7 +204,7 @@ def create_test_call_endpoint():
     """
     
     endpoint_code = '''
-@enhanced_webhook_router.post("/test-actual-call")
+@webhook_router.post("/test-actual-call")
 async def test_actual_call(call_data: Dict[str, Any]):
     """
     🧪 MAKE ACTUAL ELEVENLABS CALL - FOR TESTING

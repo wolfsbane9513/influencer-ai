@@ -6,10 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import Dict
 
-from api.enhanced_webhooks import enhanced_webhook_router
+from api.webhooks import webhook_router
 from api.monitoring import monitoring_router
-from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
-from services.enhanced_voice import EnhancedVoiceService
+from agents.orchestrator import CampaignOrchestrator
+from services.voice import VoiceService
 from config.settings import settings
 
 # Set up logging
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 # Global state management
 active_campaigns: Dict[str, any] = {}
-orchestrator: EnhancedCampaignOrchestrator = None
-voice_service: EnhancedVoiceService = None
+orchestrator: CampaignOrchestrator = None
+voice_service: VoiceService = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,8 +39,8 @@ async def lifespan(app: FastAPI):
     
     try:
         # Initialize services with proper error handling
-        voice_service = EnhancedVoiceService()
-        orchestrator = EnhancedCampaignOrchestrator()
+        voice_service = VoiceService()
+        orchestrator = CampaignOrchestrator()
         
         # Test service connectivity
         voice_test = await voice_service.test_credentials()
@@ -85,7 +85,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(enhanced_webhook_router, prefix="/api/webhook", tags=["Enhanced Webhooks"])
+app.include_router(webhook_router, prefix="/api/webhook", tags=["Enhanced Webhooks"])
 app.include_router(monitoring_router, prefix="/api/monitor", tags=["Monitoring"])
 
 @app.get("/")

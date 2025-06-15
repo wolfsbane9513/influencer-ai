@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
 from models.campaign import CampaignData, NegotiationState, Creator
-from agents.enhanced_negotiation import NegotiationResultValidator
 
 logger = logging.getLogger(__name__)
 
