@@ -312,6 +312,14 @@ class VoiceService:
     def _extract_call_results(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Extract meaningful results from ElevenLabs conversation data"""
         
+        # Handle None data
+        if data is None:
+            return {
+                "status": CallStatus.FAILED,
+                "conversation_id": None,
+                "error": "No data received from API"
+            }
+        
         # Get basic call information
         status = data.get("status", "unknown")
         analysis = data.get("analysis", {})

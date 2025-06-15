@@ -26,6 +26,20 @@ class NegotiationResult:
     def __post_init__(self):
         if self.negotiation_date is None:
             self.negotiation_date = datetime.now()
+    
+    def is_successful(self) -> bool:
+        """Check if negotiation was successful"""
+        return self.status == "success"
+    
+    @property
+    def rate(self) -> Optional[float]:
+        """Get rate (compatibility property)"""
+        return self.final_rate
+    
+    @property 
+    def creator_name(self) -> str:
+        """Get creator name (fallback)"""
+        return self.creator_id
 
 
 class NegotiationAgent:
@@ -244,6 +258,27 @@ class NegotiationAgent:
             error_message=call_data.get("error")
         )
     
+    # Add public method for orchestrator to call
+    async def negotiate_with_creator(
+        self,
+        creator: Creator,
+        campaign_data: CampaignData,
+        voice_service: Optional[VoiceService] = None
+    ) -> NegotiationResult:
+        """
+        Public method for orchestrator - negotiate with single creator
+        
+        Args:
+            creator: Creator to negotiate with
+            campaign_data: Campaign context
+            voice_service: Optional voice service (ignored, uses self.voice_service)
+            
+        Returns:
+            Single negotiation result
+        """
+        
+        return await self._negotiate_with_creator(creator, campaign_data)
+
     async def close(self) -> None:
         """Clean up resources"""
         await self.voice_service.close()
