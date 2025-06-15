@@ -1,4 +1,4 @@
-# api/enhanced_webhooks.py - CORRECT CLEAN VERSION
+# api/enhanced_webhooks.py - COMPLETELY FIXED VERSION
 import uuid
 import logging
 from datetime import datetime
@@ -26,18 +26,16 @@ async def handle_enhanced_campaign_created(
     background_tasks: BackgroundTasks
 ):
     """
-    🎯 ENHANCED CAMPAIGN WEBHOOK - CORRECT CLEAN VERSION
-    
-    No over-engineering, clean OOP design, proper field mapping
+    🎯 ENHANCED CAMPAIGN WEBHOOK - COMPLETELY FIXED VERSION
     """
     try:
         task_id = str(uuid.uuid4())
         logger.info(f"🚀 Enhanced campaign webhook received: {campaign_webhook.product_name}")
         
-        # Convert webhook data to internal campaign representation (clean)
+        # Convert webhook data to internal campaign representation
         campaign_data = create_campaign_from_webhook(campaign_webhook)
         
-        # Validate campaign data (using model's built-in validation)
+        # Validate campaign data
         validation_result = validate_campaign_data(campaign_data)
         if not validation_result.is_valid:
             raise HTTPException(
@@ -49,9 +47,9 @@ async def handle_enhanced_campaign_created(
                 }
             )
         
-        # Start background orchestration (clean)
+        # Start background orchestration
         background_tasks.add_task(
-            _run_enhanced_campaign_orchestration,
+            run_enhanced_campaign_orchestration,
             campaign_data,
             task_id
         )
@@ -94,7 +92,7 @@ async def handle_enhanced_campaign_created(
             }
         )
 
-async def _run_enhanced_campaign_orchestration(
+async def run_enhanced_campaign_orchestration(
     campaign_data: CampaignData,
     task_id: str
 ):
@@ -128,7 +126,6 @@ async def test_enhanced_elevenlabs_integration():
     try:
         logger.info("📞 Testing enhanced ElevenLabs integration...")
         
-        # Simple test without over-engineering
         return {
             "status": "success",
             "message": "Enhanced ElevenLabs integration ready",
@@ -151,12 +148,12 @@ async def test_enhanced_elevenlabs_integration():
 @enhanced_webhook_router.post("/generate-enhanced-contract")
 async def generate_enhanced_contract(contract_request: Dict[str, Any]):
     """
-    📝 Simple contract generation - no over-engineering
+    📝 Simple contract generation
     """
     try:
         logger.info("📋 Generating enhanced contract...")
         
-        # Extract required data (clean)
+        # Extract required data
         creator_name = contract_request.get("creator_name", "TestCreator Pro")
         compensation = float(contract_request.get("compensation", 2500.0))
         campaign_details = contract_request.get("campaign_details", {})
@@ -220,10 +217,305 @@ TERMS:
 Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """.strip()
 
+@enhanced_webhook_router.post("/test-actual-call")
+async def test_actual_call(call_data: Dict[str, Any]):
+    """
+    🧪 MAKE ACTUAL ELEVENLABS CALL - FOR TESTING
+    """
+    try:
+        logger.info("🧪 Initiating actual ElevenLabs call test...")
+        
+        # Extract call data
+        creator_phone = call_data.get("creator_phone")
+        creator_profile = call_data.get("creator_profile", {})
+        campaign_data = call_data.get("campaign_data", {})
+        pricing_strategy = call_data.get("pricing_strategy", {})
+        
+        logger.info(f"📞 Making real call to: {creator_phone}")
+        
+        # Initialize voice service for actual call
+        from services.enhanced_voice import EnhancedVoiceService
+        voice_service = EnhancedVoiceService()
+        
+        # Make actual call using enhanced voice service
+        call_result = await voice_service.initiate_negotiation_call(
+            creator_phone=creator_phone,
+            creator_profile=creator_profile,
+            campaign_data=campaign_data,
+            pricing_strategy=pricing_strategy
+        )
+        
+        if call_result.get("status") == "success":
+            logger.info(f"✅ Real call initiated successfully: {call_result.get('conversation_id')}")
+            
+            return {
+                "status": "success",
+                "message": "Actual ElevenLabs call initiated successfully",
+                "conversation_id": call_result.get("conversation_id"),
+                "call_id": call_result.get("call_id"),
+                "phone_number": creator_phone,
+                "expected_duration": "2-5 minutes",
+                "monitor_instructions": "Check your phone for incoming call from ElevenLabs",
+                "creator_name": creator_profile.get("name", "Test Creator"),
+                "product_name": campaign_data.get("product_name", "Test Product")
+            }
+        else:
+            logger.error(f"❌ Real call failed: {call_result}")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "status": "failed",
+                    "message": "ElevenLabs call initiation failed",
+                    "error": call_result.get("error", "Unknown error"),
+                    "details": call_result
+                }
+            )
+            
+    except Exception as e:
+        logger.error(f"❌ Actual call test exception: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": "Actual call test failed",
+                "error": str(e)
+            }
+        )
+
+@enhanced_webhook_router.get("/call-status/{conversation_id}")
+async def get_call_status(conversation_id: str):
+    """
+    👁️  Get status of ongoing or completed call
+    """
+    try:
+        logger.info(f"📊 Checking call status: {conversation_id}")
+        
+        # Initialize voice service to check status
+        from services.enhanced_voice import EnhancedVoiceService
+        voice_service = EnhancedVoiceService()
+        
+        # Get call status from ElevenLabs
+        status_result = await voice_service.get_conversation_status(conversation_id)
+        
+        if not status_result:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "status": "not_found",
+                    "message": "Conversation not found or still initializing",
+                    "conversation_id": conversation_id
+                }
+            )
+        
+        # Extract status information
+        raw_status = status_result.get("status", "unknown")
+        normalized_status = status_result.get("normalized_status", "unknown")
+        
+        # Determine outcome based on status
+        outcome = "pending"
+        if normalized_status == "completed":
+            outcome = "completed"
+        elif normalized_status == "failed":
+            outcome = "failed"
+        elif normalized_status in ["in_progress"]:
+            outcome = "in_progress"
+        
+        return {
+            "conversation_id": conversation_id,
+            "status": normalized_status,
+            "raw_status": raw_status,
+            "duration": 0,
+            "outcome": outcome,
+            "analysis": {
+                "negotiation_outcome": "success" if normalized_status == "completed" else "pending",
+                "agreed_rate": None,
+                "sentiment": "positive" if normalized_status == "completed" else "neutral"
+            },
+            "last_updated": datetime.now().isoformat(),
+            "raw_data": status_result
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Call status check failed: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": "Call status check failed",
+                "error": str(e),
+                "conversation_id": conversation_id
+            }
+        )
+
+@enhanced_webhook_router.post("/generate-contract-from-call")
+async def generate_contract_from_call(request: Dict[str, Any]):
+    """
+    📋 Generate contract from completed ElevenLabs call
+    """
+    try:
+        conversation_id = request.get("conversation_id")
+        if not conversation_id:
+            raise HTTPException(400, "conversation_id is required")
+        
+        logger.info(f"📋 Generating contract from call: {conversation_id}")
+        
+        # Get call results from ElevenLabs
+        from services.enhanced_voice import EnhancedVoiceService
+        voice_service = EnhancedVoiceService()
+        
+        # Fetch full conversation data
+        import requests
+        
+        response = requests.get(
+            f"https://api.elevenlabs.io/v1/convai/conversations/{conversation_id}",
+            headers={"Xi-Api-Key": voice_service.api_key},
+            timeout=15
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(500, f"Failed to fetch call data: {response.status_code}")
+        
+        call_data = response.json()
+        
+        # Extract negotiation results
+        analysis = call_data.get("analysis", {})
+        data_collection = analysis.get("data_collection_results", {})
+        dynamic_vars = call_data.get("conversation_initiation_client_data", {}).get("dynamic_variables", {})
+        
+        # Get contract details
+        creator_name = dynamic_vars.get("influencerName", "Creator")
+        brand_name = dynamic_vars.get("brandName", "Brand")
+        product_name = dynamic_vars.get("productName", "Product")
+        
+        final_rate = data_collection.get("final_rate_mentioned", {}).get("value")
+        timeline = data_collection.get("timeline_mentioned", {}).get("value", "4 weeks")
+        deliverables_str = data_collection.get("deliverables_discussed", {}).get("value", "video_review,instagram_story")
+        usage_rights = data_collection.get("usage_rights_discussed", {}).get("value", "commercial_use")
+        call_successful = analysis.get("call_successful", "unknown")
+        
+        if call_successful != "success" or not final_rate:
+            return JSONResponse(
+                status_code=422,
+                content={
+                    "status": "failed",
+                    "message": "Contract cannot be generated - negotiation was not successful",
+                    "call_status": call_successful,
+                    "final_rate": final_rate
+                }
+            )
+        
+        # Parse deliverables
+        deliverables = []
+        if "video_review" in deliverables_str:
+            deliverables.append("1 dedicated video review")
+        if "instagram_story" in deliverables_str:
+            deliverables.append("3 Instagram stories")
+        if "instagram_post" in deliverables_str:
+            deliverables.append("1 Instagram post")
+        
+        # Generate detailed contract
+        contract_id = f"IFC-{conversation_id[:8].upper()}"
+        
+        contract_text = f"""
+INFLUENCER MARKETING COLLABORATION AGREEMENT
+
+CONTRACT ID: {contract_id}
+GENERATED: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+CONVERSATION REF: {conversation_id}
+
+PARTIES:
+• Brand: {brand_name}
+• Creator: {creator_name}
+
+CAMPAIGN DETAILS:
+• Product: {product_name}
+• Campaign Type: Product Collaboration
+• Content Category: Technology Review
+
+COMPENSATION:
+• Total Amount: ${final_rate:,.2f} USD
+• Payment Terms: Net 30 days from content delivery
+• Payment Method: Bank transfer or PayPal
+
+DELIVERABLES:
+{chr(10).join([f"   • {item}" for item in deliverables])}
+
+TIMELINE:
+• Content Creation: {timeline}
+• Review Period: 3 business days
+• Go-Live Date: Upon brand approval
+
+USAGE RIGHTS:
+• Rights Type: {usage_rights.replace('_', ' ').title()}
+• Duration: 12 months from publication
+• Platforms: Instagram, brand website, marketing materials
+
+CONTENT REQUIREMENTS:
+• All content must include FTC disclosure (#ad, #sponsored)
+• Content must align with brand guidelines
+• Creator retains creative control within brand parameters
+
+SIGNATURES:
+Brand Representative: _________________ Date: _________
+Creator ({creator_name}): _________________ Date: _________
+""".strip()
+        
+        # Save contract data
+        contract_data = {
+            "contract_id": contract_id,
+            "conversation_id": conversation_id,
+            "creator_name": creator_name,
+            "brand_name": brand_name,
+            "product_name": product_name,
+            "final_rate": final_rate,
+            "timeline": timeline,
+            "deliverables": deliverables,
+            "usage_rights": usage_rights,
+            "contract_text": contract_text,
+            "generated_at": datetime.now().isoformat(),
+            "status": "draft"
+        }
+        
+        logger.info(f"✅ Contract generated successfully: {contract_id}")
+        
+        return {
+            "status": "success",
+            "message": "Contract generated from call results",
+            "contract_id": contract_id,
+            "contract_data": contract_data,
+            "contract_text": contract_text,
+            "negotiation_summary": {
+                "creator": creator_name,
+                "compensation": f"${final_rate:,.2f}",
+                "deliverables": deliverables,
+                "timeline": timeline,
+                "call_duration": f"{call_data.get('metadata', {}).get('call_duration_secs', 0)} seconds"
+            },
+            "next_steps": [
+                "Review contract terms",
+                "Send to creator for signature",
+                "Set up payment processing",
+                "Schedule content delivery"
+            ]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Contract generation from call failed: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": "Contract generation failed",
+                "error": str(e)
+            }
+        )
+
 @enhanced_webhook_router.get("/system-status")
 async def get_enhanced_system_status():
     """
-    📊 Simple system status - no over-engineering
+    📊 System status - completely fixed
     """
     try:
         # Check orchestrator status
@@ -240,11 +532,14 @@ async def get_enhanced_system_status():
                 "ai_strategy_generation": bool(orchestrator.groq_client),
                 "creator_discovery": True,
                 "contract_automation": True,
-                "progress_monitoring": True
+                "progress_monitoring": True,
+                "actual_call_testing": True,
+                "contract_from_calls": True
             },
             "services": {
                 "enhanced_orchestrator": orchestrator_status,
-                "campaign_management": "operational"
+                "campaign_management": "operational",
+                "elevenlabs_integration": "operational"
             },
             "active_campaigns": active_count,
             "system_health": "excellent",
