@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Any
 from datetime import datetime
 
-from models.campaign import CampaignOrchestrationState
+from core.models import OrchestrationState
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class DatabaseService:
         # In a real implementation, this would initialize SQLAlchemy connection
         logger.info("🗄️  Database service initialized (mock mode)")
     
-    async def sync_campaign_results(self, orchestration_state: CampaignOrchestrationState):
+    async def sync_campaign_results(self, orchestration_state: OrchestrationState):
         """Sync campaign results to database"""
         try:
             logger.info(f"💾 Syncing campaign {orchestration_state.campaign_id} to database")
@@ -37,7 +37,7 @@ class DatabaseService:
             logger.error(f"❌ Database sync failed: {e}")
             raise
     
-    async def _update_campaign_record(self, state: CampaignOrchestrationState):
+    async def _update_campaign_record(self, state: OrchestrationState):
         """Update campaign record with results"""
         # Mock database update
         update_data = {
@@ -49,7 +49,7 @@ class DatabaseService:
         }
         logger.info(f"📝 Campaign record updated: {update_data}")
     
-    async def _insert_outreach_logs(self, state: CampaignOrchestrationState):
+    async def _insert_outreach_logs(self, state: OrchestrationState):
         """Insert outreach logs"""
         for negotiation in state.negotiations:
             log_data = {
@@ -66,7 +66,7 @@ class DatabaseService:
             }
             logger.info(f"📞 Outreach log inserted: {log_data}")
     
-    async def _insert_contracts(self, state: CampaignOrchestrationState):
+    async def _insert_contracts(self, state: OrchestrationState):
         """Insert contract records"""
         successful_negotiations = [n for n in state.negotiations if n.status.value == "success"]
         
@@ -82,7 +82,7 @@ class DatabaseService:
             }
             logger.info(f"📝 Contract inserted: {contract_data}")
     
-    async def _insert_payments(self, state: CampaignOrchestrationState):
+    async def _insert_payments(self, state: OrchestrationState):
         """Insert payment records"""
         successful_negotiations = [n for n in state.negotiations if n.status.value == "success"]
         

@@ -4,11 +4,11 @@ import logging
 from typing import List, Dict, Any
 from pathlib import Path
 
-from models.campaign import CampaignData,Creator, CreatorMatch
+from core.models import CampaignData,Creator, CreatorMatch
 from services.embeddings import EmbeddingService
 from services.pricing import PricingService
 
-from config.settings import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +209,7 @@ class InfluencerDiscoveryAgent:
         
         try:
             # Create a mock campaign data for discovery
-            from models.campaign import CampaignData
+            from core.models import CampaignData
             
             mock_campaign = CampaignData(
                 id="discovery_temp",
@@ -413,3 +413,6 @@ class InfluencerDiscoveryAgent:
         
         logger.info("🎭 Using mock matches for demo")
         return mock_matches
+
+# Legacy compatibility
+DiscoveryAgent = InfluencerDiscoveryAgent

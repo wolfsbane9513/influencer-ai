@@ -112,7 +112,7 @@ class ProductionSettings(Settings):
     
     debug: bool = False
     api_reload: bool = False
-    use_mock_services: bool = False
+    
     log_level: str = "WARNING"
     allowed_origins: List[str] = []  # Must be explicitly set in production
     rate_limit_per_minute: int = 30  # More restrictive in production

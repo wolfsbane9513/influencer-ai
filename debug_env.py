@@ -58,7 +58,7 @@ def debug_environment():
     print("\n🎯 Pydantic Settings Test:")
     print("-" * 30)
     try:
-        from config.settings import settings
+        from core.config import settings
         
         # Test settings
         checks = [

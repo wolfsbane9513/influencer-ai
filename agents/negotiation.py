@@ -5,11 +5,11 @@ import logging
 from datetime import datetime
 from typing import Optional, Dict, Any
 
-from models.campaign import CampaignData, CreatorMatch, NegotiationState, NegotiationStatus, CallStatus
+from core.models import CampaignData, CreatorMatch, NegotiationState, NegotiationStatus, CallStatus
 from services.voice import VoiceService
 from services.pricing import PricingService
 
-from config.settings import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

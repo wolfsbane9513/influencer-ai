@@ -18,5 +18,6 @@ __all__ = [
     "Creator", 
     "NegotiationResult",
     "Contract",
-    "OrchestrationState"
+    "OrchestrationState",
+    "CampaignOrchestrationState"
 ]

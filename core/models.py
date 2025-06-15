@@ -30,6 +30,50 @@ class ContractStatus(str, Enum):
     REJECTED = "rejected"
     EXPIRED = "expired"
 
+
+class CallStatus(str, Enum):
+    """Call status enumeration"""
+    NOT_STARTED = "not_started"
+    INITIATED = "initiated"
+    RINGING = "ringing"
+    ANSWERED = "answered"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    NO_ANSWER = "no_answer"
+
+class NegotiationState(BaseModel):
+    """
+    Negotiation state tracking model
+    
+    Tracks the state of ongoing negotiations with creators
+    """
+    creator_id: str
+    creator_name: str
+    campaign_id: str
+    status: NegotiationStatus = NegotiationStatus.PENDING
+    call_status: CallStatus = CallStatus.NOT_STARTED
+    
+    # Call tracking
+    conversation_id: Optional[str] = None
+    call_started_at: Optional[datetime] = None
+    call_ended_at: Optional[datetime] = None
+    call_duration_seconds: int = 0
+    
+    # Results
+    agreed_rate: Optional[float] = None
+    original_rate: Optional[float] = None
+    terms_agreed: List[str] = Field(default_factory=list)
+    
+    # Metadata
+    last_contact_date: datetime = Field(default_factory=datetime.now)
+    notes: Optional[str] = None
+    follow_up_required: bool = False
+    
+    def get_call_duration_minutes(self) -> float:
+        """Get call duration in minutes"""
+        return self.call_duration_seconds / 60.0
+
+
 class CampaignData(BaseModel):
     """
     Unified campaign data model
@@ -148,6 +192,16 @@ class Creator(BaseModel):
         
         self.match_score = min(score, 100.0)
         return self.match_score
+
+
+class CreatorMatch(BaseModel):
+    """Creator matching result"""
+    creator: Creator
+    match_score: float
+    reasons: List[str] = Field(default_factory=list)
+    
+    class Config:
+        arbitrary_types_allowed = True
 
 class NegotiationResult(BaseModel):
     """

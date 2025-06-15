@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import Dict, Any
 
-from models.campaign import CampaignData,Creator
+from core.models import CampaignData,Creator
 
 logger = logging.getLogger(__name__)
 

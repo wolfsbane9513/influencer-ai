@@ -4,9 +4,9 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
-from models.campaign import CampaignData,NegotiationState
+from core.models import CampaignData,NegotiationState
 
-from config.settings import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

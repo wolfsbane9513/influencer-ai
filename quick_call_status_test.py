@@ -20,7 +20,7 @@ def test_call_status_directly():
     print(f"📞 Checking status for: {conversation_id}")
     
     # Load settings
-    from config.settings import settings
+    from core.config import settings
     
     if not settings.elevenlabs_api_key:
         print("❌ No ElevenLabs API key found")
