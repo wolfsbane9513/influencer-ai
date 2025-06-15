@@ -1,0 +1,30 @@
+[project]
+name = "influencer-ai"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.12",
+    "pydantic-settings>=2.9.1",
+    "pydantic>=2.11.5",
+    "python-dotenv>=1.1.0",
+    "python-multipart>=0.0.20",
+    "uvicorn[standard]>=0.34.2",
+    "groq>=0.26.0",
+    "openai>=1.82.1",
+    "elevenlabs>=2.1.0",
+    "sentence-transformers>=4.1.0",
+    "numpy>=2.2.6",
+    "scikit-learn>=1.6.1",
+    "sqlalchemy>=2.0.41",
+    "psycopg2-binary>=2.9.10",
+    "aiohttp>=3.12.6",
+    "requests>=2.32.3",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "flake8>=7.2.0",
+    "pytest>=8.3.5",
+]

@@ -40,9 +40,22 @@ coverage.xml
 # VS Code
 .vscode/
 
+# PyCharm
+.idea/
+
 # macOS
 .DS_Store
 
 # Windows
 Thumbs.db
 ehthumbs.db
+
+# Project specific
+cleanup_backup_*/
+archive/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
