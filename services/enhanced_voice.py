@@ -1,10 +1,10 @@
-# services/enhanced_voice.py - COMPLETE VERSION WITH TIMEOUT FIXES
+# services/enhanced_voice.py - CORRECTED VERSION
 import asyncio
 import logging
 import requests
 import random
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 
 from config.settings import settings
@@ -13,93 +13,67 @@ logger = logging.getLogger(__name__)
 
 class EnhancedVoiceService:
     """
-    🎯 ENHANCED ELEVENLABS INTEGRATION - COMPLETE WITH TIMEOUT FIXES
+    🎯 CORRECTED ELEVENLABS INTEGRATION
     
-    Complete version that includes:
-    - All original conversation analysis functionality
-    - All dynamic variable generation methods
-    - All structured data extraction features
-    - PLUS timeout fixes and better error handling
+    Fixes:
+    1. Proper API response validation for contract generation
+    2. Improved error handling for call state management
+    3. Better timeout and retry logic
+    4. Correct conversation status monitoring
     """
     
     def __init__(self):
         self.api_key = settings.elevenlabs_api_key
-        self.agent_id = settings.elevenlabs_agent_id  
+        self.agent_id = settings.elevenlabs_agent_id
         self.phone_number_id = settings.elevenlabs_phone_number_id
         self.base_url = "https://api.elevenlabs.io"
         
-        # FIXED: Increased timeouts and better error handling
-        self.request_timeout = 60  # Increased from 30 to 60 seconds
-        self.retry_attempts = 2    # Retry failed requests
+        # Optimized timeouts based on ElevenLabs documentation
+        self.request_timeout = 30
+        self.status_check_timeout = 15
+        self.retry_attempts = 3
+        self.retry_delay = 2
         
-        # Check if real integration is possible
         self.use_mock = not all([self.api_key, self.agent_id, self.phone_number_id])
         
-        self._debug_credentials()
-    
-    def _debug_credentials(self):
-        """Debug credential status"""
-        logger.info("🔍 Enhanced ElevenLabs Service Status:")
-        logger.info(f"   API Key: {'✅ Set' if self.api_key else '❌ Missing'}")
-        logger.info(f"   Agent ID: {'✅ Set' if self.agent_id else '❌ Missing'}")
-        logger.info(f"   Phone Number ID: {'✅ Set' if self.phone_number_id else '❌ Missing'}")
-        logger.info(f"   Mode: {'🎭 Mock' if self.use_mock else '🔥 Live API'}")
-        logger.info(f"   Request Timeout: {self.request_timeout}s")
+        if self.use_mock:
+            logger.warning("⚠️ ElevenLabs credentials incomplete - using mock calls")
+        else:
+            logger.info("✅ ElevenLabs service initialized with real API")
     
     async def test_credentials(self) -> Dict[str, Any]:
-        """🧪 Test ElevenLabs credentials and setup"""
+        """Test ElevenLabs API credentials with proper validation"""
         if self.use_mock:
             return {
                 "status": "mock_mode",
-                "message": "ElevenLabs credentials not configured - using mock mode",
-                "missing": [
-                    field for field, value in [
-                        ("api_key", self.api_key),
-                        ("agent_id", self.agent_id), 
-                        ("phone_number_id", self.phone_number_id)
-                    ] if not value
-                ],
-                "monitoring_compatible": True,
-                "timeout_settings": f"{self.request_timeout}s request timeout"
+                "message": "Using mock mode - no real API calls"
             }
         
         try:
+            # Test API connectivity with simple request
             response = requests.get(
                 f"{self.base_url}/v1/user",
                 headers={"Xi-Api-Key": self.api_key},
-                timeout=self.request_timeout
+                timeout=self.status_check_timeout
             )
             
             if response.status_code == 200:
-                user_info = response.json()
                 return {
                     "status": "success",
-                    "message": "ElevenLabs credentials verified - Monitoring ready",
-                    "user": user_info.get("email", "Unknown"),
-                    "agent_id": self.agent_id,
-                    "phone_number_id": self.phone_number_id,
-                    "monitoring_compatible": True,
-                    "timeout_settings": f"{self.request_timeout}s request timeout",
-                    "enhanced_features": [
-                        "Dynamic variables integration",
-                        "Real-time conversation monitoring",
-                        "Structured data extraction",
-                        "Automatic workflow continuation"
-                    ]
+                    "message": "ElevenLabs API credentials valid",
+                    "api_connected": True
                 }
             else:
                 return {
                     "status": "failed",
-                    "message": f"API key validation failed: {response.status_code}",
-                    "error": response.text[:200],
-                    "monitoring_compatible": False
+                    "message": f"API validation failed: {response.status_code}",
+                    "error": response.text[:200]
                 }
                 
         except Exception as e:
             return {
-                "status": "error", 
-                "message": f"Credential test failed: {str(e)}",
-                "monitoring_compatible": False
+                "status": "error",
+                "message": f"Credential test failed: {str(e)}"
             }
     
     async def initiate_negotiation_call(
@@ -110,132 +84,176 @@ class EnhancedVoiceService:
         pricing_strategy: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        🔥 INITIATE ELEVENLABS CALL - FIXED TIMEOUTS + ALL FEATURES
+        🔥 CORRECTED CALL INITIATION
+        
+        Key fixes:
+        - Proper response validation before returning
+        - Better error handling for contract generation
+        - Timeout management with retries
         """
         
         if self.use_mock:
             return await self._mock_enhanced_call(creator_phone, creator_profile, campaign_data)
         
-        # FIXED: Retry logic for timeout issues
+        # Retry logic for network issues
         for attempt in range(self.retry_attempts):
             try:
-                logger.info(f"📱 Initiating Enhanced ElevenLabs call (attempt {attempt + 1}/{self.retry_attempts})")
+                logger.info(f"📱 Initiating ElevenLabs call (attempt {attempt + 1})")
                 
-                # Prepare comprehensive dynamic variables (ALL ORIGINAL FUNCTIONALITY)
-                dynamic_variables = self._prepare_dynamic_variables(
+                # Generate dynamic variables
+                dynamic_vars = self._generate_dynamic_variables(
                     creator_profile, campaign_data, pricing_strategy
                 )
                 
-                logger.info(f"📱 Calling {creator_phone} with timeout {self.request_timeout}s")
-                logger.info(f"🎯 Dynamic Variables: {list(dynamic_variables.keys())}")
-                
-                # FIXED: Increased timeout and better error handling
-                response = requests.post(
-                    f"{self.base_url}/v1/convai/twilio/outbound-call",
-                    headers={
-                        "Xi-Api-Key": self.api_key,
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "agent_id": self.agent_id,
-                        "agent_phone_number_id": self.phone_number_id,
-                        "to_number": creator_phone,
-                        "conversation_initiation_client_data": {
-                            "dynamic_variables": dynamic_variables
-                        }
-                    },
-                    timeout=self.request_timeout  # Increased timeout
+                # Make API call with proper error handling
+                response = await self._make_outbound_call_request(
+                    creator_phone, dynamic_vars
                 )
                 
-                if response.status_code == 200:
-                    result = response.json()
-                    conversation_id = result.get("conversation_id")
+                # CRITICAL FIX: Validate response before proceeding
+                if response.get("status") == "success":
+                    conversation_id = response.get("conversation_id")
                     
-                    logger.info(f"✅ Enhanced call initiated successfully!")
-                    logger.info(f"   Conversation ID: {conversation_id}")
-                    logger.info(f"   Ready for monitoring system")
+                    # Ensure we have conversation_id for contract generation
+                    if not conversation_id:
+                        raise ValueError("Missing conversation_id in API response")
+                    
+                    logger.info(f"✅ Call initiated successfully: {conversation_id}")
+                    return response
+                
+                elif attempt < self.retry_attempts - 1:
+                    logger.warning(f"⚠️ Call failed, retrying in {self.retry_delay}s...")
+                    await asyncio.sleep(self.retry_delay)
+                    continue
+                else:
+                    logger.error(f"❌ All retry attempts failed: {response}")
+                    return response
+                    
+            except Exception as e:
+                logger.error(f"❌ Call exception (attempt {attempt + 1}): {e}")
+                
+                if attempt < self.retry_attempts - 1:
+                    await asyncio.sleep(self.retry_delay)
+                    continue
+                else:
+                    # Return error response for contract generation handling
+                    return {
+                        "status": "failed",
+                        "error": str(e),
+                        "phone_number": creator_phone,
+                        "retry_attempts": self.retry_attempts
+                    }
+        
+        # Fallback should not reach here
+        return {
+            "status": "failed",
+            "error": "Unknown failure after all retries",
+            "phone_number": creator_phone
+        }
+    
+    async def _make_outbound_call_request(
+        self,
+        phone_number: str,
+        dynamic_variables: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Make the actual API request with proper validation"""
+        
+        try:
+            # Prepare request payload
+            payload = {
+                "agent_id": self.agent_id,
+                "agent_phone_number_id": self.phone_number_id,
+                "to_number": phone_number,
+                "conversation_initiation_client_data": {
+                    "dynamic_variables": dynamic_variables
+                }
+            }
+            
+            # Make request using asyncio for timeout handling
+            loop = asyncio.get_event_loop()
+            
+            def make_request():
+                return requests.post(
+                    f"{self.base_url}/v1/convai/twilio/outbound-call",
+                    headers={"Xi-Api-Key": self.api_key},
+                    json=payload,
+                    timeout=self.request_timeout
+                )
+            
+            response = await loop.run_in_executor(None, make_request)
+            
+            # CRITICAL: Proper response validation
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    
+                    # Validate required fields for contract generation
+                    if "conversation_id" not in result:
+                        logger.error("❌ Missing conversation_id in successful response")
+                        return {
+                            "status": "failed",
+                            "error": "Missing conversation_id in API response",
+                            "raw_response": result
+                        }
                     
                     return {
                         "status": "success",
-                        "conversation_id": conversation_id,
+                        "conversation_id": result["conversation_id"],
                         "call_id": result.get("call_id"),
-                        "phone_number": creator_phone,
-                        "monitoring_ready": True,
-                        "attempt": attempt + 1,
-                        "timeout_used": self.request_timeout,
-                        "dynamic_variables": dynamic_variables,
-                        "enhanced_features": [
-                            "Dynamic variables integration",
-                            "Monitoring system compatible", 
-                            "Structured data extraction ready",
-                            "Automatic workflow continuation"
-                        ],
+                        "phone_number": phone_number,
                         "raw_response": result
                     }
-                else:
-                    error_msg = f"API Error {response.status_code}: {response.text}"
-                    logger.error(f"❌ Enhanced call failed: {error_msg}")
                     
-                    if attempt < self.retry_attempts - 1:
-                        logger.info(f"🔄 Retrying in 5 seconds...")
-                        await asyncio.sleep(5)
-                        continue
-                    
+                except json.JSONDecodeError as e:
+                    logger.error(f"❌ Invalid JSON response: {e}")
                     return {
                         "status": "failed",
-                        "error": error_msg,
-                        "phone_number": creator_phone,
-                        "monitoring_ready": False,
-                        "attempts_made": attempt + 1
+                        "error": f"Invalid JSON response: {e}",
+                        "raw_response": response.text
                     }
-                    
-            except requests.exceptions.Timeout as e:
-                logger.error(f"⏰ Timeout on attempt {attempt + 1}: {e}")
+            else:
+                logger.error(f"❌ API error {response.status_code}: {response.text}")
+                return {
+                    "status": "failed",
+                    "error": f"API Error {response.status_code}: {response.text}",
+                    "status_code": response.status_code
+                }
                 
-                if attempt < self.retry_attempts - 1:
-                    logger.info(f"🔄 Retrying with longer timeout...")
-                    self.request_timeout += 30  # Increase timeout for retry
-                    await asyncio.sleep(5)
-                    continue
-                else:
-                    # FIXED: Fall back to mock mode on persistent timeouts
-                    logger.warning("⚠️ Persistent timeout - falling back to mock mode for this call")
-                    return await self._mock_enhanced_call(creator_phone, creator_profile, campaign_data)
-                    
-            except Exception as e:
-                logger.error(f"❌ Enhanced call exception on attempt {attempt + 1}: {e}")
-                
-                if attempt < self.retry_attempts - 1:
-                    await asyncio.sleep(5)
-                    continue
-                else:
-                    # FIXED: Fall back to mock mode on persistent errors
-                    logger.warning("⚠️ Persistent errors - falling back to mock mode for this call")
-                    return await self._mock_enhanced_call(creator_phone, creator_profile, campaign_data)
-        
-        # Should not reach here, but fallback just in case
-        return await self._mock_enhanced_call(creator_phone, creator_profile, campaign_data)
+        except requests.exceptions.Timeout:
+            return {
+                "status": "failed",
+                "error": "Request timeout - ElevenLabs API not responding"
+            }
+        except Exception as e:
+            return {
+                "status": "failed",
+                "error": f"Request failed: {str(e)}"
+            }
     
     async def get_conversation_status(self, conversation_id: str) -> Optional[Dict[str, Any]]:
         """
-        📡 GET CONVERSATION STATUS - Used by ConversationMonitor
+        📡 CORRECTED STATUS MONITORING
+        
+        Fixes:
+        - Proper async handling
+        - Better error handling for failed/ended calls
+        - Correct status mapping
         """
         
         if self.use_mock or conversation_id.startswith("mock_"):
             return await self._mock_status_check(conversation_id)
         
         try:
-            # FIXED: Async with better timeout handling
             loop = asyncio.get_event_loop()
             
-            def make_request():
+            def make_status_request():
                 return requests.get(
                     f"{self.base_url}/v1/convai/conversations/{conversation_id}",
                     headers={"Xi-Api-Key": self.api_key},
-                    timeout=15  # Shorter timeout for status checks
+                    timeout=self.status_check_timeout
                 )
             
-            response = await loop.run_in_executor(None, make_request)
+            response = await loop.run_in_executor(None, make_status_request)
             
             if response.status_code == 200:
                 result = response.json()
@@ -243,509 +261,244 @@ class EnhancedVoiceService:
                 # Add monitoring metadata
                 result["monitoring_metadata"] = {
                     "fetched_at": datetime.now().isoformat(),
-                    "api_response_time": "< 15s",
-                    "data_source": "elevenlabs_api"
+                    "service": "elevenlabs_api"
                 }
+                
+                # Map ElevenLabs status to our expected states
+                status = result.get("status", "unknown")
+                result["normalized_status"] = self._normalize_conversation_status(status)
                 
                 return result
             else:
-                logger.error(
-                    f"❌ ElevenLabs API error {response.status_code}: {response.text[:200]}"
-                )
-                return None
+                logger.error(f"❌ Status check failed {response.status_code}: {response.text}")
+                return {
+                    "status": "error",
+                    "normalized_status": "failed",
+                    "error": f"API Error {response.status_code}",
+                    "conversation_id": conversation_id
+                }
                 
         except Exception as e:
-            logger.error(f"❌ Error fetching conversation status: {e}")
-            # FIXED: Return mock status on error to keep monitoring working
-            return await self._mock_status_check(conversation_id)
+            logger.error(f"❌ Status check exception: {e}")
+            return {
+                "status": "error",
+                "normalized_status": "failed", 
+                "error": str(e),
+                "conversation_id": conversation_id
+            }
     
-    def _prepare_dynamic_variables(
-        self, 
-        creator_profile: Dict[str, Any], 
+    def _normalize_conversation_status(self, elevenlabs_status: str) -> str:
+        """Map ElevenLabs status to standard states"""
+        status_mapping = {
+            "initiated": "in_progress",
+            "in-progress": "in_progress", 
+            "processing": "in_progress",
+            "done": "completed",
+            "completed": "completed",
+            "failed": "failed",
+            "error": "failed",
+            "timeout": "failed"
+        }
+        return status_mapping.get(elevenlabs_status.lower(), "unknown")
+    
+    async def wait_for_conversation_completion_with_analysis(
+        self,
+        conversation_id: str,
+        max_wait_seconds: int = 300
+    ) -> Dict[str, Any]:
+        """
+        🔄 CORRECTED CONVERSATION WAITING
+        
+        Fixes:
+        - Proper completion detection
+        - Better timeout handling
+        - Analysis data extraction
+        """
+        
+        if self.use_mock or conversation_id.startswith("mock_"):
+            return await self._mock_conversation_completion(conversation_id)
+        
+        start_time = datetime.now()
+        poll_interval = 10  # Poll every 10 seconds
+        
+        logger.info(f"🔄 Waiting for conversation completion: {conversation_id}")
+        
+        while (datetime.now() - start_time).total_seconds() < max_wait_seconds:
+            try:
+                status_data = await self.get_conversation_status(conversation_id)
+                
+                if not status_data:
+                    logger.warning("⚠️ No status data received, continuing to poll...")
+                    await asyncio.sleep(poll_interval)
+                    continue
+                
+                normalized_status = status_data.get("normalized_status", "unknown")
+                
+                if normalized_status == "completed":
+                    logger.info("✅ Conversation completed successfully")
+                    
+                    # Extract analysis data
+                    analysis_data = self._extract_analysis_data(status_data)
+                    
+                    return {
+                        "status": "completed",
+                        "conversation_data": status_data,
+                        "analysis_data": analysis_data,
+                        "completion_time": datetime.now().isoformat()
+                    }
+                
+                elif normalized_status == "failed":
+                    logger.error("❌ Conversation failed")
+                    return {
+                        "status": "failed",
+                        "conversation_data": status_data,
+                        "error": status_data.get("error", "Conversation failed"),
+                        "failure_time": datetime.now().isoformat()
+                    }
+                
+                # Still in progress, continue polling
+                logger.info(f"📞 Conversation in progress: {normalized_status}")
+                await asyncio.sleep(poll_interval)
+                
+            except Exception as e:
+                logger.error(f"❌ Error during conversation monitoring: {e}")
+                await asyncio.sleep(poll_interval)
+        
+        # Timeout reached
+        logger.warning(f"⏰ Conversation timeout after {max_wait_seconds}s")
+        return {
+            "status": "timeout",
+            "error": f"Conversation did not complete within {max_wait_seconds} seconds",
+            "conversation_id": conversation_id
+        }
+    
+    def _extract_analysis_data(self, conversation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract structured analysis from conversation data"""
+        
+        # Default analysis structure
+        analysis = {
+            "negotiation_outcome": "unknown",
+            "agreed_rate": None,
+            "conversation_sentiment": "neutral",
+            "key_points": [],
+            "next_steps": []
+        }
+        
+        # Extract from transcript if available
+        transcript = conversation_data.get("transcript", [])
+        if transcript:
+            analysis["transcript_length"] = len(transcript)
+            analysis["key_points"] = self._extract_key_points(transcript)
+        
+        # Extract from ElevenLabs analysis if present
+        if "analysis" in conversation_data:
+            elevenlabs_analysis = conversation_data["analysis"]
+            
+            # Map ElevenLabs analysis to our structure
+            analysis.update({
+                "negotiation_outcome": elevenlabs_analysis.get("outcome", "unknown"),
+                "agreed_rate": elevenlabs_analysis.get("agreed_price"),
+                "conversation_sentiment": elevenlabs_analysis.get("sentiment", "neutral")
+            })
+        
+        return analysis
+    
+    def _extract_key_points(self, transcript: List[Dict[str, Any]]) -> List[str]:
+        """Extract key conversation points from transcript"""
+        key_points = []
+        
+        for entry in transcript:
+            text = entry.get("text", "").lower()
+            
+            # Look for pricing mentions
+            if any(word in text for word in ["$", "price", "rate", "cost", "budget"]):
+                key_points.append(f"Pricing discussed: {entry.get('text', '')[:100]}")
+            
+            # Look for agreement indicators
+            if any(word in text for word in ["agree", "yes", "deal", "accept"]):
+                key_points.append(f"Agreement indicated: {entry.get('text', '')[:100]}")
+            
+            # Look for objections
+            if any(word in text for word in ["no", "can't", "unable", "too"]):
+                key_points.append(f"Objection raised: {entry.get('text', '')[:100]}")
+        
+        return key_points[:5]  # Return top 5 key points
+    
+    def _generate_dynamic_variables(
+        self,
+        creator_profile: Dict[str, Any],
         campaign_data: Dict[str, Any],
         pricing_strategy: Dict[str, Any]
-    ) -> Dict[str, str]:
-        """📝 Prepare dynamic variables for ElevenLabs agent - ALL ORIGINAL FUNCTIONALITY"""
-        
-        try:
-            # Enhanced InfluencerProfile
-            influencer_profile = self._format_influencer_profile(creator_profile)
-            
-            # Campaign brief
-            campaign_brief = json.dumps({
-                "brand_name": campaign_data.get('brand_name', 'TechFit Solutions'),
-                "product_name": campaign_data.get('product_name', 'Enhanced Fitness Tracker'),
-                "product_description": campaign_data.get('product_description', 'Advanced fitness tracking with AI coaching'),
-                "unique_value": self._get_unique_value_proposition(campaign_data),
-                "target_audience": campaign_data.get('target_audience', 'Fitness enthusiasts'),
-                "campaign_goal": campaign_data.get('campaign_goal', 'Launch new product'),
-                "product_niche": campaign_data.get('product_niche', 'fitness')
-            })
-            
-            # Negotiation strategy
-            negotiation_strategy = json.dumps(self._generate_negotiation_strategy(creator_profile, campaign_data))
-            
-            # Deliverable requirements
-            deliverable_requirements = json.dumps(self._generate_deliverable_requirements(creator_profile, campaign_data))
-            
-            # Timeline expectations
-            timeline_expectations = json.dumps(self._generate_timeline_expectations(campaign_data))
-            
-            # Usage rights
-            usage_rights = json.dumps(self._generate_usage_rights_strategy(creator_profile, campaign_data))
-            
-            # Budget strategy
-            budget_strategy = json.dumps(self._generate_budget_strategy(creator_profile, pricing_strategy))
-            
-            # Competitor context
-            competitor_context = json.dumps(self._generate_competitor_context(creator_profile, campaign_data))
-            
-            # Monitoring instructions for ElevenLabs agent
-            monitoring_instructions = json.dumps({
-                "conversation_tracking": "enabled",
-                "outcome_detection": "structured",
-                "data_extraction": "comprehensive",
-                "status_reporting": "real_time"
-            })
-            
-            return {
-                "InfluencerProfile": influencer_profile,
-                "campaignBrief": campaign_brief,
-                "negotiationStrategy": negotiation_strategy,
-                "deliverableRequirements": deliverable_requirements,
-                "timelineExpectations": timeline_expectations,
-                "usageRights": usage_rights,
-                "budgetStrategy": budget_strategy,
-                "competitorContext": competitor_context,
-                "monitoringInstructions": monitoring_instructions,
-                "influencerName": creator_profile.get('name', 'Creator'),
-                "conversationMode": "monitored_negotiation"
-            }
-        
-        except Exception as e:
-            logger.error(f"❌ Error preparing dynamic variables: {e}")
-            # Fallback to simpler version if JSON encoding fails
-            return {
-                "InfluencerProfile": self._format_influencer_profile(creator_profile),
-                "campaignBrief": f"Brand collaboration for {campaign_data.get('product_name', 'product')}",
-                "influencerName": creator_profile.get('name', 'Creator'),
-                "conversationMode": "monitored_negotiation"
-            }
-    
-    def _format_influencer_profile(self, creator_profile: Dict[str, Any]) -> str:
-        """📝 Format influencer profile for ElevenLabs"""
-        
-        name = creator_profile.get("name", "Unknown")
-        channel = creator_profile.get("id", "unknown_channel")
-        niche = creator_profile.get("niche", "fitness")
-        followers = creator_profile.get("followers", 100000)
-        engagement = creator_profile.get("engagement_rate", 5.0)
-        avg_views = creator_profile.get("average_views", 50000)
-        location = creator_profile.get("location", "Mumbai, India")
-        languages = creator_profile.get("languages", ["English"])
-        collaboration_rate = creator_profile.get("typical_rate", 3000)
-        platform = creator_profile.get("platform", "Instagram")
-        
-        return (
-            f"name:{name}, "
-            f"channel:{channel}, "
-            f"platform:{platform}, "
-            f"niche:{niche}, "
-            f"followers:{followers//1000}K, "
-            f"audienceType:{niche.title()} Enthusiasts, "
-            f"engagement:{engagement}%, "
-            f"avgViews:{avg_views//1000}K, "
-            f"location:{location}, "
-            f"languages:{', '.join(languages) if isinstance(languages, list) else languages}, "
-            f"collaboration_rate:{collaboration_rate}"
-        )
-    
-    def _generate_negotiation_strategy(self, creator_profile: Dict[str, Any], campaign_data: Dict[str, Any]) -> Dict[str, Any]:
-        """🎯 Generate negotiation strategy"""
-        
-        niche_match = creator_profile.get("niche", "").lower() == campaign_data.get("product_niche", "").lower()
-        engagement = creator_profile.get("engagement_rate", 0)
-        
-        if niche_match and engagement > 5.0:
-            approach = "collaborative"
-        else:
-            approach = "value_focused"
+    ) -> Dict[str, Any]:
+        """Generate dynamic variables for ElevenLabs agent"""
         
         return {
-            "approach": approach,
-            "matchReasons": self._generate_match_reasons(creator_profile, campaign_data),
-            "brandAlignment": f"Creator's {creator_profile.get('niche')} expertise aligns with our {campaign_data.get('product_niche')} product",
-            "objectionHandling": "flexible_on_timeline_firm_on_quality",
-            "priorityPoints": ["content_authenticity", "audience_engagement"],
-            "monitoringMode": "real_time_status_updates"
+            "influencerName": creator_profile.get("name", "Creator"),
+            "influencerNiche": creator_profile.get("niche", "lifestyle"),
+            "followerCount": creator_profile.get("followers", 0),
+            "engagementRate": creator_profile.get("engagement_rate", 0.0),
+            "campaignBrief": campaign_data.get("product_description", ""),
+            "brandName": campaign_data.get("brand_name", ""),
+            "productName": campaign_data.get("product_name", ""),
+            "targetAudience": campaign_data.get("target_audience", ""),
+            "initialOffer": pricing_strategy.get("initial_offer", 1000),
+            "maxBudget": pricing_strategy.get("max_offer", 2000),
+            "negotiationStyle": pricing_strategy.get("style", "collaborative")
         }
     
-    def _generate_match_reasons(self, creator_profile: Dict[str, Any], campaign_data: Dict[str, Any]) -> list:
-        """Generate match reasons"""
-        reasons = []
-        
-        engagement = creator_profile.get("engagement_rate", 0)
-        if engagement > 6.0:
-            reasons.append(f"Exceptional {engagement}% engagement rate")
-        elif engagement > 3.0:
-            reasons.append(f"Strong {engagement}% engagement rate")
-        
-        if creator_profile.get("niche", "").lower() == campaign_data.get("product_niche", "").lower():
-            reasons.append("Perfect niche alignment")
-        
-        followers = creator_profile.get("followers", 0)
-        if followers > 500000:
-            reasons.append("Large, established audience")
-        elif followers > 100000:
-            reasons.append("Strong mid-tier following")
-        else:
-            reasons.append("Highly engaged micro-community")
-        
-        return reasons[:3]
-    
-    def _generate_deliverable_requirements(self, creator_profile: Dict[str, Any], campaign_data: Dict[str, Any]) -> Dict[str, Any]:
-        """📋 Generate deliverable requirements"""
-        
-        platform = creator_profile.get("platform", "Instagram").lower()
-        
-        if platform == "youtube":
-            primary = "60-90 second product review video with authentic testing"
-            secondary = "YouTube Short showcasing key features"
-        elif platform == "tiktok":
-            primary = "60-second authentic product demo with trending audio"
-            secondary = "Follow-up video showing results after 7 days"
-        else:  # Instagram or general
-            primary = "Instagram Reel (60-90 seconds) showing authentic product experience"
-            secondary = "Feed post with 3-5 high-quality lifestyle images"
-        
-        return {
-            "primary": primary,
-            "secondary": secondary,
-            "specifications": {
-                "video_length": "60-90 seconds for optimal engagement",
-                "quality_requirements": "1080p minimum, natural lighting preferred",
-                "brand_integration": "Natural product placement, not overly promotional"
-            }
-        }
-    
-    def _generate_timeline_expectations(self, campaign_data: Dict[str, Any]) -> Dict[str, Any]:
-        """📅 Generate timeline expectations"""
-        
-        launch_date = datetime.now() + timedelta(days=14)
-        
-        return {
-            "preferred": "7 days from contract signing",
-            "deadline": "10 days maximum",
-            "launchDate": launch_date.strftime("%B %d coordinated campaign launch"),
-            "flexibility": "Can extend to 10 days if needed for quality content"
-        }
-    
-    def _generate_usage_rights_strategy(self, creator_profile: Dict[str, Any], campaign_data: Dict[str, Any]) -> Dict[str, Any]:
-        """📜 Generate usage rights"""
-        
-        followers = creator_profile.get("followers", 0)
-        
-        if followers > 500000:
-            usage_type = "organic_plus_website_features"
-            duration = "18 months"
-        else:
-            usage_type = "organic_social_media_only"
-            duration = "12 months"
-        
-        return {
-            "type": usage_type,
-            "duration": f"{duration} from posting date",
-            "exclusivity_period": "30 days in product category"
-        }
-    
-    def _generate_budget_strategy(self, creator_profile: Dict[str, Any], pricing_strategy: Dict[str, Any]) -> Dict[str, Any]:
-        """💰 Generate budget strategy"""
-        
-        initial_offer = pricing_strategy.get('initial_offer', creator_profile.get('typical_rate', 3000))
-        max_offer = pricing_strategy.get('max_offer', initial_offer * 1.3)
-        
-        return {
-            "initialOffer": initial_offer,
-            "maxOffer": max_offer,
-            "negotiationRoom": max_offer - initial_offer,
-            "rushPremium": "+20% for 5-day delivery",
-            "paymentTerms": "50% upfront, 50% on content delivery and approval",
-            "monitoringEnabled": True
-        }
-    
-    def _generate_competitor_context(self, creator_profile: Dict[str, Any], campaign_data: Dict[str, Any]) -> Dict[str, Any]:
-        """🏆 Generate competitive context"""
-        
-        return {
-            "marketRates": {
-                "tier_average": f"${creator_profile.get('typical_rate', 3000) * 0.9:.0f}-{creator_profile.get('typical_rate', 3000) * 1.2:.0f} for similar creators",
-                "niche_premium": f"15-20% premium for {creator_profile.get('niche')} specialists"
-            },
-            "competitive_advantage": f"First {campaign_data.get('product_niche')} brand to offer AI-powered personalization",
-            "brand_prestige": "Working with industry-leading innovators"
-        }
-    
-    def _get_unique_value_proposition(self, campaign_data: Dict[str, Any]) -> str:
-        """Get unique value proposition"""
-        niche = campaign_data.get('product_niche', 'fitness')
-        if niche == 'fitness':
-            return "Only fitness tracker with personalized AI coaching based on individual biometrics"
-        elif niche == 'tech':
-            return "Revolutionary tech that adapts to user behavior through machine learning"
-        else:
-            return f"Industry-first innovation in {niche} space with AI-powered features"
-    
-    def extract_conversation_analysis(self, conversation_result: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        📊 EXTRACT STRUCTURED ANALYSIS FROM CONVERSATION RESULT
-        
-        Used by ConversationMonitor to process completed conversations
-        """
-        
-        # Get transcript for analysis
-        transcript = conversation_result.get("transcript", "")
-        
-        if not transcript:
-            logger.warning("⚠️ No transcript available for analysis")
-            return {
-                "analysis_source": "no_transcript",
-                "analysis_confidence": 0.0
-            }
-        
-        # Extract structured analysis
-        analysis_data = {
-            "negotiation_outcome": self._determine_outcome_from_transcript(transcript),
-            "final_rate_mentioned": self._extract_rate_from_transcript(transcript),
-            "objections_raised": self._extract_objections_from_transcript(transcript),
-            "deliverables_discussed": self._extract_deliverables_from_transcript(transcript),
-            "timeline_mentioned": self._extract_timeline_from_transcript(transcript),
-            "creator_enthusiasm_level": self._estimate_enthusiasm_from_transcript(transcript),
-            "conversation_summary": transcript[:200] + "..." if len(transcript) > 200 else transcript,
-            "key_quotes": self._extract_key_quotes_from_transcript(transcript),
-            "analysis_source": "elevenlabs_transcript",
-            "analysis_confidence": self._calculate_analysis_confidence(transcript),
-            "monitoring_metadata": {
-                "processed_at": datetime.now().isoformat(),
-                "transcript_length": len(transcript),
-                "extraction_method": "enhanced_nlp"
-            }
-        }
-        
-        logger.info(f"📊 Analysis extracted: {analysis_data['negotiation_outcome']} (confidence: {analysis_data['analysis_confidence']:.2f})")
-        return analysis_data
-    
-    def _determine_outcome_from_transcript(self, transcript: str) -> str:
-        """Determine negotiation outcome from transcript"""
-        
-        transcript_lower = transcript.lower()
-        
-        # Success indicators
-        success_words = ["yes", "accept", "agree", "sounds good", "deal", "interested", "perfect", "great", "let's do it"]
-        failure_words = ["no", "decline", "reject", "not interested", "can't", "busy", "pass", "sorry"]
-        followup_words = ["think about it", "let me consider", "get back to you", "need time"]
-        
-        success_score = sum(1 for word in success_words if word in transcript_lower)
-        failure_score = sum(1 for word in failure_words if word in transcript_lower)
-        followup_score = sum(1 for word in followup_words if word in transcript_lower)
-        
-        if success_score > failure_score and success_score > followup_score:
-            return "accepted"
-        elif failure_score > success_score and failure_score > followup_score:
-            return "declined"
-        elif followup_score > 0:
-            return "needs_followup"
-        else:
-            return "unclear"
-    
-    def _extract_rate_from_transcript(self, transcript: str) -> Optional[float]:
-        """Extract mentioned rate from transcript"""
-        
-        import re
-        
-        # Look for dollar amounts in transcript
-        money_pattern = r'\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)'
-        matches = re.findall(money_pattern, transcript)
-        
-        if matches:
-            # Return the last mentioned amount (likely the agreed rate)
-            try:
-                return float(matches[-1].replace(',', ''))
-            except ValueError:
-                pass
-        
-        return None
-    
-    def _extract_objections_from_transcript(self, transcript: str) -> list:
-        """Extract objections from transcript"""
-        
-        transcript_lower = transcript.lower()
-        objections = []
-        
-        if any(phrase in transcript_lower for phrase in ["too low", "more money", "higher rate"]):
-            objections.append("price_too_low")
-        if any(phrase in transcript_lower for phrase in ["busy", "tight timeline", "not enough time"]):
-            objections.append("timeline_tight")
-        if any(phrase in transcript_lower for phrase in ["not a fit", "doesn't align", "different brand"]):
-            objections.append("brand_misalignment")
-        if any(phrase in transcript_lower for phrase in ["already working", "committed to", "exclusive"]):
-            objections.append("already_committed")
-        
-        return objections
-    
-    def _extract_deliverables_from_transcript(self, transcript: str) -> list:
-        """Extract discussed deliverables from transcript"""
-        
-        transcript_lower = transcript.lower()
-        deliverables = []
-        
-        if any(phrase in transcript_lower for phrase in ["video", "review video", "product review"]):
-            deliverables.append("video_review")
-        if any(phrase in transcript_lower for phrase in ["instagram post", "feed post", "ig post"]):
-            deliverables.append("instagram_post")
-        if any(phrase in transcript_lower for phrase in ["story", "stories", "instagram story"]):
-            deliverables.append("instagram_story")
-        if any(phrase in transcript_lower for phrase in ["tiktok", "tik tok", "short video"]):
-            deliverables.append("tiktok_video")
-        if any(phrase in transcript_lower for phrase in ["unboxing", "unbox"]):
-            deliverables.append("unboxing_video")
-        
-        return deliverables if deliverables else ["video_review", "instagram_post"]  # Default
-    
-    def _extract_timeline_from_transcript(self, transcript: str) -> str:
-        """Extract timeline from transcript"""
-        
-        import re
-        
-        # Look for time expressions
-        time_pattern = r'(\d+)\s*(day|days|week|weeks)'
-        matches = re.findall(time_pattern, transcript.lower())
-        
-        if matches:
-            number, unit = matches[-1]  # Get the last mentioned timeline
-            return f"{number} {unit}"
-        
-        return "7 days"  # Default
-    
-    def _estimate_enthusiasm_from_transcript(self, transcript: str) -> int:
-        """Estimate creator enthusiasm level (1-10) from transcript"""
-        
-        transcript_lower = transcript.lower()
-        
-        positive_words = ["excited", "love", "perfect", "amazing", "great", "awesome", "fantastic", "definitely"]
-        negative_words = ["concerned", "worried", "not sure", "maybe", "hesitant", "unsure"]
-        
-        positive_score = sum(1 for word in positive_words if word in transcript_lower)
-        negative_score = sum(1 for word in negative_words if word in transcript_lower)
-        
-        base_score = 5  # Neutral
-        enthusiasm = base_score + positive_score - negative_score
-        
-        return max(1, min(10, enthusiasm))  # Clamp between 1-10
-    
-    def _extract_key_quotes_from_transcript(self, transcript: str) -> list:
-        """Extract key quotes from transcript"""
-        
-        # Simple implementation - would be enhanced with better NLP
-        sentences = transcript.split('.')
-        key_quotes = []
-        
-        for sentence in sentences[:5]:  # Take first 5 sentences
-            sentence = sentence.strip()
-            if len(sentence) > 20 and len(sentence) < 100:
-                key_quotes.append(sentence)
-        
-        return key_quotes[:3]  # Maximum 3 quotes
-    
-    def _calculate_analysis_confidence(self, transcript: str) -> float:
-        """Calculate confidence in analysis results"""
-        
-        confidence_factors = []
-        
-        # Length factor
-        if len(transcript) > 200:
-            confidence_factors.append(0.3)
-        elif len(transcript) > 100:
-            confidence_factors.append(0.2)
-        
-        # Content quality factor
-        if any(word in transcript.lower() for word in ["rate", "price", "dollars", "$"]):
-            confidence_factors.append(0.2)
-        
-        if any(word in transcript.lower() for word in ["yes", "no", "accept", "decline"]):
-            confidence_factors.append(0.3)
-        
-        if any(word in transcript.lower() for word in ["video", "post", "content"]):
-            confidence_factors.append(0.2)
-        
-        return sum(confidence_factors)
-    
+    # Mock methods for testing
     async def _mock_enhanced_call(
-        self, 
-        creator_phone: str, 
+        self,
+        creator_phone: str,
         creator_profile: Dict[str, Any],
         campaign_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Enhanced mock call for testing and fallback"""
+        """Mock call for testing"""
+        await asyncio.sleep(1)  # Simulate API delay
         
-        logger.info(f"🎭 Enhanced mock call to {creator_phone} (fallback mode)")
-        await asyncio.sleep(2)
-        
-        mock_conversation_id = f"mock_enhanced_{creator_profile.get('id', 'unknown')}_{datetime.now().strftime('%H%M%S')}"
+        mock_conversation_id = f"mock_conv_{random.randint(1000, 9999)}"
         
         return {
             "status": "success",
             "conversation_id": mock_conversation_id,
-            "call_id": f"mock_call_{creator_phone[-4:]}",
+            "call_id": f"mock_call_{random.randint(1000, 9999)}",
             "phone_number": creator_phone,
-            "monitoring_ready": True,
-            "enhanced_mode": True,
-            "mock_mode": True,
-            "fallback_reason": "timeout_fallback_or_testing"
+            "mock": True
         }
     
     async def _mock_status_check(self, conversation_id: str) -> Dict[str, Any]:
-        """Mock status check for testing and fallback"""
+        """Mock status check"""
+        await asyncio.sleep(0.5)
         
-        # Simulate conversation progression
-        await asyncio.sleep(1)
+        return {
+            "status": "completed",
+            "normalized_status": "completed",
+            "conversation_id": conversation_id,
+            "transcript": [
+                {"role": "agent", "text": "Hello! I'd like to discuss a collaboration opportunity."},
+                {"role": "user", "text": "Sure, I'm interested. What's the offer?"},
+                {"role": "agent", "text": "We can offer $1,500 for a sponsored post."},
+                {"role": "user", "text": "That sounds good, I accept!"}
+            ],
+            "analysis": {
+                "outcome": "accepted",
+                "agreed_price": 1500,
+                "sentiment": "positive"
+            },
+            "mock": True
+        }
+    
+    async def _mock_conversation_completion(self, conversation_id: str) -> Dict[str, Any]:
+        """Mock conversation completion"""
+        await asyncio.sleep(2)  # Simulate conversation time
         
-        # Mock realistic progression based on conversation age
-        if "mock_" in conversation_id:
-            # For mock conversations, randomly progress
-            statuses = ["in_progress", "in_progress", "completed"]
-            status = random.choice(statuses)
-        else:
-            # For failed real conversations, mark as completed with mock data
-            status = "completed"
+        status_data = await self._mock_status_check(conversation_id)
+        analysis_data = self._extract_analysis_data(status_data)
         
-        if status == "completed":
-            # Generate mock completed conversation
-            success = random.random() < 0.75  # 75% success rate
-            
-            if success:
-                final_rate = random.randint(3200, 5800)
-                transcript = f"Creator: Yes, I'm interested in working with you. The rate of ${final_rate} sounds good for the collaboration."
-            else:
-                transcript = "Creator: I'm sorry, but I don't think this is a good fit for my audience right now."
-            
-            return {
-                "status": status,
-                "transcript": transcript,
-                "recording_url": f"https://mock-recordings.example.com/{conversation_id}",
-                "monitoring_metadata": {
-                    "mock_mode": True,
-                    "fetched_at": datetime.now().isoformat(),
-                    "fallback_data": True
-                }
-            }
-        else:
-            return {
-                "status": status,
-                "monitoring_metadata": {
-                    "mock_mode": True,
-                    "fetched_at": datetime.now().isoformat()
-                }
-            }
-
-# Backward compatibility aliases
-ComprehensiveVoiceService = EnhancedVoiceService
+        return {
+            "status": "completed",
+            "conversation_data": status_data,
+            "analysis_data": analysis_data,
+            "completion_time": datetime.now().isoformat(),
+            "mock": True
+        }

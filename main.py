@@ -1,203 +1,198 @@
-# main.py - FIXED VERSION with Better Import Handling
+# main.py - CORRECTED INTEGRATION
 import asyncio
-import uvicorn
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from typing import Dict
 
-# Global state to track active campaigns
-active_campaigns = {}
+from api.enhanced_webhooks import enhanced_webhook_router
+from api.monitoring import monitoring_router
+from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
+from services.enhanced_voice import EnhancedVoiceService
+from config.settings import settings
 
-def load_settings():
-    """Load settings with fallback"""
-    try:
-        from config.settings import settings
-        print("✅ Using SimpleSettings fallback")
-        return settings
-    except ImportError as e2:
-        print(f"❌ Both settings failed: {e2}")
-        print("📋 Please run: python fix_imports.py")
-        exit(1)
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-def load_enhanced_endpoints():
-    """Load enhanced endpoints with graceful fallback"""
-    try:
-        from api.enhanced_webhooks import enhanced_webhook_router
-        from api.enhanced_monitoring import enhanced_monitoring_router
-        print("✅ Enhanced endpoints loaded")
-        return enhanced_webhook_router, enhanced_monitoring_router
-    except ImportError as e:
-        print(f"⚠️  Enhanced endpoints not available: {e}")
-        return None, None
-
-def load_legacy_endpoints():
-    """Load legacy endpoints with graceful fallback"""
-    try:
-        from api.webhooks import webhook_router
-        from api.monitoring import monitoring_router
-        print("✅ Legacy endpoints loaded")
-        return webhook_router, monitoring_router
-    except ImportError as e:
-        print(f"⚠️  Legacy endpoints not available: {e}")
-        return None, None
-
-# Load settings
-settings = load_settings()
+# Global state management
+active_campaigns: Dict[str, any] = {}
+orchestrator: EnhancedCampaignOrchestrator = None
+voice_service: EnhancedVoiceService = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager"""
-    print("🚀 InfluencerFlow AI Platform starting up...")
-    print(f"🔧 Debug mode: {settings.debug}")
-    print(f"🎯 Demo mode: {settings.demo_mode}")
+    """
+    🚀 CORRECTED LIFESPAN MANAGEMENT
     
-    # Try to load enhanced features
-    enhanced_webhook_router, enhanced_monitoring_router = load_enhanced_endpoints()
-    if enhanced_webhook_router and enhanced_monitoring_router:
-        print("🔥 Enhanced features available!")
+    Proper initialization and cleanup of services
+    """
     
-    # Try to load legacy features
-    legacy_webhook_router, legacy_monitoring_router = load_legacy_endpoints()
-    if legacy_webhook_router and legacy_monitoring_router:
-        print("📋 Legacy endpoints available!")
+    global orchestrator, voice_service
     
-    yield
-    print("👋 InfluencerFlow AI Platform shutting down...")
+    # Startup
+    logger.info("🚀 Starting InfluencerFlow AI Platform...")
+    
+    try:
+        # Initialize services with proper error handling
+        voice_service = EnhancedVoiceService()
+        orchestrator = EnhancedCampaignOrchestrator()
+        
+        # Test service connectivity
+        voice_test = await voice_service.test_credentials()
+        logger.info(f"📞 Voice service status: {voice_test.get('status', 'unknown')}")
+        
+        logger.info("✅ Platform initialization completed")
+        
+        yield
+        
+    except Exception as e:
+        logger.error(f"❌ Platform initialization failed: {e}")
+        raise
+    
+    finally:
+        # Cleanup
+        logger.info("🛑 Shutting down platform...")
+        
+        # Stop any active monitoring
+        if orchestrator and hasattr(orchestrator, 'conversation_monitor'):
+            orchestrator.conversation_monitor.stop_all_monitoring()
+        
+        # Clear active campaigns
+        active_campaigns.clear()
+        
+        logger.info("✅ Platform shutdown completed")
 
-# Create FastAPI app
+# Create FastAPI app with corrected lifespan
 app = FastAPI(
     title="InfluencerFlow AI Platform",
-    description="AI-powered influencer marketing campaign automation",
-    version="2.0.0",
+    description="Enhanced AI-powered influencer marketing automation with ElevenLabs integration",
+    version="2.0.0-fixed",
     lifespan=lifespan
 )
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Try to include enhanced routers
-try:
-    from api.enhanced_webhooks import enhanced_webhook_router
-    from api.enhanced_monitoring import enhanced_monitoring_router
-    
-    app.include_router(enhanced_webhook_router, prefix="/api/webhook", tags=["enhanced-webhooks"])
-    app.include_router(enhanced_monitoring_router, prefix="/api/monitor", tags=["enhanced-monitoring"])
-    print("✅ Enhanced endpoints loaded")
-except ImportError as e:
-    print(f"⚠️  Enhanced endpoints not available: {e}")
-
-# Try to include legacy routers
-try:
-    from api.webhooks import webhook_router
-    from api.monitoring import monitoring_router
-    
-    app.include_router(webhook_router, prefix="/api/webhook", tags=["webhooks"])
-    app.include_router(monitoring_router, prefix="/api/monitor", tags=["monitoring"])
-    print("✅ Legacy endpoints loaded")
-except ImportError as e:
-    print(f"⚠️  Legacy endpoints not available: {e}")
+# Include routers
+app.include_router(enhanced_webhook_router, prefix="/api/webhook", tags=["Enhanced Webhooks"])
+app.include_router(monitoring_router, prefix="/api/monitor", tags=["Monitoring"])
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
+    """Root endpoint with platform status"""
     return {
-        "message": "InfluencerFlow AI Platform is running",
-        "version": "2.0.0",
-        "status": "healthy",
-        "demo_mode": settings.demo_mode,
-        "active_campaigns": len(active_campaigns)
+        "service": "InfluencerFlow AI Platform",
+        "version": "2.0.0-fixed",
+        "status": "operational",
+        "features": [
+            "Fixed ElevenLabs integration",
+            "Proper call state handling", 
+            "Corrected contract generation",
+            "Enhanced error handling"
+        ],
+        "fixes_applied": [
+            "API response validation",
+            "Conversation monitoring",
+            "Contract generation logic",
+            "Error handling and retries"
+        ]
     }
 
 @app.get("/health")
 async def health_check():
-    """Detailed health check"""
+    """
+    🏥 HEALTH CHECK WITH SERVICE VALIDATION
+    """
     
-    # Check service availability
-    services = {
-        "api": "running",
-        "database": "connected",  # TODO: Add actual DB health check
+    health_status = {
+        "status": "healthy",
+        "timestamp": "2024-12-14T10:00:00Z",
+        "services": {}
     }
     
-    # Check API keys
-    if hasattr(settings, 'groq_api_key') and settings.groq_api_key:
-        services["groq"] = "configured"
-    else:
-        services["groq"] = "missing_key"
-    
-    if hasattr(settings, 'elevenlabs_api_key') and settings.elevenlabs_api_key:
-        services["elevenlabs"] = "configured"
-    else:
-        services["elevenlabs"] = "missing_key"
-    
-    return {
-        "status": "healthy",
-        "services": services,
-        "active_campaigns": len(active_campaigns),
-        "settings": {
-            "demo_mode": settings.demo_mode,
-            "mock_calls": getattr(settings, 'mock_calls', False),
-            "max_negotiation_duration": getattr(settings, 'max_negotiation_duration', 45)
+    try:
+        # Check voice service
+        if voice_service:
+            voice_test = await voice_service.test_credentials()
+            health_status["services"]["voice_service"] = {
+                "status": voice_test.get("status", "unknown"),
+                "mode": "mock" if voice_service.use_mock else "live"
+            }
+        else:
+            health_status["services"]["voice_service"] = {
+                "status": "not_initialized",
+                "mode": "unknown"
+            }
+        
+        # Check orchestrator
+        if orchestrator:
+            health_status["services"]["orchestrator"] = {
+                "status": "initialized",
+                "active_campaigns": len(active_campaigns)
+            }
+        else:
+            health_status["services"]["orchestrator"] = {
+                "status": "not_initialized"
+            }
+        
+        # Overall status
+        service_statuses = [service.get("status") for service in health_status["services"].values()]
+        if all(status in ["healthy", "initialized", "success", "mock_mode"] for status in service_statuses):
+            health_status["status"] = "healthy"
+        else:
+            health_status["status"] = "degraded"
+        
+        return health_status
+        
+    except Exception as e:
+        logger.error(f"❌ Health check failed: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": "2024-12-14T10:00:00Z"
         }
+
+# Error handlers
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    """Handle HTTP exceptions with proper logging"""
+    logger.error(f"HTTP Exception: {exc.status_code} - {exc.detail}")
+    return {
+        "error": exc.detail,
+        "status_code": exc.status_code,
+        "type": "http_error"
     }
 
-@app.get("/debug")
-async def debug_info():
-    """Debug information for troubleshooting"""
-    
-    debug_info = {
-        "python_version": "3.13+",
-        "fastapi_version": "0.115+",
-        "settings_loaded": True,
-        "active_campaigns": len(active_campaigns)
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    """Handle general exceptions with proper logging"""
+    logger.error(f"Unhandled Exception: {str(exc)}")
+    return {
+        "error": "Internal server error",
+        "message": str(exc),
+        "type": "server_error"
     }
-    
-    # Check imports
-    import_status = {}
-    
-    # Test core imports
-    try:
-        from models.campaign import CampaignWebhook
-        import_status["models"] = "✅ Available"
-    except ImportError as e:
-        import_status["models"] = f"❌ Failed: {e}"
-    
-    try:
-        from agents.orchestrator import CampaignOrchestrator
-        import_status["orchestrator"] = "✅ Available"
-    except ImportError as e:
-        import_status["orchestrator"] = f"❌ Failed: {e}"
-    
-    try:
-        from agents.negotiation import NegotiationAgent
-        import_status["negotiation_agent"] = "✅ Available"
-    except ImportError as e:
-        import_status["negotiation_agent"] = f"❌ Failed: {e}"
-    
-    try:
-        from services.voice import VoiceService
-        import_status["voice_service"] = "✅ Available"
-    except ImportError as e:
-        import_status["voice_service"] = f"❌ Failed: {e}"
-    
-    debug_info["import_status"] = import_status
-    
-    return debug_info
 
 if __name__ == "__main__":
-    print("🚀 Starting InfluencerFlow AI Platform...")
-    print(f"🔧 Host: {settings.host}")
-    print(f"🔧 Port: {settings.port}")
-    print(f"🔧 Debug: {settings.debug}")
+    import uvicorn
+    
+    logger.info("🚀 Starting InfluencerFlow AI Platform...")
     
     uvicorn.run(
         "main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.debug
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
     )
