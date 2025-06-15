@@ -1,18 +1,21 @@
-# core/config.py - UNIFIED CONFIGURATION
+# core/config.py - CORRECTED UNIFIED CONFIGURATION
 import os
 import logging
 from typing import Optional, List
 from pydantic_settings import BaseSettings
-from pydantic import validator
 
 logger = logging.getLogger(__name__)
 
+
 class Settings(BaseSettings):
     """
-    Unified application settings
+    Clean Configuration Management
     
-    Centralizes all configuration with proper validation and environment support.
-    Replaces multiple settings files with single, clean implementation.
+    Unified settings class following OOP principles:
+    - Single source of truth for all configuration
+    - Environment-based configuration with fallbacks
+    - Type validation with Pydantic
+    - No legacy configuration retention
     """
     
     # Core Application Settings
@@ -30,7 +33,7 @@ class Settings(BaseSettings):
     elevenlabs_api_key: Optional[str] = None
     elevenlabs_agent_id: Optional[str] = None
     elevenlabs_phone_number_id: Optional[str] = None
-    elevenlabs_base_url: str = "https://api.elevenlabs.io/v1"
+    elevenlabs_base_url: str = "https://api.elevenlabs.io"
     
     # AI Configuration
     groq_api_key: Optional[str] = None
@@ -60,201 +63,122 @@ class Settings(BaseSettings):
     # Security Settings
     allowed_origins: List[str] = ["*"]
     api_key_header: str = "X-API-Key"
-    rate_limit_per_minute: int = 60
-    
-    # Performance Settings
-    max_campaigns_in_memory: int = 100
-    cleanup_completed_campaigns_hours: int = 24
-    
-    @validator('environment')
-    def validate_environment(cls, v):
-        valid_environments = ['development', 'staging', 'production']
-        if v not in valid_environments:
-            raise ValueError(f'Environment must be one of: {", ".join(valid_environments)}')
-        return v
-    
-    @validator('log_level')
-    def validate_log_level(cls, v):
-        valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-        if v.upper() not in valid_levels:
-            raise ValueError(f'Log level must be one of: {", ".join(valid_levels)}')
-        return v.upper()
-    
-    @validator('mock_success_rate')
-    def validate_success_rate(cls, v):
-        if not 0.0 <= v <= 1.0:
-            raise ValueError('Mock success rate must be between 0.0 and 1.0')
-        return v
-    
-    def is_production(self) -> bool:
-        """Check if running in production environment"""
-        return self.environment == "production"
-    
-    def is_development(self) -> bool:
-        """Check if running in development environment"""
-        return self.environment == "development"
-    
-    def get_log_level_int(self) -> int:
-        """Get numeric log level for logging configuration"""
-        return getattr(logging, self.log_level)
+    rate_limit_per_minute: int = 100
     
     class Config:
+        """Pydantic configuration"""
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
-        # Allow environment variables to override settings
+        
+        # Environment variable prefixes
         env_prefix = ""
+    
+    def __init__(self, **kwargs):
+        """Initialize settings with validation"""
+        super().__init__(**kwargs)
+        self._validate_configuration()
+        self._configure_services()
+    
+    def _validate_configuration(self) -> None:
+        """Validate configuration and set service flags"""
+        
+        # Validate ElevenLabs configuration
+        elevenlabs_configured = all([
+            self.elevenlabs_api_key,
+            self.elevenlabs_agent_id,
+            self.elevenlabs_phone_number_id
+        ])
+        
+        if not elevenlabs_configured:
+            logger.warning("⚠️ ElevenLabs not fully configured - using mock services")
+            self.use_mock_services = True
+        
+        # Validate Groq configuration
+        if not self.groq_api_key:
+            logger.warning("⚠️ Groq API key not configured - AI features limited")
+        
+        # Validate database configuration
+        if not self.database_url:
+            logger.warning("⚠️ Database not configured - using mock database")
+    
+    def _configure_services(self) -> None:
+        """Configure services based on environment"""
+        
+        # Enable/disable mock services based on environment
+        if self.environment == "production":
+            # In production, disable mock services if APIs are configured
+            if self.is_elevenlabs_configured():
+                self.use_mock_services = False
+        elif self.environment == "development":
+            # In development, default to mock services unless explicitly disabled
+            if not self.is_elevenlabs_configured():
+                self.use_mock_services = True
+    
+    def is_elevenlabs_configured(self) -> bool:
+        """Check if ElevenLabs is fully configured"""
+        return all([
+            self.elevenlabs_api_key,
+            self.elevenlabs_agent_id,
+            self.elevenlabs_phone_number_id
+        ])
+    
+    def is_groq_configured(self) -> bool:
+        """Check if Groq AI is configured"""
+        return bool(self.groq_api_key)
+    
+    def is_database_configured(self) -> bool:
+        """Check if database is configured"""
+        return bool(self.database_url)
+    
+    def get_service_status(self) -> dict:
+        """Get status of all configured services"""
+        return {
+            "elevenlabs": "✅" if self.is_elevenlabs_configured() else "❌",
+            "groq": "✅" if self.is_groq_configured() else "❌",
+            "database": "✅" if self.is_database_configured() else "❌",
+            "mock_services": self.use_mock_services
+        }
+    
+    def log_configuration_status(self) -> None:
+        """Log current configuration status"""
+        
+        logger.info(f"🔧 {self.app_name} v{self.app_version}")
+        logger.info(f"Environment: {self.environment}")
+        logger.info(f"Debug Mode: {self.debug}")
+        logger.info(f"Mock Services: {self.use_mock_services}")
+        logger.info(f"Log Level: {self.log_level}")
+        logger.info(f"API: {self.api_host}:{self.api_port}")
+        
+        service_status = self.get_service_status()
+        logger.info(f"ElevenLabs Configured: {service_status['elevenlabs']}")
+        logger.info(f"Groq AI Configured: {service_status['groq']}")
+        logger.info(f"Database Configured: {service_status['database']}")
 
-class ProductionSettings(Settings):
-    """
-    Production-specific settings with security hardening
-    """
-    
-    debug: bool = False
-    api_reload: bool = False
-    
-    log_level: str = "WARNING"
-    allowed_origins: List[str] = []  # Must be explicitly set in production
-    rate_limit_per_minute: int = 30  # More restrictive in production
-    
-    @validator('elevenlabs_api_key')
-    def validate_elevenlabs_key_required(cls, v):
-        if not v:
-            raise ValueError('ElevenLabs API key is required in production')
-        return v
 
-class DevelopmentSettings(Settings):
-    """
-    Development-specific settings with relaxed validation
-    """
-    
-    debug: bool = True
-    api_reload: bool = True
-    use_mock_services: bool = True
-    log_level: str = "DEBUG"
+# Create global settings instance
+settings = Settings()
 
-def get_settings() -> Settings:
-    """
-    Factory function to get appropriate settings based on environment
+# Configure logging based on settings
+def configure_logging():
+    """Configure application logging"""
     
-    Returns:
-        Settings instance configured for current environment
-    """
-    
-    environment = os.getenv("ENVIRONMENT", "development").lower()
-    
-    if environment == "production":
-        return ProductionSettings()
-    elif environment == "development":
-        return DevelopmentSettings()
-    else:
-        return Settings(environment=environment)
-
-def setup_logging(settings: Settings):
-    """
-    Configure logging based on settings
-    
-    Args:
-        settings: Application settings instance
-    """
+    log_level = getattr(logging, settings.log_level.upper(), logging.INFO)
     
     logging.basicConfig(
-        level=settings.get_log_level_int(),
+        level=log_level,
         format=settings.log_format,
         handlers=[
             logging.StreamHandler(),
-            # Add file handler in production
-            logging.FileHandler('app.log') if settings.is_production() else logging.NullHandler()
+            # Add file handler if needed
+            # logging.FileHandler('app.log')
         ]
     )
     
-    # Reduce noise from external libraries
+    # Set specific logger levels
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.getLogger("asyncio").setLevel(logging.WARNING)
-    
-    logger.info(f"🔧 Logging configured for {settings.environment} environment")
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
-def validate_production_settings(settings: Settings):
-    """
-    Validate that all required settings are present for production
-    
-    Args:
-        settings: Settings to validate
-        
-    Raises:
-        ValueError: If required production settings are missing
-    """
-    
-    if not settings.is_production():
-        return
-    
-    required_production_settings = [
-        ("elevenlabs_api_key", "ElevenLabs API key"),
-        ("elevenlabs_agent_id", "ElevenLabs Agent ID"),
-        ("elevenlabs_phone_number_id", "ElevenLabs Phone Number ID")
-    ]
-    
-    missing_settings = []
-    
-    for setting_name, description in required_production_settings:
-        value = getattr(settings, setting_name)
-        if not value:
-            missing_settings.append(description)
-    
-    if missing_settings:
-        raise ValueError(
-            f"Missing required production settings: {', '.join(missing_settings)}. "
-            f"Please set these environment variables before running in production."
-        )
-    
-    # Validate security settings
-    if settings.allowed_origins == ["*"]:
-        logger.warning("⚠️ CORS is set to allow all origins in production - this is insecure!")
-    
-    logger.info("✅ Production settings validation passed")
 
-def print_settings_summary(settings: Settings):
-    """
-    Print a summary of current settings (excluding sensitive data)
-    
-    Args:
-        settings: Settings to summarize
-    """
-    
-    print(f"""
-🔧 {settings.app_name} v{settings.app_version}
-Environment: {settings.environment}
-Debug Mode: {settings.debug}
-Mock Services: {settings.use_mock_services}
-Log Level: {settings.log_level}
-API: {settings.api_host}:{settings.api_port}
-ElevenLabs Configured: {'✅' if settings.elevenlabs_api_key else '❌'}
-Groq AI Configured: {'✅' if settings.groq_api_key else '❌'}
-Database Configured: {'✅' if settings.database_url else '❌'}
-""")
-
-# Global settings instance
-settings = get_settings()
-
-# Setup logging immediately
-setup_logging(settings)
-
-# Validate production settings if needed
-try:
-    validate_production_settings(settings)
-except ValueError as e:
-    if settings.is_production():
-        logger.error(f"❌ Production validation failed: {e}")
-        raise
-    else:
-        logger.warning(f"⚠️ Production validation would fail: {e}")
-
-# Print settings summary
-if settings.is_development():
-    print_settings_summary(settings)
-
-# Export commonly used settings for convenience
-API_HOST = settings.api_host
-API_PORT = settings.api_port
-DEBUG = settings.debug
-USE_MOCK_SERVICES = settings.use_mock_services
+# Initialize logging when module is imported
+configure_logging()
