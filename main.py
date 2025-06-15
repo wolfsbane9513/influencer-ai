@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from datetime import datetime
 
 from core.config import settings
 from api.campaigns import router as campaigns_router
@@ -144,12 +145,13 @@ async def health_check():
     
     health_status = {
         "status": "healthy",
-        "timestamp": "2024-12-14T12:00:00Z",
+        "timestamp": datetime.now().isoformat(),
         "environment": settings.environment,
         "version": settings.app_version
     }
     
     services_status = {}
+    services_count = 0
     
     try:
         # Check voice service
@@ -159,8 +161,9 @@ async def health_check():
         services_status["voice_service"] = {
             "status": "operational",
             "mode": "mock" if settings.use_mock_services else "live",
-            "api_configured": bool(settings.elevenlabs_api_key)
+            "api_configured": bool(getattr(settings, 'elevenlabs_api_key', None))
         }
+        services_count += 1
         
     except Exception as e:
         services_status["voice_service"] = {
@@ -170,33 +173,15 @@ async def health_check():
         health_status["status"] = "degraded"
     
     try:
-        # Check AI service
-        if settings.groq_api_key:
-            services_status["ai_service"] = {
-                "status": "operational",
-                "model": settings.groq_model
-            }
-        else:
-            services_status["ai_service"] = {
-                "status": "disabled",
-                "reason": "No API key configured"
-            }
-            
-    except Exception as e:
-        services_status["ai_service"] = {
-            "status": "error",
-            "error": str(e)
-        }
-    
-    # Check database service
-    try:
+        # Check database service
         from services.database import DatabaseService
         db_service = DatabaseService()
         
         services_status["database_service"] = {
             "status": "operational",
-            "mode": "mock" if not settings.database_url else "live"
+            "mode": "mock" if not getattr(settings, 'database_url', None) else "live"
         }
+        services_count += 1
         
     except Exception as e:
         services_status["database_service"] = {
@@ -205,7 +190,27 @@ async def health_check():
         }
         health_status["status"] = "degraded"
     
+    try:
+        # Check orchestrator
+        from agents.orchestrator import CampaignOrchestrator
+        orchestrator = CampaignOrchestrator()
+        
+        services_status["orchestrator"] = {
+            "status": "operational",
+            "agents_loaded": True
+        }
+        services_count += 1
+        
+    except Exception as e:
+        services_status["orchestrator"] = {
+            "status": "error",
+            "error": str(e)
+        }
+        health_status["status"] = "degraded"
+    
+    # Add services info to response
     health_status["services"] = services_status
+    health_status["services_count"] = services_count
     
     return health_status
 
