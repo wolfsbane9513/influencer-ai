@@ -1,4 +1,4 @@
-# agents/discovery.py - FIXED DISCOVERY AGENT
+# agents/discovery.py - COMPLETELY FIXED DISCOVERY AGENT
 import json
 import logging
 from typing import List, Dict, Any
@@ -8,12 +8,13 @@ from core.models import CampaignData, Creator, CreatorMatch
 
 logger = logging.getLogger(__name__)
 
+
 class DiscoveryAgent:
     """
     🔍 Fixed Discovery Agent
     
     Clean, maintainable implementation that discovers creators for campaigns.
-    Compatible with orchestrator expectations.
+    Compatible with orchestrator expectations and proper method names.
     """
     
     def __init__(self):
@@ -51,58 +52,89 @@ class DiscoveryAgent:
         """Get mock creators for testing"""
         mock_creator_data = [
             {
-                "id": "creator_001",
-                "name": "Sample Creator 1",
-                "handle": "@samplecreator1",
+                "id": "creator_tech_001",
+                "name": "TechReviewer_Sarah",
+                "handle": "@techsarah",
                 "platform": "instagram",
-                "followers": 75000,
-                "engagement_rate": 4.5,
-                "average_views": 15000,
+                "followers": 125000,
+                "engagement_rate": 4.8,
+                "average_views": 18000,
                 "niche": "tech",
                 "location": "San Francisco",
-                "phone": "+1234567890",
+                "phone": "+918806859890",  # Your verified number
                 "languages": ["English"],
-                "specialties": ["tech", "gadgets"],
-                "rate_per_post": 1200.0,
-                "typical_rate": 1200.0,
-                "availability": "excellent",
-                "brand_safety_score": 9.0
+                "specialties": ["tech", "gadgets", "reviews"],
+                "rate_per_post": 1000.0,
+                "content_types": ["posts", "stories", "reels"],
+                "availability": "excellent"
             },
             {
-                "id": "creator_002",
-                "name": "Sample Creator 2", 
-                "handle": "@samplecreator2",
-                "platform": "youtube",
-                "followers": 150000,
-                "engagement_rate": 5.2,
-                "average_views": 25000,
-                "niche": "tech",
-                "location": "New York",
-                "phone": "+1234567891",
-                "languages": ["English"],
-                "specialties": ["tech", "reviews"],
-                "rate_per_post": 1800.0,
-                "typical_rate": 1800.0,
-                "availability": "good",
-                "brand_safety_score": 8.5
-            },
-            {
-                "id": "creator_003",
-                "name": "Sample Creator 3",
-                "handle": "@samplecreator3", 
-                "platform": "tiktok",
-                "followers": 45000,
-                "engagement_rate": 6.1,
+                "id": "creator_food_002",
+                "name": "FoodBlogger_Lisa",
+                "handle": "@foodielisa",
+                "platform": "instagram",
+                "followers": 85000,
+                "engagement_rate": 6.2,
                 "average_views": 12000,
-                "niche": "tech",
-                "location": "Los Angeles",
-                "phone": "+1234567892",
+                "niche": "food",
+                "location": "New York",
+                "phone": "+18005551238",
                 "languages": ["English"],
-                "specialties": ["tech", "unboxing"],
-                "rate_per_post": 900.0,
-                "typical_rate": 900.0,
-                "availability": "excellent",
-                "brand_safety_score": 8.8
+                "specialties": ["food", "lifestyle", "cooking"],
+                "rate_per_post": 1000.0,
+                "content_types": ["posts", "stories"],
+                "availability": "good"
+            },
+            {
+                "id": "creator_gaming_003",
+                "name": "GamingStreamer_Alex",
+                "handle": "@alexgames",
+                "platform": "youtube",
+                "followers": 200000,
+                "engagement_rate": 5.5,
+                "average_views": 35000,
+                "niche": "gaming",
+                "location": "Los Angeles",
+                "phone": "+18005551237",
+                "languages": ["English"],
+                "specialties": ["gaming", "tech", "streaming"],
+                "rate_per_post": 1000.0,
+                "content_types": ["videos", "live streams"],
+                "availability": "fair"
+            },
+            {
+                "id": "creator_fitness_004",
+                "name": "FitnessGuru_Mike",
+                "handle": "@mikefitness",
+                "platform": "tiktok",
+                "followers": 150000,
+                "engagement_rate": 7.1,
+                "average_views": 22000,
+                "niche": "fitness",
+                "location": "Miami",
+                "phone": "+18005551235",
+                "languages": ["English", "Spanish"],
+                "specialties": ["fitness", "wellness", "nutrition"],
+                "rate_per_post": 1000.0,
+                "content_types": ["short videos", "tutorials"],
+                "availability": "excellent"
+            },
+            {
+                "id": "creator_beauty_005",
+                "name": "BeautyInfluencer_Priya",
+                "handle": "@priyabeauty",
+                "platform": "instagram",
+                "followers": 95000,
+                "engagement_rate": 5.8,
+                "average_views": 14000,
+                "niche": "beauty",
+                "location": "Toronto",
+                "phone": "+18005551236",
+                "languages": ["English"],
+                "specialties": ["beauty", "skincare", "makeup"],
+                "rate_per_post": 1000.0,
+                "content_types": ["posts", "stories", "tutorials"],
+                "availability": "good"
             }
         ]
         
@@ -117,41 +149,44 @@ class DiscoveryAgent:
         logger.info(f"🎭 Created {len(creators)} mock creators")
         return creators
     
-    async def discover_creators(
-        self, 
-        campaign_data: CampaignData, 
+    async def find_creators(
+        self,
+        target_audience: str,
+        budget_per_creator: float,
         max_creators: int = 10
     ) -> List[Creator]:
         """
-        Discover creators for campaign (main interface method)
+        Main method expected by orchestrator - find creators matching criteria
         
         Args:
-            campaign_data: Campaign information for matching
+            target_audience: Target audience description (used to infer niche)
+            budget_per_creator: Budget available per creator
             max_creators: Maximum number of creators to return
             
         Returns:
-            List of Creator objects
+            List of matching Creator objects
         """
+        
         logger.info(f"🔍 Searching for creators...")
-        logger.info(f"📊 Budget: ${campaign_data.total_budget}, Max creators: {max_creators}")
+        logger.info(f"📊 Budget: ${budget_per_creator}, Max creators: {max_creators}")
         
         try:
-            # Calculate budget per creator
-            budget_per_creator = campaign_data.total_budget / max_creators
+            # Extract niche from target audience (simple keyword matching)
+            niche = self._extract_niche_from_audience(target_audience)
             
             # Filter and score creators
             matching_creators = []
             
             for creator in self.creators_data:
                 # Calculate match score
-                match_score = self._calculate_match_score(creator, campaign_data, budget_per_creator)
+                match_score = self._calculate_match_score(creator, niche, budget_per_creator)
                 
                 if match_score > 50.0:  # Only include good matches
                     creator.match_score = match_score
                     creator.rate_compatible = creator.rate_per_post <= budget_per_creator * 1.2
                     matching_creators.append(creator)
             
-            # Sort by match score
+            # Sort by match score (highest first)
             matching_creators.sort(key=lambda c: c.match_score, reverse=True)
             
             # Return top matches
@@ -159,30 +194,58 @@ class DiscoveryAgent:
             
             logger.info(f"✅ Found {len(result)} matching creators")
             for creator in result:
-                logger.info(f"   👤 {creator.name} - Score: {creator.match_score:.1f}, Rate: ${creator.rate_per_post}")
+                logger.info(f"   👤 {creator.name} - Score: {creator.match_score}, Rate: ${creator.rate_per_post}")
             
             return result
             
         except Exception as e:
             logger.error(f"❌ Discovery failed: {e}")
             # Return mock creators for demo
-            return self.creators_data[:min(3, len(self.creators_data))]
+            return self.creators_data[:min(max_creators, len(self.creators_data))]
+    
+    def _extract_niche_from_audience(self, target_audience: str) -> str:
+        """Extract niche from target audience description"""
+        audience_lower = target_audience.lower()
+        
+        # Simple keyword matching for niche detection
+        if any(word in audience_lower for word in ["tech", "technology", "gadget", "device"]):
+            return "tech"
+        elif any(word in audience_lower for word in ["food", "cooking", "recipe", "culinary"]):
+            return "food"
+        elif any(word in audience_lower for word in ["game", "gaming", "gamer", "esports"]):
+            return "gaming"
+        elif any(word in audience_lower for word in ["fitness", "workout", "gym", "health"]):
+            return "fitness"
+        elif any(word in audience_lower for word in ["beauty", "makeup", "skincare", "cosmetic"]):
+            return "beauty"
+        else:
+            # Default to tech for unknown niches
+            return "tech"
     
     def _calculate_match_score(
-        self, 
-        creator: Creator, 
-        campaign_data: CampaignData, 
+        self,
+        creator: Creator,
+        target_niche: str,
         budget_per_creator: float
     ) -> float:
-        """Calculate how well a creator matches the campaign"""
+        """Calculate how well a creator matches the campaign criteria"""
         score = 0.0
         
         # Niche matching (40% of score)
-        campaign_niche = getattr(campaign_data, 'product_niche', 'tech')
-        if creator.niche.lower() == campaign_niche.lower():
+        if creator.niche.lower() == target_niche.lower():
             score += 40.0
-        elif campaign_niche.lower() in [s.lower() for s in creator.specialties]:
+        elif target_niche.lower() in [s.lower() for s in creator.specialties]:
             score += 25.0
+        else:
+            # Partial match for related niches
+            related_matches = {
+                "tech": ["gaming"],
+                "gaming": ["tech"],
+                "fitness": ["lifestyle"],
+                "beauty": ["lifestyle"]
+            }
+            if target_niche in related_matches and creator.niche in related_matches[target_niche]:
+                score += 15.0
         
         # Budget compatibility (30% of score)
         if creator.rate_per_post <= budget_per_creator:
@@ -193,32 +256,73 @@ class DiscoveryAgent:
             score += 10.0
         
         # Engagement rate (20% of score)
-        if creator.engagement_rate >= 5.0:
+        if creator.engagement_rate >= 6.0:
             score += 20.0
-        elif creator.engagement_rate >= 3.0:
+        elif creator.engagement_rate >= 4.0:
             score += 15.0
-        elif creator.engagement_rate >= 1.0:
+        elif creator.engagement_rate >= 2.0:
             score += 10.0
-        
-        # Follower count and availability (10% of score)
-        if creator.availability in ["excellent", "good"]:
+        elif creator.engagement_rate >= 1.0:
             score += 5.0
         
-        if 10000 <= creator.followers <= 500000:  # Sweet spot
+        # Follower count and availability (10% of score)
+        if creator.availability == "excellent":
+            score += 5.0
+        elif creator.availability == "good":
+            score += 3.0
+        elif creator.availability == "fair":
+            score += 1.0
+        
+        # Optimal follower range bonus
+        if 50000 <= creator.followers <= 500000:  # Sweet spot for engagement
             score += 5.0
         elif creator.followers > 100000:
             score += 3.0
+        elif creator.followers > 10000:
+            score += 2.0
         
         return min(score, 100.0)
     
+    # Additional methods for compatibility
+    
+    async def discover_creators(
+        self,
+        campaign_data: CampaignData,
+        max_creators: int = 10
+    ) -> List[Creator]:
+        """
+        Alternative interface using CampaignData object
+        
+        Args:
+            campaign_data: Complete campaign information
+            max_creators: Maximum number of creators to return
+            
+        Returns:
+            List of matching Creator objects
+        """
+        
+        return await self.find_creators(
+            target_audience=campaign_data.target_audience,
+            budget_per_creator=campaign_data.budget_per_creator,
+            max_creators=max_creators
+        )
+    
     async def find_matches(
-        self, 
-        campaign_data: CampaignData, 
+        self,
+        campaign_data: CampaignData,
         max_results: int = 5
     ) -> List[CreatorMatch]:
         """
         Alternative interface that returns CreatorMatch objects
+        
+        Args:
+            campaign_data: Campaign information for matching
+            max_results: Maximum number of matches to return
+            
+        Returns:
+            List of CreatorMatch objects with detailed scoring
         """
+        
         creators = await self.discover_creators(campaign_data, max_results)
         
         matches = []
@@ -232,7 +336,9 @@ class DiscoveryAgent:
                     f"Engagement: {creator.engagement_rate}%",
                     f"Followers: {creator.followers:,}"
                 ],
-                availability_score=0.8 if creator.availability == "excellent" else 0.6,
+                availability_score=0.9 if creator.availability == "excellent" else (
+                    0.7 if creator.availability == "good" else 0.5
+                ),
                 rate_compatible=creator.rate_compatible
             )
             matches.append(match)
@@ -242,20 +348,25 @@ class DiscoveryAgent:
     async def discover_influencers(self, product_niche: str, total_budget: float) -> List[Dict[str, Any]]:
         """
         Legacy interface for backward compatibility
+        
+        Args:
+            product_niche: Product niche for matching
+            total_budget: Total campaign budget
+            
+        Returns:
+            List of creator dictionaries
         """
-        # Create mock campaign data
-        mock_campaign = CampaignData(
-            id="discovery_temp",
-            name=f"Discovery for {product_niche}",
-            description=f"Product in {product_niche} niche",
-            product_niche=product_niche,
-            total_budget=total_budget,
-            max_creators=5
+        
+        max_creators = 5
+        budget_per_creator = total_budget / max_creators
+        
+        creators = await self.find_creators(
+            target_audience=f"People interested in {product_niche}",
+            budget_per_creator=budget_per_creator,
+            max_creators=max_creators
         )
         
-        creators = await self.discover_creators(mock_campaign, 5)
-        
-        # Convert to dictionary format
+        # Convert to dictionary format for legacy compatibility
         return [
             {
                 "id": creator.id,

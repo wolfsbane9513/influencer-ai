@@ -64,6 +64,21 @@ class Settings(BaseSettings):
     allowed_origins: List[str] = ["*"]
     api_key_header: str = "X-API-Key"
     rate_limit_per_minute: int = 100
+
+    @property
+    def version(self) -> str:
+        """Compatibility property for version access"""
+        return self.app_version
+
+    @property
+    def host(self) -> str:
+        """Compatibility property for host access"""
+        return self.api_host
+
+    @property
+    def port(self) -> int:
+        """Compatibility property for port access"""
+        return self.api_port    
     
     class Config:
         """Pydantic configuration"""

@@ -1,352 +1,89 @@
 {
   "creators": [
     {
-      "id": "sarah_tech",
+      "id": "creator_tech_001",
       "name": "TechReviewer_Sarah",
-      "platform": "YouTube",
-      "followers": 500000,
+      "handle": "@techsarah",
+      "platform": "instagram",
+      "followers": 125000,
+      "engagement_rate": 4.8,
+      "average_views": 18000,
       "niche": "tech",
-      "typical_rate": 4500,
-      "engagement_rate": 4.2,
-      "average_views": 180000,
-      "last_campaign_date": "2024-10-15",
-      "availability": "good",
-      "location": "Mumbai, India",
-      "phone_number": "+918806859890",
-      "languages": [
-        "English",
-        "Hindi"
-      ],
-      "specialties": [
-        "smartphone_reviews",
-        "gadget_unboxing",
-        "tech_tutorials"
-      ],
-      "audience_demographics": {
-        "age_18_24": 35,
-        "age_25_34": 40,
-        "age_35_44": 20,
-        "age_45_plus": 5,
-        "male": 70,
-        "female": 30,
-        "top_countries": [
-          "India",
-          "USA",
-          "UK",
-          "Canada",
-          "Australia"
-        ]
-      },
-      "performance_metrics": {
-        "avg_completion_rate": 98,
-        "brand_safety_score": 9.5,
-        "audience_quality": 8.8,
-        "delivery_punctuality": 95,
-        "content_quality_score": 9.2,
-        "collaboration_rating": 4.8
-      },
-      "recent_campaigns": [
-        {
-          "brand": "TechCorp",
-          "date": "2024-10-15",
-          "deliverables": [
-            "video_review",
-            "instagram_post"
-          ],
-          "price": 4200,
-          "performance": {
-            "views": 195000,
-            "engagement_rate": 4.6,
-            "click_through_rate": 2.1
-          }
-        }
-      ],
-      "rate_history": {
-        "2024": 4500,
-        "2023": 4000,
-        "2022": 3200
-      },
-      "preferred_collaboration_style": "Professional and detail-oriented. Prefers clear briefs and timeline flexibility.",
-      "phone": "+918806859890"
+      "location": "San Francisco",
+      "phone": "+918806859890",
+      "languages": ["English"],
+      "specialties": ["tech", "gadgets", "reviews"],
+      "rate_per_post": 1000.0,
+      "content_types": ["posts", "stories", "reels"],
+      "availability": "excellent"
     },
     {
-      "id": "mike_fitness",
-      "name": "FitnessGuru_Mike",
-      "platform": "Instagram",
-      "followers": 300000,
-      "niche": "fitness",
-      "typical_rate": 3200,
-      "engagement_rate": 5.8,
-      "average_views": 120000,
-      "last_campaign_date": "2024-11-01",
-      "availability": "limited",
-      "location": "Los Angeles, USA",
-      "phone_number": "+918806859890",
-      "languages": [
-        "English",
-        "Spanish"
-      ],
-      "specialties": [
-        "workout_routines",
-        "supplement_reviews",
-        "fitness_gear"
-      ],
-      "audience_demographics": {
-        "age_18_24": 25,
-        "age_25_34": 45,
-        "age_35_44": 25,
-        "age_45_plus": 5,
-        "male": 60,
-        "female": 40,
-        "top_countries": [
-          "USA",
-          "Canada",
-          "Mexico",
-          "Brazil",
-          "UK"
-        ]
-      },
-      "performance_metrics": {
-        "avg_completion_rate": 100,
-        "brand_safety_score": 9.8,
-        "audience_quality": 9.2,
-        "delivery_punctuality": 98,
-        "content_quality_score": 9.0,
-        "collaboration_rating": 4.9
-      },
-      "recent_campaigns": [
-        {
-          "brand": "ProteinPlus",
-          "date": "2024-11-01",
-          "deliverables": [
-            "workout_video",
-            "supplement_review",
-            "stories"
-          ],
-          "price": 3500,
-          "performance": {
-            "views": 140000,
-            "engagement_rate": 6.2,
-            "click_through_rate": 3.1
-          }
-        }
-      ],
-      "rate_history": {
-        "2024": 3200,
-        "2023": 2800,
-        "2022": 2200
-      },
-      "preferred_collaboration_style": "High-energy and authentic. Requires product testing period. Strong on deadline adherence.",
-      "phone": "+18005551235"
-    },
-    {
-      "id": "priya_beauty",
-      "name": "BeautyInfluencer_Priya",
-      "platform": "TikTok",
-      "followers": 1000000,
-      "niche": "beauty",
-      "typical_rate": 6000,
-      "engagement_rate": 7.2,
-      "average_views": 450000,
-      "last_campaign_date": "2024-11-20",
-      "availability": "busy",
-      "location": "Delhi, India",
-      "phone_number": "+918806859890",
-      "languages": [
-        "English",
-        "Hindi",
-        "Punjabi"
-      ],
-      "specialties": [
-        "makeup_tutorials",
-        "skincare_reviews",
-        "fashion_hauls"
-      ],
-      "audience_demographics": {
-        "age_18_24": 50,
-        "age_25_34": 35,
-        "age_35_44": 12,
-        "age_45_plus": 3,
-        "male": 15,
-        "female": 85,
-        "top_countries": [
-          "India",
-          "Pakistan",
-          "Bangladesh",
-          "UAE",
-          "USA"
-        ]
-      },
-      "performance_metrics": {
-        "avg_completion_rate": 96,
-        "brand_safety_score": 9.0,
-        "audience_quality": 8.5,
-        "delivery_punctuality": 90,
-        "content_quality_score": 9.4,
-        "collaboration_rating": 4.6
-      },
-      "recent_campaigns": [
-        {
-          "brand": "GlowCosmetics",
-          "date": "2024-11-20",
-          "deliverables": [
-            "makeup_tutorial",
-            "product_review",
-            "instagram_reels"
-          ],
-          "price": 6200,
-          "performance": {
-            "views": 520000,
-            "engagement_rate": 7.8,
-            "click_through_rate": 2.9
-          }
-        }
-      ],
-      "rate_history": {
-        "2024": 6000,
-        "2023": 5200,
-        "2022": 4000
-      },
-      "preferred_collaboration_style": "Creative freedom important. Prefers seasonal campaigns. Strong aesthetic requirements.",
-      "phone": "+18005551236"
-    },
-    {
-      "id": "alex_gaming",
-      "name": "GamingStreamer_Alex",
-      "platform": "Twitch",
-      "followers": 800000,
-      "niche": "gaming",
-      "typical_rate": 5500,
-      "engagement_rate": 8.1,
-      "average_views": 350000,
-      "last_campaign_date": "2024-10-30",
-      "availability": "good",
-      "location": "Toronto, Canada",
-      "phone_number": "+918806859890",
-      "languages": [
-        "English",
-        "French"
-      ],
-      "specialties": [
-        "fps_games",
-        "game_reviews",
-        "tech_hardware"
-      ],
-      "audience_demographics": {
-        "age_18_24": 60,
-        "age_25_34": 30,
-        "age_35_44": 8,
-        "age_45_plus": 2,
-        "male": 80,
-        "female": 20,
-        "top_countries": [
-          "USA",
-          "Canada",
-          "UK",
-          "Germany",
-          "Australia"
-        ]
-      },
-      "performance_metrics": {
-        "avg_completion_rate": 94,
-        "brand_safety_score": 8.8,
-        "audience_quality": 9.0,
-        "delivery_punctuality": 92,
-        "content_quality_score": 8.9,
-        "collaboration_rating": 4.7
-      },
-      "recent_campaigns": [
-        {
-          "brand": "GameGear",
-          "date": "2024-10-30",
-          "deliverables": [
-            "sponsored_stream",
-            "equipment_review"
-          ],
-          "price": 5200,
-          "performance": {
-            "views": 380000,
-            "engagement_rate": 8.5,
-            "click_through_rate": 4.2
-          }
-        }
-      ],
-      "rate_history": {
-        "2024": 5500,
-        "2023": 4800,
-        "2022": 3800
-      },
-      "preferred_collaboration_style": "Flexible with gaming content. Prefers hardware/software that enhances gameplay. Community-focused.",
-      "phone": "+18005551237"
-    },
-    {
-      "id": "lisa_food",
+      "id": "creator_food_002",
       "name": "FoodBlogger_Lisa",
-      "platform": "YouTube",
-      "followers": 250000,
+      "handle": "@foodielisa", 
+      "platform": "instagram",
+      "followers": 85000,
+      "engagement_rate": 6.2,
+      "average_views": 12000,
       "niche": "food",
-      "typical_rate": 2800,
-      "engagement_rate": 6.5,
-      "average_views": 95000,
-      "last_campaign_date": "2024-11-10",
-      "availability": "excellent",
-      "location": "New York, USA",
-      "phone_number": "+918806859890",
-      "languages": [
-        "English"
-      ],
-      "specialties": [
-        "restaurant_reviews",
-        "recipe_videos",
-        "food_photography"
-      ],
-      "audience_demographics": {
-        "age_18_24": 20,
-        "age_25_34": 40,
-        "age_35_44": 30,
-        "age_45_plus": 10,
-        "male": 35,
-        "female": 65,
-        "top_countries": [
-          "USA",
-          "Canada",
-          "UK",
-          "Australia",
-          "Germany"
-        ]
-      },
-      "performance_metrics": {
-        "avg_completion_rate": 99,
-        "brand_safety_score": 9.9,
-        "audience_quality": 8.9,
-        "delivery_punctuality": 97,
-        "content_quality_score": 9.1,
-        "collaboration_rating": 4.8
-      },
-      "recent_campaigns": [
-        {
-          "brand": "TastyTreats",
-          "date": "2024-11-10",
-          "deliverables": [
-            "recipe_video",
-            "taste_test",
-            "instagram_posts"
-          ],
-          "price": 2600,
-          "performance": {
-            "views": 105000,
-            "engagement_rate": 7.1,
-            "click_through_rate": 2.8
-          }
-        }
-      ],
-      "rate_history": {
-        "2024": 2800,
-        "2023": 2400,
-        "2022": 2000
-      },
-      "preferred_collaboration_style": "Detail-oriented with ingredients/preparation. Values authenticity. Prefers local/sustainable brands.",
-      "phone": "+18005551238"
+      "location": "New York",
+      "phone": "+18005551238",
+      "languages": ["English"],
+      "specialties": ["food", "lifestyle", "cooking"],
+      "rate_per_post": 1000.0,
+      "content_types": ["posts", "stories"],
+      "availability": "good"
+    },
+    {
+      "id": "creator_gaming_003",
+      "name": "GamingStreamer_Alex",
+      "handle": "@alexgames",
+      "platform": "youtube", 
+      "followers": 200000,
+      "engagement_rate": 5.5,
+      "average_views": 35000,
+      "niche": "gaming",
+      "location": "Los Angeles",
+      "phone": "+18005551237",
+      "languages": ["English"],
+      "specialties": ["gaming", "tech", "streaming"],
+      "rate_per_post": 1000.0,
+      "content_types": ["videos", "live streams"],
+      "availability": "fair"
+    },
+    {
+      "id": "creator_fitness_004",
+      "name": "FitnessGuru_Mike",
+      "handle": "@mikefitness",
+      "platform": "tiktok",
+      "followers": 150000,
+      "engagement_rate": 7.1,
+      "average_views": 22000,
+      "niche": "fitness",
+      "location": "Miami", 
+      "phone": "+18005551235",
+      "languages": ["English", "Spanish"],
+      "specialties": ["fitness", "wellness", "nutrition"],
+      "rate_per_post": 1000.0,
+      "content_types": ["short videos", "tutorials"],
+      "availability": "excellent"
+    },
+    {
+      "id": "creator_beauty_005",
+      "name": "BeautyInfluencer_Priya",
+      "handle": "@priyabeauty",
+      "platform": "instagram",
+      "followers": 95000,
+      "engagement_rate": 5.8,
+      "average_views": 14000,
+      "niche": "beauty",
+      "location": "Toronto",
+      "phone": "+18005551236",
+      "languages": ["English"],
+      "specialties": ["beauty", "skincare", "makeup"],
+      "rate_per_post": 1000.0,
+      "content_types": ["posts", "stories", "tutorials"],
+      "availability": "good"
     }
   ]
 }

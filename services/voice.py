@@ -1,8 +1,9 @@
-# services/voice.py - COMPLETE FIXED VOICE SERVICE
+# services/voice.py - FIXED WITH CAMPAIGN-SPECIFIC CONTEXT
 import asyncio
 import logging
 import httpx
 import json
+import uuid
 from typing import Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
@@ -20,18 +21,15 @@ class CallStatus(str, Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     FAILED = "failed"
-    TIMEOUT = "timeout"  # Added missing TIMEOUT status
+    TIMEOUT = "timeout"
 
 
 class VoiceService:
     """
-    🎙️ Complete Fixed Voice Service
+    🎙️ Fixed Voice Service with Campaign-Specific Context
     
-    Fixed ElevenLabs integration with correct API payload structure:
-    - Correct API endpoint: /v1/convai/twilio/outbound-call
-    - Correct payload fields: agent_phone_number_id, to_number
-    - Compatible with your exact model structure
-    - Clean OOP design without unnecessary helpers
+    Key Fix: The AI agent now knows exactly what campaign it's representing
+    and behaves as a brand representative, not a generic assistant.
     """
     
     def __init__(self):
@@ -45,7 +43,7 @@ class VoiceService:
         self.base_url = "https://api.elevenlabs.io"
         self.timeout = 30.0
         
-        # HTTP client configuration
+        # Configure HTTP client
         self._configure_client()
         
         logger.info(f"🎙️ Voice Service initialized (mock: {self.use_mock})")
@@ -54,7 +52,8 @@ class VoiceService:
         """Configure HTTP client with proper headers"""
         headers = {
             "Xi-Api-Key": self.api_key or "mock-key",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         }
         
         self.client = httpx.AsyncClient(
@@ -69,310 +68,388 @@ class VoiceService:
         dynamic_variables: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Initiate voice call to creator
+        Initiate campaign-specific voice call with proper context
         
-        Args:
-            creator: Creator to contact
-            campaign_data: Campaign information
-            dynamic_variables: Additional context for AI agent
-            
-        Returns:
-            Call result with conversation_id and status
+        FIXED: Now passes complete campaign context so AI knows:
+        - What brand it represents (TestTech Solutions)
+        - What product to pitch (E2E TestPro Device)
+        - What terms to negotiate
+        - Who the influencer is and why they're a good fit
         """
         
+        logger.info(f"📞 Initiating call to {creator.name} at {creator.phone}")
+        
         if self.use_mock:
-            return self._create_mock_response(creator, campaign_data)
+            return await self._mock_call_initiation(creator, campaign_data)
         
         try:
-            # Prepare call payload with correct field names
-            payload = self._build_call_payload(creator, campaign_data, dynamic_variables)
+            # FIXED: Build campaign-specific context instead of generic variables
+            campaign_context = self._build_campaign_context(creator, campaign_data, dynamic_variables)
             
-            # Make API call to correct ElevenLabs endpoint
-            response = await self._make_api_call(payload)
+            # Prepare API payload with campaign context
+            payload = {
+                "agent_id": self.agent_id,
+                "agent_phone_number_id": self.phone_number_id,
+                "to_number": creator.phone,
+                "dynamic_variables": campaign_context
+            }
             
-            # Process and validate response
-            return self._process_response(response, creator)
+            logger.info(f"🔧 Making ElevenLabs API call with payload keys: {list(payload.keys())}")
+            
+            # Make API call
+            response = await self.client.post(
+                f"{self.base_url}/v1/convai/twilio/outbound-call",
+                json=payload
+            )
+            
+            # Parse response
+            response_data = await self._parse_api_response(response)
+            
+            logger.info(f"🔍 ElevenLabs API response: {response_data}")
+            
+            # Return standardized result
+            return self._format_call_result(response_data, creator)
             
         except Exception as e:
             logger.error(f"❌ Call initiation failed for {creator.name}: {e}")
             return {
-                "status": CallStatus.FAILED,
-                "error": str(e),
-                "creator_id": creator.id
+                "success": False,
+                "message": f"Call initiation error: {str(e)}",
+                "conversation_id": None,
+                "status": "failed"
             }
     
-    def _build_call_payload(
+    def _build_campaign_context(
         self,
         creator: Creator,
         campaign_data: CampaignData,
-        dynamic_variables: Optional[Dict[str, Any]] = None
+        additional_vars: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Build API payload for ElevenLabs call with correct field names"""
+        """
+        FIXED: Build campaign context to match your ElevenLabs configuration exactly
         
-        # Get phone number - your model uses 'phone' not 'phone_number'
-        phone_number = getattr(creator, 'phone', None) or getattr(creator, 'phone_number', None)
+        This matches the variable names I can see in your ElevenLabs setup.
+        """
         
-        if not phone_number:
-            raise ValueError(f"Creator {creator.name} has no phone number")
+        # Calculate personalized offer details
+        personalized_rate = min(campaign_data.budget_per_creator, creator.rate_per_post * 1.2)
+        rate_range_min = max(campaign_data.budget_per_creator * 0.8, creator.rate_per_post * 0.9)
+        rate_range_max = campaign_data.budget_per_creator
         
-        # Use the CORRECT field names based on the 422 error message
-        payload = {
-            "agent_id": self.agent_id,
-            "agent_phone_number_id": self.phone_number_id,  # Correct field name
-            "to_number": phone_number,  # Correct field name
-            "max_duration": 300  # 5 minutes max
-        }
-        
-        # Prepare dynamic variables for AI agent
-        variables = self._prepare_dynamic_variables(creator, campaign_data, dynamic_variables)
-        if variables:
-            payload["dynamic_variables"] = variables
-        
-        return payload
-    
-    def _prepare_dynamic_variables(
-        self,
-        creator: Creator,
-        campaign_data: CampaignData,
-        additional_variables: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """Prepare context variables for AI agent"""
-        
-        # Handle different field names in your models with robust fallbacks
-        variables = {
+        # Match your ElevenLabs variable structure exactly
+        campaign_context = {
+            # Core identification variables (matching your ElevenLabs config)
             "influencerName": creator.name,
-            "influencerNiche": getattr(creator, 'niche', 'general'),
-            "influencerFollowers": getattr(creator, 'followers', 0),
-            "brandName": self._get_brand_name(campaign_data),
-            "productName": self._get_product_name(campaign_data), 
-            "productDescription": self._get_product_description(campaign_data),
-            "targetAudience": getattr(campaign_data, 'target_audience', 'general audience'),
-            "campaignGoal": getattr(campaign_data, 'campaign_goal', 'brand awareness'),
-            "suggestedRate": getattr(creator, 'rate_per_post', None) or getattr(creator, 'typical_rate', 1000),
-            "timeline": "4-6 weeks",
-            "deliverables": "video review, social posts"
+            "campaignBriefbrand_name": campaign_data.company_name,
+            
+            # Influencer Profile object (as shown in your config)
+            "InfluencerProfile": {
+                "name": creator.name,
+                "channel": f"{creator.handle}",
+                "niche": creator.niche,
+                "followers": creator.followers,
+                "engagement": creator.engagement_rate,
+                "audienceType": f"{creator.niche} enthusiasts",
+                "location": getattr(creator, 'location', 'Global'),
+                "performanceMetrics": f"{creator.engagement_rate}% engagement rate with {creator.followers:,} followers"
+            },
+            
+            # Campaign Brief object (matching your structure)
+            "campaignBrief": {
+                "brand_name": campaign_data.company_name,
+                "product_name": campaign_data.product_name,
+                "product_description": campaign_data.product_description,
+                "product_niche": getattr(campaign_data, 'product_niche', 'tech'),
+                "uniqueValue": f"exclusive early access to {campaign_data.product_name}"
+            },
+            
+            # Negotiation Strategy object
+            "negotiationStrategy": {
+                "approach": "collaborative",
+                "matchReasons": f"Your {creator.niche} content and {creator.engagement_rate}% engagement aligns perfectly with our target audience",
+                "objectionHandling": "flexible_on_timeline_firm_on_quality",
+                "brandAlignment": f"Strong alignment between {creator.niche} content and {campaign_data.product_name}"
+            },
+            
+            # Deliverable Requirements
+            "deliverableRequirements": {
+                "primary": f"Product review video featuring {campaign_data.product_name}",
+                "secondary": campaign_data.content_requirements
+            },
+            
+            # Timeline Expectations
+            "timelineExpectations": {
+                "preferred": campaign_data.timeline,
+                "launchDate": "within 4 weeks",
+                "deadline": "6 weeks maximum"
+            },
+            
+            # Usage Rights
+            "usageRights": {
+                "type": "organic_plus_website_features", 
+                "duration": "12 months from posting date"
+            },
+            
+            # Budget Strategy
+            "budgetStrategy": {
+                "initialOffer": str(int(personalized_rate)),
+                "maxOffer": str(int(rate_range_max)),
+                "rushPremium": "+20% for expedited delivery"
+            },
+            
+            # Competitor Context
+            "competitorContext": {
+                "marketRates": f"${int(rate_range_min)}-${int(rate_range_max)} range for similar campaigns",
+                "platform": f"Leading {creator.platform} creators in {creator.niche}"
+            },
+            
+            # Additional flat variables for direct access
+            "InfluencerProfileniche": creator.niche,
+            "InfluencerProfilefollowers": str(creator.followers),
+            "InfluencerProfileengagement": str(creator.engagement_rate),
+            "InfluencerProfileaudienceType": f"{creator.niche} enthusiasts",
+            "InfluencerProfilelocation": getattr(creator, 'location', 'Global'),
+            "InfluencerProfileperformanceMetrics": f"{creator.engagement_rate}% engagement with {creator.followers:,} followers",
+            
+            "campaignBriefproduct_niche": getattr(campaign_data, 'product_niche', 'tech'),
+            "campaignBriefuniqueValue": f"exclusive early access to {campaign_data.product_name}",
+            
+            "negotiationStrategymatchReasons": f"Your {creator.niche} content perfectly aligns with our {campaign_data.product_name} campaign",
+            "negotiationStrategyobjectionHandling": "flexible_on_timeline_firm_on_quality",
+            "negotiationStrategyapproach": "collaborative",
+            "negotiationStrategybrandAlignment": f"Perfect fit between {creator.niche} audience and {campaign_data.product_name}",
+            
+            "deliverableRequirementsprimary": f"Authentic product review of {campaign_data.product_name}",
+            "deliverableRequirementssecondary": campaign_data.content_requirements,
+            
+            "timelineExpectationspreferred": campaign_data.timeline,
+            "timelineExpectationslaunchDate": "coordinated campaign launch",
+            "timelineExpectationsdeadline": "6 weeks maximum",
+            
+            "usageRightstype": "organic_plus_website_features",
+            "usageRightsduration": "12 months from posting date",
+            
+            "budgetStrategyinitialOffer": str(int(personalized_rate)),
+            "budgetStrategymaxOffer": str(int(rate_range_max)),
+            "budgetStrategyrusshPremium": "+20% for expedited delivery",
+            
+            "competitorContextmarketRates": f"${int(rate_range_min)}-${int(rate_range_max)} range",
+            
+            # Final agreement fields (will be updated during conversation)
+            "finalAgreedRate": str(int(personalized_rate)),
+            "finalDeliverables": campaign_data.content_requirements,
+            "finalTimeline": campaign_data.timeline
         }
         
         # Add any additional variables
-        if additional_variables:
-            variables.update(additional_variables)
+        if additional_vars:
+            campaign_context.update(additional_vars)
         
-        return variables
-    
-    def _get_brand_name(self, campaign_data: CampaignData) -> str:
-        """Extract brand name from campaign data"""
-        if hasattr(campaign_data, 'brand_name') and campaign_data.brand_name:
-            return campaign_data.brand_name
-        elif hasattr(campaign_data, 'name') and ' - ' in campaign_data.name:
-            return campaign_data.name.split(' - ')[0]
-        elif hasattr(campaign_data, 'name'):
-            return campaign_data.name
-        return "Brand"
-    
-    def _get_product_name(self, campaign_data: CampaignData) -> str:
-        """Extract product name from campaign data"""
-        if hasattr(campaign_data, 'product_name') and campaign_data.product_name:
-            return campaign_data.product_name
-        elif hasattr(campaign_data, 'name') and ' - ' in campaign_data.name:
-            return campaign_data.name.split(' - ')[1]
-        elif hasattr(campaign_data, 'name'):
-            return campaign_data.name
-        return "Product"
-    
-    def _get_product_description(self, campaign_data: CampaignData) -> str:
-        """Extract product description from campaign data"""
-        if hasattr(campaign_data, 'product_description') and campaign_data.product_description:
-            return campaign_data.product_description
-        elif hasattr(campaign_data, 'description') and campaign_data.description:
-            return campaign_data.description
-        return "Great product for influencer marketing"
-    
-    async def _make_api_call(self, payload: Dict[str, Any]) -> httpx.Response:
-        """Make HTTP request to ElevenLabs API"""
+        logger.info(f"🎯 Built ElevenLabs-compatible context for {creator.name}: {campaign_data.company_name} - {campaign_data.product_name}")
         
-        # Use the CORRECT ElevenLabs endpoint
-        url = f"{self.base_url}/v1/convai/twilio/outbound-call"
-        
-        logger.info(f"📞 Making real ElevenLabs call to {payload.get('to_number')}")
-        logger.info(f"🔧 Using agent_id: {self.agent_id}")
-        logger.info(f"🔧 Using agent_phone_number_id: {self.phone_number_id}")
-        
-        response = await self.client.post(url, json=payload)
-        return response
+        return campaign_context
     
-    def _process_response(
-        self,
-        response: httpx.Response,
-        creator: Creator
-    ) -> Dict[str, Any]:
-        """Process ElevenLabs API response"""
+    def _determine_match_reasons(self, creator: Creator, campaign_data: CampaignData) -> str:
+        """Determine specific reasons why this creator is a good fit"""
         
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                
-                # Log the full response for debugging
-                logger.info(f"🔍 ElevenLabs API response: {data}")
-                
-                # Try different possible field names for conversation_id
-                conversation_id = (
-                    data.get("conversation_id") or 
-                    data.get("id") or 
-                    data.get("call_id") or
-                    data.get("session_id")
-                )
-                
-                if not conversation_id:
-                    logger.warning("⚠️ No conversation_id found in response, using generated ID")
-                    conversation_id = f"elevenlabs-{int(datetime.now().timestamp())}"
-                
-                logger.info(f"✅ Call initiated successfully: {conversation_id}")
+        reasons = []
+        
+        # Niche alignment
+        if creator.niche.lower() in campaign_data.target_audience.lower():
+            reasons.append(f"your {creator.niche} content aligns perfectly with our target audience")
+        
+        # Platform fit
+        if creator.platform in ["instagram", "youtube", "tiktok"]:
+            reasons.append(f"your {creator.platform} presence is ideal for product showcases")
+        
+        # Engagement quality
+        if creator.engagement_rate > 4.0:
+            reasons.append(f"your {creator.engagement_rate}% engagement rate shows strong audience connection")
+        
+        # Follower range
+        if 50000 <= creator.followers <= 500000:
+            reasons.append("your audience size is perfect for authentic product reviews")
+        
+        # Specialties match
+        matching_specialties = [spec for spec in creator.specialties if spec.lower() in campaign_data.product_description.lower()]
+        if matching_specialties:
+            reasons.append(f"your expertise in {', '.join(matching_specialties)} matches our product perfectly")
+        
+        return "; ".join(reasons[:3])  # Top 3 reasons to keep it concise
+    
+    async def _parse_api_response(self, response: httpx.Response) -> Dict[str, Any]:
+        """Parse ElevenLabs API response with proper error handling"""
+        
+        try:
+            if response.status_code == 200:
+                response_json = response.json()
+                return {
+                    "success": True,
+                    "message": "Call initiated successfully",
+                    "conversation_id": response_json.get("conversation_id"),
+                    "call_sid": response_json.get("call_sid"),
+                    "raw_response": response_json
+                }
+            else:
+                try:
+                    error_data = response.json()
+                    error_message = error_data.get("detail", f"HTTP {response.status_code} error")
+                except:
+                    error_message = f"HTTP {response.status_code} error"
                 
                 return {
-                    "status": CallStatus.CONNECTING,
-                    "conversation_id": conversation_id,
-                    "call_id": data.get("call_id"),
-                    "creator_id": creator.id,
-                    "phone_number": getattr(creator, 'phone', None) or getattr(creator, 'phone_number', None),
-                    "started_at": datetime.now().isoformat(),
-                    "raw_response": data  # Include full response for debugging
+                    "success": False,
+                    "message": f"HTTP {response.status_code} error: {error_message}",
+                    "conversation_id": None,
+                    "call_sid": None
                 }
                 
-            except json.JSONDecodeError as e:
-                logger.error(f"❌ Invalid JSON response: {e}")
-                return {
-                    "status": CallStatus.FAILED,
-                    "error": f"Invalid JSON response: {e}",
-                    "creator_id": creator.id
-                }
-        else:
-            logger.error(f"❌ API error {response.status_code}: {response.text}")
+        except Exception as e:
+            logger.error(f"❌ Failed to parse API response: {e}")
             return {
-                "status": CallStatus.FAILED,
-                "error": f"API Error {response.status_code}: {response.text}",
-                "creator_id": creator.id,
-                "status_code": response.status_code
+                "success": False,
+                "message": f"Response parsing error: {str(e)}",
+                "conversation_id": None,
+                "call_sid": None
             }
     
-    def _create_mock_response(
+    def _format_call_result(self, api_response: Dict[str, Any], creator: Creator) -> Dict[str, Any]:
+        """Format API response into standardized call result"""
+        
+        if api_response.get("success", False):
+            conversation_id = api_response.get("conversation_id")
+            
+            if conversation_id:
+                return {
+                    "success": True,
+                    "message": f"Campaign call successfully initiated to {creator.name}",
+                    "conversation_id": conversation_id,
+                    "call_sid": api_response.get("call_sid"),
+                    "status": "connecting"
+                }
+            else:
+                # Generate fallback ID if API doesn't provide one
+                fallback_id = f"elevenlabs-{int(datetime.now().timestamp())}"
+                logger.warning("⚠️ No conversation_id found in response, using generated ID")
+                
+                return {
+                    "success": True,
+                    "message": f"Campaign call initiated to {creator.name} (fallback ID)",
+                    "conversation_id": fallback_id,
+                    "status": "connecting"
+                }
+        else:
+            return {
+                "success": False,
+                "message": api_response.get("message", "Campaign call initiation failed"),
+                "conversation_id": None,
+                "status": "failed"
+            }
+    
+    async def _mock_call_initiation(
         self,
         creator: Creator,
         campaign_data: CampaignData
     ) -> Dict[str, Any]:
-        """Create mock response for development/testing"""
+        """Mock call initiation for testing with campaign context"""
         
-        conversation_id = f"mock-{creator.id}-{int(datetime.now().timestamp())}"
+        mock_conversation_id = f"mock-campaign-{uuid.uuid4().hex[:8]}"
         
-        logger.info(f"🎭 Mock call initiated for {creator.name}")
+        logger.info(f"🎭 Mock campaign call initiated for {creator.name}: {mock_conversation_id}")
+        logger.info(f"🎯 Campaign: {campaign_data.company_name} - {campaign_data.product_name}")
         
         return {
-            "status": CallStatus.CONNECTING,
-            "conversation_id": conversation_id,
-            "creator_id": creator.id,
-            "phone_number": getattr(creator, 'phone', None) or getattr(creator, 'phone_number', '+1-555-MOCK'),
-            "started_at": datetime.now().isoformat(),
-            "mock": True
+            "success": True,
+            "message": f"Mock campaign call initiated to {creator.name} for {campaign_data.product_name}",
+            "conversation_id": mock_conversation_id,
+            "status": "in_progress"
         }
     
     async def check_call_status(self, conversation_id: str) -> Dict[str, Any]:
-        """
-        Check status of ongoing call
-        
-        Args:
-            conversation_id: ElevenLabs conversation ID
-            
-        Returns:
-            Current call status and any available results
-        """
+        """Check current status of ongoing call"""
         
         if self.use_mock:
-            return self._create_mock_status(conversation_id)
+            return await self._mock_status_check(conversation_id)
         
         try:
-            url = f"{self.base_url}/v1/convai/conversations/{conversation_id}"
-            response = await self.client.get(url)
+            response = await self.client.get(
+                f"{self.base_url}/v1/convai/conversation/{conversation_id}"
+            )
             
             if response.status_code == 200:
                 data = response.json()
-                return self._extract_call_results(data)
+                return self._parse_status_response(data, conversation_id)
             else:
                 logger.error(f"❌ Status check failed: {response.status_code}")
                 return {
-                    "status": CallStatus.FAILED,
-                    "error": f"Status check failed: {response.status_code}"
+                    "status": "failed",
+                    "conversation_id": conversation_id,
+                    "error": f"Status check failed: {response.status_code}",
+                    "call_successful": False
                 }
                 
         except Exception as e:
             logger.error(f"❌ Status check error: {e}")
             return {
-                "status": CallStatus.FAILED,
-                "error": str(e)
+                "status": "failed",
+                "conversation_id": conversation_id,
+                "error": str(e),
+                "call_successful": False
             }
     
-    def _extract_call_results(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract meaningful results from ElevenLabs conversation data"""
+    def _parse_status_response(self, data: Dict[str, Any], conversation_id: str) -> Dict[str, Any]:
+        """Parse status response from ElevenLabs API"""
         
-        # Handle None data
-        if data is None:
+        try:
+            status = data.get("status", "unknown")
+            call_successful = data.get("call_successful", False)
+            
+            # Extract conversation analysis if available
+            analysis = data.get("analysis", {})
+            
             return {
-                "status": CallStatus.FAILED,
-                "conversation_id": None,
-                "error": "No data received from API"
+                "status": status,
+                "conversation_id": conversation_id,
+                "call_successful": call_successful,
+                "analysis": analysis,
+                "final_rate": analysis.get("final_rate"),
+                "timeline": analysis.get("timeline"),
+                "deliverables": analysis.get("deliverables"),
+                "raw_data": data
             }
-        
-        # Get basic call information
-        status = data.get("status", "unknown")
-        analysis = data.get("analysis", {})
-        
-        # Extract negotiation results if available
-        data_collection = analysis.get("data_collection_results", {})
-        
-        result = {
-            "status": self._map_elevenlabs_status(status),
-            "conversation_id": data.get("id"),
-            "raw_status": status
-        }
-        
-        # Add negotiation results if call completed successfully
-        if status == "done" and data_collection:
-            result.update({
-                "final_rate": data_collection.get("final_rate_mentioned", {}).get("value"),
-                "timeline": data_collection.get("timeline_mentioned", {}).get("value"),
-                "deliverables": data_collection.get("deliverables_discussed", {}).get("value"),
-                "call_successful": analysis.get("call_successful") == "success"
-            })
-        
-        return result
+            
+        except Exception as e:
+            logger.error(f"❌ Error parsing status response: {e}")
+            return {
+                "status": "failed",
+                "conversation_id": conversation_id,
+                "error": f"Status parsing error: {str(e)}",
+                "call_successful": False
+            }
     
-    def _map_elevenlabs_status(self, status: str) -> CallStatus:
-        """Map ElevenLabs status to our standard status enum"""
-        mapping = {
-            "initiated": CallStatus.CONNECTING,
-            "in-progress": CallStatus.IN_PROGRESS,
-            "processing": CallStatus.IN_PROGRESS,
-            "done": CallStatus.COMPLETED,
-            "completed": CallStatus.COMPLETED,
-            "failed": CallStatus.FAILED,
-            "error": CallStatus.FAILED,
-            "timeout": CallStatus.FAILED
-        }
-        return mapping.get(status, CallStatus.FAILED)
-    
-    def _create_mock_status(self, conversation_id: str) -> Dict[str, Any]:
-        """Create mock status response for development"""
+    async def _mock_status_check(self, conversation_id: str) -> Dict[str, Any]:
+        """Mock status check with campaign negotiation results"""
         
-        # Simulate completed call with successful negotiation
         return {
-            "status": CallStatus.COMPLETED,
+            "status": "completed",
             "conversation_id": conversation_id,
-            "final_rate": 800.0,
-            "timeline": "4 weeks",
-            "deliverables": "video_review,instagram_story",
             "call_successful": True,
-            "mock": True
+            "final_rate": 1200.0,
+            "timeline": "4 weeks",
+            "deliverables": "3 Instagram posts, 2 TikTok videos showcasing E2E TestPro Device",
+            "negotiation_outcome": "agreed to campaign terms",
+            "influencer_interest": "high",
+            "analysis": {
+                "sentiment": "positive",
+                "negotiation_outcome": "successful",
+                "agreement_reached": "yes"
+            }
         }
     
     async def close(self) -> None:
-        """Clean up HTTP client"""
-        if hasattr(self, 'client'):
+        """Clean up HTTP client resources"""
+        try:
             await self.client.aclose()
+            logger.info("✅ Voice Service resources cleaned up")
+        except Exception as e:
+            logger.error(f"❌ Error cleaning up voice service: {e}")

@@ -63,7 +63,7 @@ class InfluencerAIEndToEndTest:
         try:
             print("1. 🏥 Testing system health...")
             
-            response = requests.get(f"{self.base_url}/health", timeout=10)
+            response = requests.get(f"{self.base_url}/api/health", timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
@@ -120,15 +120,16 @@ class InfluencerAIEndToEndTest:
             
             # Create test campaign using new unified API
             campaign_data = {
+                "company_name": "TestTech Solutions",  # Changed from brand_name
                 "product_name": "E2E TestPro Device",
-                "brand_name": "TestTech Solutions",
                 "product_description": "Revolutionary testing device for end-to-end validation",
                 "target_audience": "Tech enthusiasts and developers",
-                "campaign_goal": "Generate awareness and drive pre-orders",
-                "product_niche": "tech",
-                "total_budget": 12000.0,
+                "campaign_goals": "Generate awareness and drive pre-orders",  # Changed from campaign_goal
+                "budget_per_creator": 1200.0,  # Changed from total_budget (12000/10)
                 "max_creators": 10,
-                "timeline_days": 30
+                "timeline": "30 days",  # Add this field
+                "content_requirements": "Social media posts and stories",  # Add this field
+                "brand_guidelines": "Follow tech brand voice and style"  # Add this field
             }
             
             response = requests.post(

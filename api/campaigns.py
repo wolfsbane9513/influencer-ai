@@ -1,338 +1,303 @@
-# api/campaigns.py - FIXED UNIFIED CAMPAIGN API
+# api/campaigns.py - FIXED CAMPAIGNS API
 import asyncio
 import logging
-import uuid
+from typing import Dict, Any, Optional
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from typing import Dict, Any
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel
 
-from core.models import (
-    CampaignData, 
-    OrchestrationState, 
-    CampaignCreateRequest,
-    CampaignStatusResponse
-)
+from core.models import CampaignData, OrchestrationState
 from agents.orchestrator import CampaignOrchestrator
+from services.voice import VoiceService
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
 
-# Global state for campaign tracking
-active_campaigns: Dict[str, OrchestrationState] = {}
+router = APIRouter(prefix="/api", tags=["campaigns"])
 
-# Single orchestrator instance
+# Global orchestrator instance
 orchestrator = CampaignOrchestrator()
 
-@router.post("/campaigns", response_model=Dict[str, Any])
-async def create_campaign(
-    campaign_request: CampaignCreateRequest,
-    background_tasks: BackgroundTasks
-) -> Dict[str, Any]:
-    """
-    🚀 Unified Campaign Creation Endpoint
-    
-    Handles campaign creation with proper validation and background processing.
-    """
+# Campaign state storage (in production, use proper database)
+campaign_states: Dict[str, OrchestrationState] = {}
+
+
+class CampaignRequest(BaseModel):
+    """Campaign creation request model"""
+    company_name: str
+    product_name: str
+    product_description: str
+    target_audience: str
+    campaign_goals: str
+    budget_per_creator: float
+    max_creators: int = 10
+    timeline: str = "2 weeks"
+    content_requirements: str = "Social media posts"
+    brand_guidelines: str = "Follow brand voice and style"
+
+
+class CampaignResponse(BaseModel):
+    """Campaign creation response model"""
+    success: bool
+    campaign_id: str
+    task_id: str
+    message: str
+    campaign_code: Optional[str] = None
+
+
+@router.get("/health")
+async def health_check():
+    """System health check endpoint"""
     try:
-        # Generate unique identifiers
-        task_id = str(uuid.uuid4())
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "services": "initialized"
+        }
+    except Exception as e:
+        logger.error(f"❌ Health check failed: {e}")
+        raise HTTPException(status_code=500, detail="Service unhealthy")
+
+
+@router.get("/webhook/test-enhanced-elevenlabs")
+async def test_elevenlabs():
+    """Test ElevenLabs integration"""
+    try:
+        logger.info("📞 Testing ElevenLabs integration...")
+        
+        voice_service = VoiceService()
+        
+        # Check if in mock mode
+        if voice_service.use_mock:
+            return {
+                "status": "mock_mode",
+                "api_connected": False,
+                "message": "ElevenLabs running in mock mode"
+            }
+        else:
+            # In production, you could test with a verified number
+            return {
+                "status": "configured",
+                "api_connected": True,
+                "message": "ElevenLabs API configured and ready"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ ElevenLabs test failed: {e}")
+        return {
+            "status": "error",
+            "api_connected": False,
+            "message": f"ElevenLabs test failed: {str(e)}"
+        }
+
+
+@router.post("/campaigns")
+async def create_campaign(
+    request: CampaignRequest,
+    background_tasks: BackgroundTasks
+) -> CampaignResponse:
+    """
+    Create new campaign and start orchestration
+    
+    Fixed error handling to prevent OrchestrationState field errors
+    """
+    
+    try:
+        # Generate unique IDs
+        import uuid
         campaign_id = str(uuid.uuid4())
+        task_id = str(uuid.uuid4())
+        campaign_code = f"CAMP-{campaign_id[:8].upper()}"
         
-        # Create campaign data object using the request converter
-        campaign_data = campaign_request.to_campaign_data(campaign_id)
-        
-        # Generate campaign code
-        campaign_code = campaign_data.generate_campaign_code()
-        
-        logger.info(f"🚀 Campaign created: {campaign_data.product_name} (Task: {task_id})")
-        
-        # Initialize orchestration state for tracking
-        initial_state = OrchestrationState(
+        # Create campaign data
+        campaign_data = CampaignData(
             campaign_id=campaign_id,
-            campaign_data=campaign_data,
-            current_stage="queued"
+            company_name=request.company_name,
+            product_name=request.product_name,
+            product_description=request.product_description,
+            target_audience=request.target_audience,
+            campaign_goals=request.campaign_goals,
+            budget_per_creator=request.budget_per_creator,
+            max_creators=request.max_creators,
+            timeline=request.timeline,
+            content_requirements=request.content_requirements,
+            brand_guidelines=request.brand_guidelines
         )
-        active_campaigns[task_id] = initial_state
+        
+        logger.info(f"🚀 Campaign created: {request.product_name} (Task: {task_id})")
         
         # Start orchestration in background
         background_tasks.add_task(
             run_campaign_orchestration,
-            task_id,
-            campaign_data
+            campaign_data,
+            task_id
         )
         
-        return {
-            "task_id": task_id,
-            "campaign_id": campaign_id,
-            "campaign_code": campaign_code,
-            "status": "started",
-            "message": f"Campaign orchestration started for {campaign_data.product_name}",
-            "estimated_duration_minutes": 8,
-            "max_creators": campaign_data.max_creators,
-            "budget_per_creator": campaign_data.get_budget_per_creator()
-        }
+        logger.info(f"🎯 Starting orchestration for task {task_id}")
+        
+        return CampaignResponse(
+            success=True,
+            campaign_id=campaign_id,
+            task_id=task_id,
+            message="Campaign created and orchestration started",
+            campaign_code=campaign_code
+        )
         
     except Exception as e:
         logger.error(f"❌ Campaign creation failed: {e}")
-        raise HTTPException(status_code=400, detail=f"Campaign creation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Campaign creation failed: {str(e)}"
+        )
 
-async def run_campaign_orchestration(task_id: str, campaign_data: CampaignData):
+
+@router.get("/campaigns/{task_id}")
+async def get_campaign_status(task_id: str) -> Dict[str, Any]:
     """
-    Background task for campaign orchestration
+    Get current campaign status and progress
     
-    Runs the complete campaign workflow and updates state for monitoring
+    Fixed to handle missing campaigns gracefully
     """
+    
     try:
-        logger.info(f"🎯 Starting orchestration for task {task_id}")
-        
-        # Update state to show orchestration started
-        if task_id in active_campaigns:
-            active_campaigns[task_id].current_stage = "starting"
-        
-        # Run complete orchestration
+        # Check if campaign exists in our state storage
+        if task_id in campaign_states:
+            state = campaign_states[task_id]
+            
+            return {
+                "task_id": task_id,
+                "campaign_id": state.campaign_id,
+                "stage": state.stage,
+                "is_complete": state.is_complete,
+                "progress_percentage": state.get_progress_percentage(),
+                "creators_found": state.creators_found,
+                "successful_negotiations": state.successful_negotiations,
+                "contracts_generated": state.contracts_count,
+                "error_message": state.error_message,
+                "start_time": state.start_time.isoformat() if state.start_time else None,
+                "end_time": state.end_time.isoformat() if state.end_time else None
+            }
+        else:
+            # Campaign not found in memory, try to get from orchestrator
+            status = await orchestrator.get_campaign_status(task_id)
+            return status
+            
+    except Exception as e:
+        logger.error(f"❌ Status check failed for {task_id}: {e}")
+        return {
+            "task_id": task_id,
+            "stage": "error",
+            "is_complete": False,
+            "error_message": f"Status check failed: {str(e)}"
+        }
+
+
+async def run_campaign_orchestration(
+    campaign_data: CampaignData,
+    task_id: str
+) -> None:
+    """
+    Run campaign orchestration in background with proper error handling
+    
+    Fixed: Proper error state handling without field assignment errors
+    """
+    
+    try:
+        # Start orchestration
         result_state = await orchestrator.orchestrate_campaign(campaign_data)
         
-        # Store final results
-        active_campaigns[task_id] = result_state
+        # Store final state
+        campaign_states[task_id] = result_state
         
-        logger.info(f"✅ Campaign {task_id} completed successfully")
-        logger.info(f"📊 Final metrics: {result_state.successful_negotiations} successful negotiations")
-        
+        if result_state.stage == "completed":
+            logger.info(f"✅ Campaign {task_id} completed successfully")
+        else:
+            logger.error(f"❌ Campaign {task_id} failed: {result_state.error_message}")
+            
     except Exception as e:
         logger.error(f"❌ Campaign {task_id} failed: {e}")
         
-        # Store error state
-        if task_id in active_campaigns:
-            error_state = active_campaigns[task_id]
-            error_state.current_stage = "failed"
-            # Add error_message attribute if it doesn't exist
-            if not hasattr(error_state, 'error_message'):
-                error_state.error_message = str(e)
-            else:
-                error_state.error_message = str(e)
-            error_state.completed_at = datetime.now()
+        # Create error state properly (all fields exist in fixed OrchestrationState)
+        error_state = OrchestrationState(
+            stage="failed",
+            campaign_id=campaign_data.campaign_id,
+            company_name=campaign_data.company_name,
+            product_name=campaign_data.product_name,
+            start_time=datetime.now(),
+            end_time=datetime.now(),
+            error_message=str(e)  # This field now exists in the fixed model
+        )
+        
+        campaign_states[task_id] = error_state
 
-@router.get("/campaigns/{task_id}", response_model=CampaignStatusResponse)
-async def get_campaign_status(task_id: str) -> CampaignStatusResponse:
-    """
-    📊 Get Campaign Status and Progress
-    
-    Returns detailed campaign status including progress metrics and current stage
-    """
-    if task_id not in active_campaigns:
-        raise HTTPException(status_code=404, detail="Campaign not found")
-    
-    state = active_campaigns[task_id]
-    
-    # Use the model's class method to create response
-    return CampaignStatusResponse.from_orchestration_state(task_id, state)
 
-@router.get("/campaigns/{task_id}/detailed")
-async def get_detailed_campaign_results(task_id: str) -> Dict[str, Any]:
-    """
-    📋 Get Detailed Campaign Results
-    
-    Returns comprehensive campaign results including all negotiations and contracts
-    """
-    if task_id not in active_campaigns:
-        raise HTTPException(status_code=404, detail="Campaign not found")
-    
-    state = active_campaigns[task_id]
-    
-    # Get campaign metrics
-    metrics = orchestrator.get_campaign_metrics(state)
-    
-    # Prepare detailed results
-    detailed_results = {
-        "campaign_info": {
-            "task_id": task_id,
-            "campaign_id": state.campaign_id,
-            "campaign_code": getattr(state.campaign_data, 'campaign_code', 'N/A'),
-            "product_name": getattr(state.campaign_data, 'product_name', state.campaign_data.name),
-            "brand_name": getattr(state.campaign_data, 'brand_name', 'Unknown Brand'),
-            "niche": getattr(state.campaign_data, 'product_niche', 'general'),
-            "total_budget": state.campaign_data.total_budget
-        },
-        "status": {
-            "current_stage": state.current_stage,
-            "is_complete": state.completed_at is not None,
-            "has_errors": hasattr(state, 'error_message') and state.error_message is not None,
-            "started_at": state.started_at.isoformat(),
-            "completed_at": state.completed_at.isoformat() if state.completed_at else None
-        },
-        "metrics": metrics,
-        "creators": [
-            {
-                "id": getattr(creator, 'id', 'unknown'),
-                "name": getattr(creator, 'name', 'Unknown Creator'),
-                "handle": getattr(creator, 'handle', '@unknown'),
-                "followers": getattr(creator, 'followers', 0),
-                "engagement_rate": getattr(creator, 'engagement_rate', 0.0),
-                "rate_per_post": getattr(creator, 'rate_per_post', 0.0),
-                "match_score": getattr(creator, 'match_score', 0.0),
-                "niche": getattr(creator, 'niche', 'general')
-            }
-            for creator in state.discovered_creators
-        ],
-        "negotiations": [
-            {
-                "creator_id": neg.creator_id,
-                "creator_name": neg.creator_name,
-                "status": neg.status.value,
-                "call_status": getattr(neg, 'call_status', 'unknown').value if hasattr(getattr(neg, 'call_status', None), 'value') else str(getattr(neg, 'call_status', 'unknown')),
-                "call_duration_seconds": getattr(neg, 'call_duration_seconds', 0),
-                "original_rate": getattr(neg, 'original_rate', 0.0),
-                "agreed_rate": neg.rate,  # Using unified rate property
-                "discount_percentage": neg.get_discount_percentage() if hasattr(neg, 'get_discount_percentage') else 0.0,
-                "sentiment_score": getattr(neg, 'sentiment_score', 0.0),
-                "key_concerns": getattr(neg, 'key_concerns', []),
-                "negotiated_at": neg.negotiated_at.isoformat() if neg.negotiated_at else datetime.now().isoformat(),
-                "follow_up_required": getattr(neg, 'follow_up_required', False)
-            }
-            for neg in state.negotiations
-        ],
-        "contracts": [
-            {
-                "id": getattr(contract, 'id', 'unknown'),
-                "creator_id": getattr(contract, 'creator_id', 'unknown'),
-                "rate": getattr(contract, 'rate', 0.0),
-                "deliverables": getattr(contract, 'deliverables', []),
-                "deadline": getattr(contract, 'deadline', datetime.now()).isoformat() if hasattr(getattr(contract, 'deadline', None), 'isoformat') else str(getattr(contract, 'deadline', 'N/A')),
-                "status": getattr(contract, 'status', 'draft'),
-                "payment_schedule": getattr(contract, 'payment_schedule', 'upon_completion'),
-                "created_at": getattr(contract, 'created_at', datetime.now()).isoformat() if hasattr(getattr(contract, 'created_at', None), 'isoformat') else str(getattr(contract, 'created_at', 'N/A'))
-            }
-            for contract in state.contracts
-        ],
-        "error_message": getattr(state, 'error_message', None)
-    }
-    
-    return detailed_results
+# Additional utility endpoints
 
 @router.get("/campaigns")
 async def list_campaigns() -> Dict[str, Any]:
-    """
-    📋 List All Campaigns
+    """List all campaigns and their current status"""
     
-    Returns summary of all campaigns with key metrics
-    """
-    campaigns_summary = []
-    total_campaigns = len(active_campaigns)
-    completed_campaigns = 0
-    active_campaign_count = 0
-    
-    for task_id, state in active_campaigns.items():
-        is_complete = state.completed_at is not None
-        
-        if is_complete:
-            completed_campaigns += 1
-        else:
-            active_campaign_count += 1
-        
-        campaign_summary = {
-            "task_id": task_id,
-            "campaign_id": state.campaign_id,
-            "campaign_code": getattr(state.campaign_data, 'campaign_code', 'N/A'),
-            "brand_name": getattr(state.campaign_data, 'brand_name', 'Unknown Brand'),
-            "product_name": getattr(state.campaign_data, 'product_name', state.campaign_data.name),
-            "niche": getattr(state.campaign_data, 'product_niche', 'general'),
-            "total_budget": state.campaign_data.total_budget,
-            "current_stage": state.current_stage,
-            "is_complete": is_complete,
-            "successful_negotiations": state.successful_negotiations,
-            "total_cost": state.total_cost,
-            "started_at": state.started_at.isoformat(),
-            "completed_at": state.completed_at.isoformat() if state.completed_at else None
-        }
-        campaigns_summary.append(campaign_summary)
-    
-    return {
-        "total_campaigns": total_campaigns,
-        "active_campaigns": active_campaign_count,
-        "completed_campaigns": completed_campaigns,
-        "campaigns": campaigns_summary
-    }
-
-# Legacy webhook endpoint for backward compatibility
-@router.post("/webhook/enhanced-campaign")
-async def legacy_webhook_endpoint(
-    webhook_data: Dict[str, Any],
-    background_tasks: BackgroundTasks
-) -> Dict[str, Any]:
-    """
-    🔄 Legacy Webhook Endpoint (Deprecated)
-    
-    Maintains backward compatibility. Redirects to new unified endpoint.
-    """
-    logger.warning("⚠️ Using deprecated webhook endpoint. Please migrate to POST /campaigns")
-    
-    # Convert legacy format to new format
     try:
-        campaign_request = CampaignCreateRequest(
-            product_name=webhook_data["product_name"],
-            brand_name=webhook_data["brand_name"],
-            product_description=webhook_data["product_description"],
-            target_audience=webhook_data["target_audience"],
-            campaign_goal=webhook_data["campaign_goal"],
-            product_niche=webhook_data["product_niche"],
-            total_budget=webhook_data["total_budget"],
-            max_creators=webhook_data.get("max_creators", 10),
-            timeline_days=webhook_data.get("timeline_days", 30)
-        )
+        campaigns = []
         
-        return await create_campaign(campaign_request, background_tasks)
-        
-    except KeyError as e:
-        raise HTTPException(status_code=400, detail=f"Missing required field: {e}")
-
-@router.get("/webhook/test-enhanced-elevenlabs")
-async def test_elevenlabs_integration():
-    """
-    📞 Test ElevenLabs Integration (For E2E Testing)
-    """
-    try:
-        logger.info("📞 Testing ElevenLabs integration...")
+        for task_id, state in campaign_states.items():
+            campaigns.append({
+                "task_id": task_id,
+                "campaign_id": state.campaign_id,
+                "company_name": state.company_name,
+                "product_name": state.product_name,
+                "stage": state.stage,
+                "is_complete": state.is_complete,
+                "progress_percentage": state.get_progress_percentage(),
+                "start_time": state.start_time.isoformat() if state.start_time else None
+            })
         
         return {
-            "status": "mock_mode",
-            "message": "ElevenLabs integration ready",
-            "api_connected": False,  # Mock mode
-            "features": [
-                "Dynamic variable injection",
-                "Real-time conversation monitoring", 
-                "Structured outcome analysis",
-                "Mock conversation simulation"
-            ]
+            "total_campaigns": len(campaigns),
+            "campaigns": campaigns
         }
         
     except Exception as e:
-        logger.error(f"❌ ElevenLabs integration test failed: {e}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "api_connected": False
-        }
+        logger.error(f"❌ Failed to list campaigns: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to list campaigns: {str(e)}"
+        )
 
-@router.get("/monitor/campaign/{task_id}")
-async def legacy_monitor_endpoint(task_id: str) -> Dict[str, Any]:
-    """
-    🔄 Legacy Monitor Endpoint (Deprecated)
+
+@router.delete("/campaigns/{task_id}")
+async def cancel_campaign(task_id: str) -> Dict[str, Any]:
+    """Cancel running campaign"""
     
-    Maintains backward compatibility. Redirects to new endpoint.
-    """
-    logger.warning("⚠️ Using deprecated monitor endpoint. Please migrate to GET /campaigns/{task_id}")
-    
-    # Convert to new format
-    response = await get_campaign_status(task_id)
-    
-    # Convert back to legacy format for compatibility
-    return {
-        "task_id": response.task_id,
-        "campaign_id": response.campaign_id,
-        "current_stage": response.current_stage,
-        "progress": response.progress,
-        "is_complete": response.is_complete,
-        "started_at": response.started_at,
-        "completed_at": response.completed_at,
-        "error": response.error_message
-    }
+    try:
+        if task_id in campaign_states:
+            state = campaign_states[task_id]
+            
+            if not state.is_complete:
+                # Mark as cancelled
+                state.stage = "cancelled"
+                state.is_complete = True
+                state.end_time = datetime.now()
+                state.error_message = "Campaign cancelled by user"
+                
+                logger.info(f"🛑 Campaign {task_id} cancelled")
+                
+                return {
+                    "success": True,
+                    "message": f"Campaign {task_id} cancelled",
+                    "task_id": task_id
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": "Campaign already completed",
+                    "task_id": task_id
+                }
+        else:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+            
+    except Exception as e:
+        logger.error(f"❌ Failed to cancel campaign {task_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to cancel campaign: {str(e)}"
+        )
