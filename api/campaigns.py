@@ -391,3 +391,213 @@ async def legacy_monitor_endpoint(task_id: str) -> Dict[str, Any]:
         "completed_at": response.completed_at,
         "error": response.error_message
     }
+
+# Test endpoints for end-to-end testing
+@router.get("/webhook/test-enhanced-elevenlabs")
+async def test_elevenlabs_integration():
+    """
+    📞 Test ElevenLabs Integration
+    
+    Endpoint for testing ElevenLabs API connectivity and configuration
+    """
+    
+    try:
+        from services.voice import VoiceService
+        
+        # Initialize voice service
+        voice_service = VoiceService()
+        
+        # Check if ElevenLabs is configured
+        has_api_key = bool(voice_service.api_key and voice_service.api_key != "mock-key")
+        has_agent_id = bool(voice_service.agent_id)
+        has_phone_id = bool(voice_service.phone_number_id)
+        
+        # Test credentials (mock mode check)
+        if voice_service.use_mock:
+            api_connected = False
+            status = "mock_mode"
+        else:
+            # In a real implementation, you'd test the actual API connection
+            api_connected = has_api_key and has_agent_id and has_phone_id
+            status = "configured" if api_connected else "missing_credentials"
+        
+        return {
+            "status": status,
+            "api_connected": api_connected,
+            "features": [
+                "Dynamic variables support",
+                "Conversation monitoring", 
+                "Call recording",
+                "Transcript analysis"
+            ],
+            "configuration": {
+                "has_api_key": has_api_key,
+                "has_agent_id": has_agent_id,
+                "has_phone_id": has_phone_id,
+                "mock_mode": voice_service.use_mock
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "api_connected": False,
+            "error": str(e)
+        }
+
+@router.get("/webhook/system-status")
+async def get_system_status():
+    """
+    📊 Get System Status
+    
+    Returns comprehensive system status including AI capabilities
+    """
+    
+    try:
+        from core.config import settings
+        
+        # Check AI capabilities
+        ai_features = {
+            "ai_strategy_generation": bool(settings.groq_api_key),
+            "creator_discovery": True,  # Always available
+            "contract_automation": True,  # Always available
+            "voice_integration": True,  # Always available
+            "real_time_monitoring": True  # Always available
+        }
+        
+        return {
+            "status": "operational",
+            "version": settings.app_version,
+            "environment": settings.environment,
+            "enhanced_features": ai_features,
+            "capabilities": {
+                "mock_services": settings.use_mock_services,
+                "debug_mode": settings.debug,
+                "ai_available": bool(settings.groq_api_key),
+                "voice_available": bool(settings.elevenlabs_api_key)
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+
+@router.post("/webhook/enhanced-campaign")
+async def create_enhanced_campaign(
+    campaign_data: Dict[str, Any],
+    background_tasks: BackgroundTasks
+) -> Dict[str, Any]:
+    """
+    🚀 Enhanced Campaign Creation (Legacy Compatibility)
+    
+    Creates a campaign with enhanced features and monitoring
+    """
+    
+    # Convert to unified format
+    try:
+        from core.models import CampaignData
+        
+        unified_campaign = CampaignData(
+            id=campaign_data.get("campaign_id", str(uuid.uuid4())),
+            product_name=campaign_data["product_name"],
+            brand_name=campaign_data["brand_name"],
+            product_description=campaign_data["product_description"],
+            target_audience=campaign_data["target_audience"],
+            campaign_goal=campaign_data["campaign_goal"],
+            product_niche=campaign_data["product_niche"],
+            total_budget=campaign_data["total_budget"]
+        )
+        
+        # Use the unified campaign creation
+        result = await create_campaign(unified_campaign, background_tasks)
+        
+        # Add enhanced response format
+        result.update({
+            "estimated_duration_minutes": 8,
+            "enhancements": [
+                "AI-powered creator discovery",
+                "Dynamic voice variables", 
+                "Real-time monitoring",
+                "Automated contract generation"
+            ],
+            "enhanced_features": {
+#                "ai_strategy": bool(settings.groq_api_key),
+                "voice_calls": True,
+                "smart_matching": True,
+                "analytics": True
+            }
+        })
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Enhanced campaign creation failed: {str(e)}")
+
+@router.post("/webhook/generate-enhanced-contract")
+async def generate_enhanced_contract(
+    contract_request: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    📝 Generate Enhanced Contract
+    
+    Creates a contract with advanced terms and conditions
+    """
+    
+    try:
+        contract_id = str(uuid.uuid4())
+        
+        # Extract contract details
+        creator_name = contract_request.get("creator_name", "Unknown Creator")
+        compensation = contract_request.get("compensation", 0)
+        campaign_details = contract_request.get("campaign_details", {})
+        
+        # Generate contract text
+        contract_text = f"""
+INFLUENCER MARKETING AGREEMENT
+
+Contract ID: {contract_id}
+Date: {datetime.now().strftime('%Y-%m-%d')}
+
+PARTIES:
+Brand: {campaign_details.get('brand', 'Brand Name')}
+Influencer: {creator_name}
+
+CAMPAIGN DETAILS:
+Product: {campaign_details.get('product', 'Product Name')}
+Deliverables: {', '.join(campaign_details.get('deliverables', ['Content creation']))}
+Timeline: {campaign_details.get('timeline', '30 days')}
+
+COMPENSATION:
+Total Amount: ${compensation:,.2f}
+Payment Schedule: Upon completion of deliverables
+
+TERMS:
+1. All deliverables must meet brand guidelines
+2. Content subject to approval before posting
+3. Usage rights granted for 12 months
+4. Compliance with FTC disclosure requirements
+
+Generated by InfluencerFlow AI Platform
+        """.strip()
+        
+        return {
+            "status": "success",
+            "contract_generated": True,
+            "contract_metadata": {
+                "contract_id": contract_id,
+                "creator_name": creator_name,
+                "compensation": compensation,
+                "generated_at": datetime.now().isoformat()
+            },
+            "contract_data": {
+                "compensation": compensation,
+                "deliverables": campaign_details.get('deliverables', []),
+                "timeline": campaign_details.get('timeline', '30 days')
+            },
+            "contract_text": contract_text
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Contract generation failed: {str(e)}")

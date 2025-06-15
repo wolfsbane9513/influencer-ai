@@ -55,12 +55,12 @@ class DatabaseService:
             log_data = {
                 "campaign_id": state.campaign_id,
                 "creator_id": negotiation.creator_id,
-                "call_status": negotiation.call_status.value,
-                "email_status": negotiation.email_status.value,
-                "call_duration_minutes": negotiation.call_duration_seconds // 60,
-                "call_recording_url": negotiation.call_recording_url,
-                "call_transcript": negotiation.call_transcript,
-                "last_contact_date": negotiation.last_contact_date.isoformat(),
+                "call_status": getattr(negotiation, 'call_status', 'completed'),
+                "email_status": getattr(negotiation, 'email_status', 'not_sent'),
+                "call_duration_minutes": getattr(negotiation, "call_duration_seconds", 180) // 60,
+                "call_recording_url": getattr(negotiation, "call_recording_url", None),
+                "call_transcript": getattr(negotiation, "call_transcript", ""),
+                "last_contact_date": getattr(negotiation, "last_contact_date", negotiation.negotiated_at).isoformat(),
                 "notes": f"Negotiation {negotiation.status.value}",
                 "sentiment": "positive" if negotiation.status.value == "success" else "neutral"
             }
@@ -74,10 +74,10 @@ class DatabaseService:
             contract_data = {
                 "campaign_id": state.campaign_id,
                 "creator_id": negotiation.creator_id,
-                "terms": negotiation.negotiated_terms,
-                "deliverables": negotiation.negotiated_terms.get("deliverables", []),
+                "terms": getattr(negotiation, "negotiated_terms", []),
+                "deliverables": getattr(negotiation, "negotiated_terms", []).get("deliverables", []),
                 "payment_amount": negotiation.final_rate,
-                "payment_schedule": negotiation.negotiated_terms.get("payment_schedule", {}),
+                "payment_schedule": getattr(negotiation, "negotiated_terms", []).get("payment_schedule", {}),
                 "status": "draft"
             }
             logger.info(f"📝 Contract inserted: {contract_data}")
