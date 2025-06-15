@@ -95,10 +95,7 @@ pip install -r requirements.txt
 
 3. **Environment Configuration**
 ```bash
-# Copy environment template
-cp .env.template .env
-
-# Edit .env with your API keys
+# Create a `.env` file and add your API keys
 nano .env
 ```
 
@@ -310,8 +307,7 @@ monitor_campaign("your-task-id")
 influencer-ai-backend/
 ├── main.py                 # FastAPI application entry point
 ├── config/
-│   ├── settings.py         # Configuration management
-│   └── simple_settings.py  # Fallback configuration
+│   └── settings.py         # Configuration management
 ├── models/
 │   └── campaign.py         # Data models and schemas
 ├── agents/                 # AI agent implementations
@@ -330,7 +326,7 @@ influencer-ai-backend/
 ├── data/                   # Static data files
 │   ├── creators.json       # Creator database
 │   └── market_data.json    # Market pricing data
-└── tests/                  # Test files
+├── end_to_end_test.py      # End-to-end workflow test
 ```
 
 ### Adding New Features
@@ -399,11 +395,8 @@ async def _run_my_new_phase(self, state):
 
 #### Run Tests
 ```bash
-# Run all tests
+# Run any available unit tests
 python -m pytest
-
-# Run specific test file
-python -m pytest tests/test_agents.py
 
 # Run with coverage
 python -m pytest --cov=.
@@ -412,7 +405,7 @@ python -m pytest --cov=.
 #### Test Campaign
 ```bash
 # Quick system test
-python test_setup.py
+python end_to_end_test.py
 
 # Test enhanced workflow
 curl -X POST http://localhost:8000/api/webhook/test-enhanced-campaign
