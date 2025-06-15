@@ -1,4 +1,4 @@
-# models/campaign.py
+# models/campaign.py - FIXED VERSION
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -80,49 +80,33 @@ class Creator(BaseModel):
     languages: List[str]
     specialties: List[str]
     
-    # Audience demographics
-    audience_demographics: Dict[str, Any]
-    
-    # Performance metrics
-    performance_metrics: Dict[str, float]
-    
-    # Recent campaigns and rate history
-    recent_campaigns: List[Dict[str, Any]]
-    rate_history: Dict[str, float]
-    
-    preferred_collaboration_style: str
-    
     @property
     def tier(self) -> CreatorTier:
-        """Determine creator tier based on follower count"""
-        if self.followers < 100000:
+        """Determine creator tier based on followers"""
+        if self.followers < 100_000:
             return CreatorTier.MICRO
-        elif self.followers < 1000000:
+        elif self.followers < 1_000_000:
             return CreatorTier.MACRO
         else:
             return CreatorTier.MEGA
     
     @property
-    def cost_per_view(self) -> float:
-        """Calculate cost per view"""
-        return self.typical_rate / self.average_views if self.average_views > 0 else 0
+    def estimated_cpm(self) -> float:
+        """Estimate cost per thousand views"""
+        if self.average_views > 0:
+            return (self.typical_rate / self.average_views) * 1000
+        return 0.0
 
 class CreatorMatch(BaseModel):
-    """Represents a matched creator with similarity score"""
+    """Creator matching result from discovery"""
     creator: Creator
     similarity_score: float
-    rate_compatible: bool
-    match_reasons: List[str]
     estimated_rate: float
+    match_reasons: List[str] = Field(default_factory=list)
+    availability_score: float = 0.8
     
-    @property
-    def overall_score(self) -> float:
-        """Combined score for ranking matches"""
-        base_score = self.similarity_score
-        rate_bonus = 0.1 if self.rate_compatible else -0.1
-        availability_bonus = 0.05 if self.creator.availability.value == "excellent" else 0
-        
-        return min(base_score + rate_bonus + availability_bonus, 1.0)
+    def __str__(self):
+        return f"{self.creator.name} ({self.similarity_score:.2f} match, ${self.estimated_rate:,.0f})"
 
 # ================================
 # NEGOTIATION MODELS
@@ -130,28 +114,32 @@ class CreatorMatch(BaseModel):
 
 class NegotiationStatus(str, Enum):
     PENDING = "pending"
-    CALLING = "calling"
-    NEGOTIATING = "negotiating"
+    IN_PROGRESS = "in_progress"
     SUCCESS = "success"
     FAILED = "failed"
+    PAUSED = "paused"
 
 class CallStatus(str, Enum):
     PENDING = "pending"
     SCHEDULED = "scheduled"
+    IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
+    FAILED = "failed"
     NO_ANSWER = "no_answer"
-    CANCELLED = "cancelled"
 
 class EmailStatus(str, Enum):
     PENDING = "pending"
     SENT = "sent"
+    OPENED = "opened"
     REPLIED = "replied"
     BOUNCED = "bounced"
 
 class NegotiationState(BaseModel):
-    """Tracks the state of a single negotiation"""
+    """State tracking for individual creator negotiations"""
     creator_id: str
     campaign_id: str
+    
+    # Status tracking
     status: NegotiationStatus = NegotiationStatus.PENDING
     call_status: CallStatus = CallStatus.PENDING
     email_status: EmailStatus = EmailStatus.PENDING
@@ -200,7 +188,7 @@ class NegotiationState(BaseModel):
 # ================================
 
 class CampaignOrchestrationState(BaseModel):
-    """Overall campaign orchestration state"""
+    """Overall campaign orchestration state - CORRECT VERSION with exact required fields"""
     campaign_id: str
     campaign_data: CampaignData
     
@@ -210,7 +198,7 @@ class CampaignOrchestrationState(BaseModel):
     # Negotiation states
     negotiations: List[NegotiationState] = Field(default_factory=list)
     
-    # Summary
+    # Summary metrics
     successful_negotiations: int = 0
     failed_negotiations: int = 0
     total_cost: float = 0.0
@@ -220,9 +208,15 @@ class CampaignOrchestrationState(BaseModel):
     current_influencer: Optional[str] = None
     estimated_completion_minutes: int = 5
     
+    # AI strategy field (the one that was missing)
+    ai_strategy: Optional[str] = None
+    
+    # Contract storage
+    contracts: List[Dict[str, Any]] = Field(default_factory=list)
+    
+    # Timestamps (using exact field names)
     started_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
-    negotiated_terms: Dict[str, Any] = Field(default_factory=dict)
     
     def add_negotiation_result(self, result: NegotiationState):
         """Add a completed negotiation result"""
@@ -251,7 +245,8 @@ class CampaignOrchestrationState(BaseModel):
             "total_cost": self.total_cost,
             "average_cost": self.total_cost / max(self.successful_negotiations, 1),
             "is_complete": self.completed_at is not None,
-            "duration_minutes": (datetime.now() - self.started_at).total_seconds() / 60
+            "duration_minutes": (datetime.now() - self.started_at).total_seconds() / 60,
+            "ai_strategy": self.ai_strategy
         }
     
     def get_campaign_summary(self) -> Dict[str, Any]:
@@ -263,99 +258,109 @@ class CampaignOrchestrationState(BaseModel):
             "total_budget": self.campaign_data.total_budget,
             "spent_amount": self.total_cost,
             "budget_utilization": (self.total_cost / self.campaign_data.total_budget) * 100 if self.campaign_data.total_budget > 0 else 0,
-            "creators_contacted": len(self.negotiations),
             "successful_partnerships": self.successful_negotiations,
+            "total_contacted": len(self.negotiations),
             "success_rate": f"{(self.successful_negotiations / max(len(self.negotiations), 1)) * 100:.1f}%",
-            "average_rate": self.total_cost / max(self.successful_negotiations, 1) if self.successful_negotiations > 0 else 0,
             "duration": f"{duration.total_seconds() / 60:.1f} minutes",
-            "roi_projection": "TBD - depends on campaign performance"
-        }
-    
-    def get_detailed_summary(self) -> Dict[str, Any]:
-        """Get comprehensive campaign summary with all details"""
-        base_summary = self.get_campaign_summary()
-        
-        # Add detailed negotiation breakdown
-        negotiation_details = []
-        for negotiation in self.negotiations:
-            details = {
-                "creator_id": negotiation.creator_id,
-                "status": negotiation.status.value,
-                "final_rate": negotiation.final_rate,
-                "call_duration_seconds": negotiation.call_duration_seconds,
-                "failure_reason": negotiation.failure_reason,
-                "conversation_id": negotiation.conversation_id,
-                "retry_count": negotiation.retry_count,
-                "started_at": negotiation.started_at.isoformat(),
-                "completed_at": negotiation.completed_at.isoformat() if negotiation.completed_at else None
-            }
-            negotiation_details.append(details)
-        
-        # Add discovered creators info
-        creator_matches = []
-        for match in self.discovered_influencers:
-            creator_info = {
-                "name": match.creator.name,
-                "platform": match.creator.platform.value,
-                "followers": match.creator.followers,
-                "niche": match.creator.niche,
-                "similarity_score": match.similarity_score,
-                "estimated_rate": match.estimated_rate,
-                "rate_compatible": match.rate_compatible,
-                "match_reasons": match.match_reasons,
-                "overall_score": match.overall_score
-            }
-            creator_matches.append(creator_info)
-        
-        # Performance metrics
-        performance_metrics = {
-            "discovery_efficiency": len(self.discovered_influencers) / max(len(self.negotiations), 1),
-            "cost_efficiency": self.total_cost / max(self.successful_negotiations, 1) if self.successful_negotiations > 0 else 0,
-            "time_efficiency": f"{(datetime.now() - self.started_at).total_seconds() / 60:.1f} minutes per successful negotiation" if self.successful_negotiations > 0 else "N/A",
-            "budget_efficiency": f"{(self.total_cost / self.campaign_data.total_budget) * 100:.1f}%" if self.campaign_data.total_budget > 0 else "N/A"
-        }
-        
-        return {
-            **base_summary,
-            "discovered_creators": creator_matches,
-            "negotiation_details": negotiation_details,
-            "performance_metrics": performance_metrics,
-            "campaign_config": {
-                "campaign_id": self.campaign_id,
-                "niche": self.campaign_data.product_niche,
-                "target_audience": self.campaign_data.target_audience,
-                "campaign_goal": self.campaign_data.campaign_goal
-            },
-            "timing": {
-                "started_at": self.started_at.isoformat(),
-                "completed_at": self.completed_at.isoformat() if self.completed_at else None,
-                "current_stage": self.current_stage,
-                "estimated_completion_minutes": self.estimated_completion_minutes
-            }
+            "ai_strategy_used": bool(self.ai_strategy),
+            "strategy_approach": self.strategy_data.get("negotiation_approach", "default"),
+            "contracts_generated": len(self.contracts)
         }
 
 # ================================
-# LEGACY COMPATIBILITY
+# CONTRACT MODELS
 # ================================
 
-# For backward compatibility, export the models that might be imported elsewhere
-__all__ = [
-    # Campaign models
-    "CampaignStatus",
-    "CampaignWebhook", 
-    "CampaignData",
-    "CampaignOrchestrationState",
+class ContractStatus(str, Enum):
+    DRAFT = "draft"
+    SENT = "sent"
+    SIGNED = "signed"
+    EXECUTED = "executed"
+    CANCELLED = "cancelled"
+
+class ContractData(BaseModel):
+    """Contract data model"""
+    contract_id: str
+    campaign_id: str
+    creator_id: str
+    creator_name: str
     
-    # Creator models
-    "Creator",
-    "CreatorTier",
-    "Platform", 
-    "Availability",
-    "CreatorMatch",
+    # Terms
+    compensation_amount: float
+    deliverables: List[str] = Field(default_factory=list)
+    timeline: Dict[str, str] = Field(default_factory=dict)
+    usage_rights: Dict[str, Any] = Field(default_factory=dict)
     
-    # Negotiation models
-    "NegotiationState",
-    "NegotiationStatus",
-    "CallStatus",
-    "EmailStatus"
-]
+    # Status
+    status: ContractStatus = ContractStatus.DRAFT
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=datetime.now)
+    signed_at: Optional[datetime] = None
+    
+    # Additional fields
+    contract_text: Optional[str] = None
+    legal_review_status: str = "pending"
+    amendments: List[Dict[str, Any]] = Field(default_factory=list)
+
+# ================================
+# VALIDATION MODELS
+# ================================
+
+class ValidationResult(BaseModel):
+    """Validation result for campaign data"""
+    is_valid: bool
+    errors: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    
+    def add_error(self, message: str):
+        """Add an error message"""
+        self.errors.append(message)
+        self.is_valid = False
+    
+    def add_warning(self, message: str):
+        """Add a warning message"""
+        self.warnings.append(message)
+
+# ================================
+# UTILITY FUNCTIONS
+# ================================
+
+def validate_campaign_data(data: CampaignData) -> ValidationResult:
+    """Validate campaign data completeness"""
+    result = ValidationResult(is_valid=True)
+    
+    # Required field checks
+    if not data.product_name.strip():
+        result.add_error("Product name is required")
+    
+    if not data.brand_name.strip():
+        result.add_error("Brand name is required")
+    
+    if data.total_budget <= 0:
+        result.add_error("Total budget must be greater than 0")
+    
+    if not data.target_audience.strip():
+        result.add_error("Target audience is required")
+    
+    # Warning checks
+    if data.total_budget < 1000:
+        result.add_warning("Budget is quite low for influencer marketing")
+    
+    if not data.product_description.strip():
+        result.add_warning("Product description would help with creator matching")
+    
+    return result
+
+def create_campaign_from_webhook(webhook_data: CampaignWebhook) -> CampaignData:
+    """Convert webhook data to internal campaign representation"""
+    return CampaignData(
+        id=webhook_data.campaign_id,
+        product_name=webhook_data.product_name,
+        brand_name=webhook_data.brand_name,
+        product_description=webhook_data.product_description,
+        target_audience=webhook_data.target_audience,
+        campaign_goal=webhook_data.campaign_goal,
+        product_niche=webhook_data.product_niche,
+        total_budget=webhook_data.total_budget
+    )
