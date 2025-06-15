@@ -132,7 +132,7 @@ class InfluencerAIEndToEndTest:
             }
             
             response = requests.post(
-                f"{self.base_url}/campaigns",
+                f"{self.base_url}/api/campaigns",
                 json=campaign_data,
                 timeout=30
             )
@@ -182,7 +182,7 @@ class InfluencerAIEndToEndTest:
             
             # Check campaign status using new API
             response = requests.get(
-                f"{self.base_url}/campaigns/{self.campaign_task_id}",
+                f"{self.base_url}/api/campaigns/{self.campaign_task_id}",
                 timeout=15
             )
             
@@ -223,7 +223,7 @@ class InfluencerAIEndToEndTest:
         for attempt in range(10):  # Wait up to 30 seconds
             try:
                 response = requests.get(
-                    f"{self.base_url}/campaigns/{self.campaign_task_id}",
+                    f"{self.base_url}/api/campaigns/{self.campaign_task_id}",
                     timeout=10
                 )
                 
