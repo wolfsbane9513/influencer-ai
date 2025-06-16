@@ -1,4 +1,4 @@
-# agents/enhanced_orchestrator.py - CORRECT CLEAN VERSION
+# agents/enhanced_orchestrator.py - ENHANCED WITH MINIMAL DATABASE INTEGRATION
 import json
 import asyncio
 import logging
@@ -10,6 +10,7 @@ from models.campaign import (
     NegotiationState, NegotiationStatus
 )
 from agents.discovery import InfluencerDiscoveryAgent
+from services.database import DatabaseService  # ← ADD DATABASE IMPORT
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -24,9 +25,10 @@ except ImportError:
 
 class EnhancedCampaignOrchestrator:
     """
-    🧠 CORRECT ENHANCED CAMPAIGN ORCHESTRATOR
+    🧠 ENHANCED CAMPAIGN ORCHESTRATOR WITH DATABASE
     
     ✅ Clean OOP design with proper encapsulation
+    ✅ Minimal database integration 
     ✅ No unnecessary helper functions
     ✅ Uses only fields that exist in the model
     ✅ Maintainable modular structure
@@ -37,6 +39,7 @@ class EnhancedCampaignOrchestrator:
         """Initialize orchestrator with minimal required components"""
         self.discovery_agent = InfluencerDiscoveryAgent()
         self.groq_client = self._initialize_groq_client()
+        self.database_service = None  # ← ADD: Will be injected from main.py
         
         logger.info("🧠 Enhanced Campaign Orchestrator initialized")
     
@@ -55,7 +58,7 @@ class EnhancedCampaignOrchestrator:
         task_id: str
     ) -> CampaignOrchestrationState:
         """
-        🎯 MAIN ORCHESTRATION WORKFLOW - CLEAN & CORRECT
+        🎯 MAIN ORCHESTRATION WORKFLOW - CLEAN & CORRECT WITH DATABASE
         
         Uses only actual model fields, no over-engineering
         """
@@ -69,23 +72,26 @@ class EnhancedCampaignOrchestrator:
         )
         
         try:
-            # Phase 1: Discovery
+            # *** ADD: Database initialization if available ***
+            await self._initialize_database_if_available(state)
+            
+            # Phase 1: Discovery (with database storage)
             logger.info("🔍 Phase 1: Discovery")
             await self._run_discovery_phase(state)
             
-            # Phase 2: AI Strategy Generation  
+            # Phase 2: AI Strategy Generation (with database storage)
             logger.info("🧠 Phase 2: AI Strategy")
             await self._run_strategy_phase(state)
             
-            # Phase 3: Negotiations
+            # Phase 3: Negotiations (with database storage)
             logger.info("📞 Phase 3: Negotiations")
             await self._run_negotiations_phase(state)
             
-            # Phase 4: Contracts
+            # Phase 4: Contracts (with database storage)
             logger.info("📝 Phase 4: Contracts")
             await self._run_contracts_phase(state)
             
-            # Phase 5: Completion
+            # Phase 5: Completion (with database storage)
             logger.info("🏁 Phase 5: Completion")
             await self._run_completion_phase(state)
             
@@ -96,10 +102,132 @@ class EnhancedCampaignOrchestrator:
             logger.error(f"❌ Campaign orchestration failed: {e}")
             state.current_stage = "failed"
             state.completed_at = datetime.now()
+            
+            # *** ADD: Mark as failed in database ***
+            await self._mark_campaign_failed_in_db(state, str(e))
+            
             return state
     
+    # *** ADD: Minimal database integration methods ***
+    async def _initialize_database_if_available(self, state: CampaignOrchestrationState):
+        """Initialize database if available - simple and clean"""
+        if self.database_service:
+            try:
+                await self.database_service.initialize()
+                db_campaign = await self.database_service.create_campaign(state.campaign_data)
+                state.database_enabled = True
+                logger.info(f"✅ Campaign created in database: {db_campaign.id}")
+            except Exception as e:
+                logger.error(f"❌ Database initialization failed: {e}")
+                state.database_enabled = False
+        else:
+            state.database_enabled = False
+    
+    async def _store_creators_in_db(self, state: CampaignOrchestrationState):
+        """Store discovered creators - simple implementation"""
+        if state.database_enabled and self.database_service:
+            for influencer_match in state.discovered_influencers:
+                try:
+                    await self.database_service.create_or_update_creator(influencer_match.creator)
+                    logger.info(f"✅ Creator stored: {influencer_match.creator.name}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to store creator: {e}")
+    
+    async def _store_negotiation_in_db(self, state: CampaignOrchestrationState, negotiation: NegotiationState):
+        """Store negotiation result - simple implementation"""
+        if state.database_enabled and self.database_service:
+            try:
+                negotiation_data = {
+                    "status": negotiation.status,
+                    "initial_rate": getattr(negotiation, 'initial_rate', None),
+                    "final_rate": negotiation.final_rate,
+                    "negotiated_terms": negotiation.negotiated_terms,
+                    "call_status": getattr(negotiation, 'call_status', 'completed'),
+                    "email_status": getattr(negotiation, 'email_status', 'sent'),
+                    "last_contact_date": negotiation.completed_at or datetime.now()
+                }
+                
+                db_negotiation = await self.database_service.create_negotiation(
+                    state.campaign_id,
+                    negotiation.creator_id,
+                    negotiation_data
+                )
+                logger.info(f"✅ Negotiation stored: {db_negotiation.id}")
+                
+            except Exception as e:
+                logger.error(f"❌ Failed to store negotiation: {e}")
+    
+    async def _store_contract_in_db(self, state: CampaignOrchestrationState, contract: Dict[str, Any]):
+        """Store contract - simple implementation"""
+        if state.database_enabled and self.database_service:
+            try:
+                db_contract = await self.database_service.create_contract({
+                    "id": contract["contract_id"],
+                    "campaign_id": contract["campaign_id"],
+                    "creator_id": contract["creator_id"],
+                    "compensation_amount": contract["compensation"],
+                    "deliverables": contract["terms"].get("deliverables", []),
+                    "timeline": {"duration": contract["terms"].get("timeline", "")},
+                    "usage_rights": {"period": contract["terms"].get("usage_rights", "")},
+                    "status": contract["status"],
+                    "contract_text": f"Contract for {contract['creator_id']}"
+                })
+                logger.info(f"✅ Contract stored: {db_contract.id}")
+                
+            except Exception as e:
+                logger.error(f"❌ Failed to store contract: {e}")
+    
+    async def _update_campaign_totals_in_db(self, state: CampaignOrchestrationState):
+        """Update campaign totals - simple implementation"""
+        if state.database_enabled and self.database_service:
+            try:
+                await self.database_service.update_campaign(
+                    state.campaign_id,
+                    {
+                        "influencer_count": state.successful_negotiations,
+                        "total_cost": state.total_cost
+                    }
+                )
+                logger.info(f"✅ Campaign totals updated: {state.successful_negotiations} influencers, ${state.total_cost}")
+                
+            except Exception as e:
+                logger.error(f"❌ Failed to update campaign totals: {e}")
+    
+    async def _mark_campaign_completed_in_db(self, state: CampaignOrchestrationState):
+        """Mark campaign as completed - simple implementation"""
+        if state.database_enabled and self.database_service:
+            try:
+                await self.database_service.update_campaign(
+                    state.campaign_id,
+                    {
+                        "status": "completed",
+                        "completed_at": state.completed_at
+                    }
+                )
+                logger.info("✅ Campaign marked as completed in database")
+                
+            except Exception as e:
+                logger.error(f"❌ Failed to mark campaign completed: {e}")
+    
+    async def _mark_campaign_failed_in_db(self, state: CampaignOrchestrationState, error_message: str):
+        """Mark campaign as failed - simple implementation"""
+        if state.database_enabled and self.database_service:
+            try:
+                await self.database_service.update_campaign(
+                    state.campaign_id,
+                    {
+                        "status": "failed",
+                        "ai_strategy": {"error": error_message}
+                    }
+                )
+                logger.info("⚠️ Campaign marked as failed in database")
+                
+            except Exception as e:
+                logger.error(f"❌ Failed to mark campaign failed: {e}")
+    
+    # *** UPDATED: Existing methods with database integration ***
     async def _run_discovery_phase(self, state: CampaignOrchestrationState):
-        """🔍 Run discovery phase - simple and clean"""
+        """🔍 Run discovery phase - simple and clean WITH DATABASE"""
         state.current_stage = "discovery"
         
         # Use discovery agent to find influencers
@@ -110,9 +238,12 @@ class EnhancedCampaignOrchestrator:
         
         state.discovered_influencers = discovered
         logger.info(f"🔍 Discovered {len(discovered)} influencers")
+        
+        # *** ADD: Store creators in database ***
+        await self._store_creators_in_db(state)
     
     async def _run_strategy_phase(self, state: CampaignOrchestrationState):
-        """🧠 Generate AI strategy - clean implementation"""
+        """🧠 Generate AI strategy - clean implementation WITH DATABASE"""
         state.current_stage = "strategy"
         
         if self.groq_client:
@@ -125,6 +256,17 @@ class EnhancedCampaignOrchestrator:
                 state.ai_strategy = "Default strategy due to AI error"
         else:
             state.ai_strategy = "Default strategy - Groq not available"
+        
+        # *** ADD: Store strategy in database ***
+        if state.database_enabled and self.database_service:
+            try:
+                await self.database_service.update_campaign(
+                    state.campaign_id,
+                    {"ai_strategy": state.ai_strategy}
+                )
+                logger.info("✅ AI strategy stored in database")
+            except Exception as e:
+                logger.error(f"❌ Failed to store strategy: {e}")
     
     async def _generate_ai_strategy(self, state: CampaignOrchestrationState) -> str:
         """Generate AI strategy using Groq - simple and focused"""
@@ -153,7 +295,7 @@ class EnhancedCampaignOrchestrator:
         return response.choices[0].message.content
     
     async def _run_negotiations_phase(self, state: CampaignOrchestrationState):
-        """📞 Run negotiations phase - clean and simple"""
+        """📞 Run negotiations phase - clean and simple WITH DATABASE"""
         state.current_stage = "negotiations"
         
         if not state.discovered_influencers:
@@ -195,12 +337,21 @@ class EnhancedCampaignOrchestrator:
                 negotiation.completed_at = datetime.now()
                 state.negotiations.append(negotiation)
                 
+                # *** ADD: Store negotiation in database ***
+                await self._store_negotiation_in_db(state, negotiation)
+                
+                # *** ADD: Update campaign totals ***
+                await self._update_campaign_totals_in_db(state)
+                
             except Exception as e:
                 logger.error(f"❌ Negotiation error for {creator.name}: {e}")
                 negotiation.status = NegotiationStatus.FAILED
                 negotiation.failure_reason = str(e)
                 negotiation.completed_at = datetime.now()
                 state.negotiations.append(negotiation)
+                
+                # Store failed negotiation too
+                await self._store_negotiation_in_db(state, negotiation)
     
     async def _simulate_negotiation(self, creator, campaign_data) -> bool:
         """Simple negotiation simulation - clean logic"""
@@ -210,7 +361,7 @@ class EnhancedCampaignOrchestrator:
         return False
     
     async def _run_contracts_phase(self, state: CampaignOrchestrationState):
-        """📝 Generate contracts - simple and clean"""
+        """📝 Generate contracts - simple and clean WITH DATABASE"""
         state.current_stage = "contracts"
         
         successful_negotiations = [
@@ -234,6 +385,9 @@ class EnhancedCampaignOrchestrator:
                 
                 logger.info(f"📝 Contract generated: {contract['contract_id']}")
                 
+                # *** ADD: Store contract in database ***
+                await self._store_contract_in_db(state, contract)
+                
             except Exception as e:
                 logger.error(f"❌ Contract generation failed: {e}")
         
@@ -254,7 +408,7 @@ class EnhancedCampaignOrchestrator:
         }
     
     async def _run_completion_phase(self, state: CampaignOrchestrationState):
-        """🏁 Complete campaign - simple and clean"""
+        """🏁 Complete campaign - simple and clean WITH DATABASE"""
         state.current_stage = "completed"
         state.completed_at = datetime.now()
         
@@ -263,9 +417,20 @@ class EnhancedCampaignOrchestrator:
         
         logger.info(f"🏁 Campaign completed in {duration:.1f} seconds")
         logger.info(f"📊 Results: {state.successful_negotiations} successful, {len(state.contracts)} contracts")
+        
+        # *** ADD: Mark campaign as completed in database ***
+        await self._mark_campaign_completed_in_db(state)
+        
+        # *** ADD: Final database sync ***
+        if state.database_enabled and self.database_service:
+            try:
+                await self.database_service.sync_campaign_results(state)
+                logger.info("✅ Final database sync completed")
+            except Exception as e:
+                logger.error(f"❌ Final database sync failed: {e}")
 
 
-# Simple supporting classes - no over-engineering
+# Simple supporting classes - no over-engineering (keep existing)
 class EnhancedNegotiationAgent:
     """Simple negotiation agent"""
     
