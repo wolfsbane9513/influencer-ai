@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     elevenlabs_phone_number_id: Optional[str] = None
     elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Default voice
     
-    # Database
-    database_url: str = "postgresql://localhost:5432/influencerflow"
+    database_url: str = "postgresql://user:password@localhost:5432/influencerflow"
+    database_echo: bool = False
     
     # Webhook Security
     webhook_secret: str = "your-webhook-secret-here"

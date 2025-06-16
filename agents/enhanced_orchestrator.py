@@ -42,6 +42,53 @@ class EnhancedCampaignOrchestrator:
         self.database_service = None  # ← ADD: Will be injected from main.py
         
         logger.info("🧠 Enhanced Campaign Orchestrator initialized")
+
+    # ✅ ADD: This method to match webhook calls
+    async def orchestrate_campaign(
+        self,
+        orchestration_state: CampaignOrchestrationState,
+        task_id: str
+    ) -> CampaignOrchestrationState:
+        """
+        🎯 WEBHOOK-COMPATIBLE METHOD WITH DATABASE
+        This is what your enhanced_webhooks.py is actually calling
+        """
+        logger.info(f"🎯 Starting enhanced campaign orchestration: {task_id}")
+        
+        try:
+            # *** DATABASE INITIALIZATION ***
+            if self.database_service:
+                try:
+                    await self.database_service.initialize()
+                    # Campaign already created in webhook, just mark as database-enabled
+                    orchestration_state.database_enabled = True
+                    logger.info("✅ Database integration enabled")
+                except Exception as e:
+                    logger.error(f"❌ Database initialization failed: {e}")
+                    orchestration_state.database_enabled = False
+            
+            # Call your existing enhanced campaign method
+            return await self.orchestrate_enhanced_campaign(
+                orchestration_state.campaign_data,
+                task_id
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Enhanced orchestration failed: {e}")
+            orchestration_state.current_stage = "failed"
+            orchestration_state.completed_at = datetime.now()
+            
+            # Mark as failed in database
+            if self.database_service and hasattr(orchestration_state, 'database_enabled'):
+                try:
+                    await self.database_service.update_campaign(
+                        orchestration_state.campaign_id,
+                        {"status": "failed", "ai_strategy": {"error": str(e)}}
+                    )
+                except:
+                    pass
+            
+            return orchestration_state        
     
     def _initialize_groq_client(self) -> Optional[Groq]:
         """Initialize Groq client with proper error handling"""
