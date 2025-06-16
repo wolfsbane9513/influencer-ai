@@ -1,4 +1,3 @@
-# agents/orchestrator.py
 import json
 import asyncio
 import logging
@@ -27,9 +26,9 @@ except ImportError:
 
 class CampaignOrchestrator:
     """
-    🧠 INTELLIGENT CAMPAIGN ORCHESTRATOR
+    🧠 INTELLIGENT CAMPAIGN ORCHESTRATOR WITH FULL DATABASE INTEGRATION
     Master coordinator that manages the entire campaign workflow with AI decision making:
-    Campaign → Discovery → Negotiation → Contracts → Database Sync
+    Campaign → Discovery → Negotiation → Contracts → Database Sync (at every step)
     """
     
     def __init__(self):
@@ -44,44 +43,44 @@ class CampaignOrchestrator:
         self._initialize_groq()
     
     def _initialize_groq(self):
-            """🧠 Initialize Groq LLM client for intelligent orchestration"""
-            if not GROQ_AVAILABLE:
-                logger.warning("⚠️  Groq not available - using simple orchestration")
-                return
-            
-            # ✅ FIX: Use settings object instead of os.getenv()
-            groq_api_key = settings.groq_api_key
-            
-            if groq_api_key:
-                try:
-                    self.groq_client = Groq(api_key=groq_api_key)
-                    
-                    # ✅ ENHANCED: Test the API key with a simple request
-                    test_response = self.groq_client.chat.completions.create(
-                        model="llama3-8b-8192",
-                        messages=[{"role": "user", "content": "Hello"}],
-                        max_tokens=10
-                    )
-                    
-                    logger.info("✅ Groq LLM initialized and tested successfully")
-                    
-                except Exception as e:
-                    logger.error(f"❌ Groq initialization/test failed: {e}")
-                    
-                    # ✅ ENHANCED: Provide specific error guidance
-                    if "401" in str(e) or "Unauthorized" in str(e):
-                        logger.error("🔑 Groq API key is invalid or expired")
-                        logger.error("💡 Get a new key from: https://console.groq.com/keys")
-                        logger.error("📝 Update your .env file: GROQ_API_KEY=gsk_your_new_key_here")
-                    elif "quota" in str(e).lower() or "limit" in str(e).lower():
-                        logger.error("📊 Groq API quota exceeded or rate limited")
-                    else:
-                        logger.error(f"🔧 Groq API error: {str(e)}")
-                    
-                    self.groq_client = None
-                    logger.info("📋 Continuing with simple orchestration (no AI strategy)")
-            else:
-                logger.warning("⚠️  GROQ_API_KEY not found in settings - using simple orchestration")
+        """🧠 Initialize Groq LLM client for intelligent orchestration"""
+        if not GROQ_AVAILABLE:
+            logger.warning("⚠️  Groq not available - using simple orchestration")
+            return
+        
+        # ✅ FIX: Use settings object instead of os.getenv()
+        groq_api_key = settings.groq_api_key
+        
+        if groq_api_key:
+            try:
+                self.groq_client = Groq(api_key=groq_api_key)
+                
+                # ✅ ENHANCED: Test the API key with a simple request
+                test_response = self.groq_client.chat.completions.create(
+                    model="llama3-8b-8192",
+                    messages=[{"role": "user", "content": "Hello"}],
+                    max_tokens=10
+                )
+                
+                logger.info("✅ Groq LLM initialized and tested successfully")
+                
+            except Exception as e:
+                logger.error(f"❌ Groq initialization/test failed: {e}")
+                
+                # ✅ ENHANCED: Provide specific error guidance
+                if "401" in str(e) or "Unauthorized" in str(e):
+                    logger.error("🔑 Groq API key is invalid or expired")
+                    logger.error("💡 Get a new key from: https://console.groq.com/keys")
+                    logger.error("📝 Update your .env file: GROQ_API_KEY=gsk_your_new_key_here")
+                elif "quota" in str(e).lower() or "limit" in str(e).lower():
+                    logger.error("📊 Groq API quota exceeded or rate limited")
+                else:
+                    logger.error(f"🔧 Groq API error: {str(e)}")
+                
+                self.groq_client = None
+                logger.info("📋 Continuing with simple orchestration (no AI strategy)")
+        else:
+            logger.warning("⚠️  GROQ_API_KEY not found in settings - using simple orchestration")
         
     async def orchestrate_campaign(
         self,
@@ -89,11 +88,14 @@ class CampaignOrchestrator:
         task_id: str
     ) -> CampaignOrchestrationState:
         """
-        🚀 MAIN ORCHESTRATION WORKFLOW
+        🚀 MAIN ORCHESTRATION WORKFLOW WITH DATABASE INTEGRATION
         Coordinates the entire campaign from start to finish with AI intelligence
         """
         try:
             logger.info(f"🚀 Starting campaign orchestration for {orchestration_state.campaign_id}")
+            
+            # *** STEP 0: Initialize database and create campaign record ***
+            await self._initialize_database_and_create_campaign(orchestration_state)
             
             # Update state tracking
             orchestration_state.current_stage = "initializing"
@@ -103,23 +105,26 @@ class CampaignOrchestrator:
             if self.groq_client:
                 strategy = await self._generate_ai_strategy(orchestration_state.campaign_data)
                 logger.info(f"🎯 AI Strategy Generated: {strategy.get('negotiation_approach', 'collaborative')}")
+                
+                # *** Store strategy in database ***
+                await self._store_strategy_in_database(orchestration_state, strategy)
             else:
                 strategy = self._get_default_strategy()
                 logger.info("📋 Using default strategy (Groq not available)")
             
-            # PHASE 1: DISCOVERY
+            # PHASE 1: DISCOVERY (with immediate database storage)
             logger.info("🔍 Phase 1: Creator Discovery")
             orchestration_state.current_stage = "discovery"
             await self._update_active_campaign_state(task_id, orchestration_state)
             
-            await self._run_discovery_phase(orchestration_state, strategy)
+            await self._run_discovery_phase_with_db(orchestration_state, strategy)
             
-            # PHASE 2: NEGOTIATIONS
+            # PHASE 2: NEGOTIATIONS (with real-time database updates)
             logger.info("📞 Phase 2: AI-Guided Negotiations")
             orchestration_state.current_stage = "negotiations"
             await self._update_active_campaign_state(task_id, orchestration_state)
             
-            await self._run_negotiation_phase(orchestration_state, task_id, strategy)
+            await self._run_negotiation_phase_with_db(orchestration_state, task_id, strategy)
             
             # 🧠 PHASE 3: AI COMPLETION DECISION (if Groq available)
             if self.groq_client and orchestration_state.successful_negotiations > 0:
@@ -129,24 +134,27 @@ class CampaignOrchestrator:
                 if completion_decision.get("action") == "continue" and completion_decision.get("find_more"):
                     await self._find_additional_creators(orchestration_state, completion_decision)
             
-            # PHASE 4: CONTRACT GENERATION
+            # PHASE 4: CONTRACT GENERATION (with immediate database storage)
             logger.info("📝 Phase 4: Contract Generation")
             orchestration_state.current_stage = "contracts"
             await self._update_active_campaign_state(task_id, orchestration_state)
             
-            await self._run_contract_phase(orchestration_state)
+            await self._run_contract_phase_with_db(orchestration_state)
             
-            # PHASE 5: DATABASE SYNC
-            logger.info("💾 Phase 5: Database Synchronization")
+            # PHASE 5: FINAL DATABASE SYNC AND ANALYTICS
+            logger.info("💾 Phase 5: Final Database Sync & Analytics")
             orchestration_state.current_stage = "database_sync"
             await self._update_active_campaign_state(task_id, orchestration_state)
             
-            await self._sync_to_database(orchestration_state)
+            await self._final_database_sync_and_analytics(orchestration_state)
             
             # PHASE 6: COMPLETION
             orchestration_state.current_stage = "completed"
             orchestration_state.completed_at = datetime.now()
             await self._update_active_campaign_state(task_id, orchestration_state)
+            
+            # *** Update campaign completion in database ***
+            await self._mark_campaign_completed_in_db(orchestration_state)
             
             # Generate final summary
             summary = {
@@ -168,8 +176,302 @@ class CampaignOrchestrator:
             logger.error(f"❌ Campaign orchestration failed: {str(e)}")
             orchestration_state.current_stage = "failed"
             orchestration_state.completed_at = datetime.now()
+            
+            # *** Even if failed, update database ***
+            try:
+                await self._mark_campaign_failed_in_db(orchestration_state, str(e))
+            except:
+                pass  # Don't fail twice
+                
             await self._update_active_campaign_state(task_id, orchestration_state)
             raise
+    
+    # ================================
+    # NEW DATABASE INTEGRATION METHODS
+    # ================================
+    
+    async def _initialize_database_and_create_campaign(self, state: CampaignOrchestrationState):
+        """*** STEP 0: Initialize database and create campaign record ***"""
+        try:
+            logger.info("💾 Initializing database and creating campaign...")
+            
+            # Initialize database
+            await self.database_service.initialize()
+            
+            # Create campaign in database
+            campaign_record = await self.database_service.create_campaign(state.campaign_data)
+            logger.info(f"✅ Campaign created in database: {campaign_record.id}")
+            
+            # Store database reference
+            state.database_campaign_id = campaign_record.id
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize database or create campaign: {e}")
+            # Continue without database - don't fail the entire workflow
+            state.database_enabled = False
+    
+    async def _store_strategy_in_database(self, state: CampaignOrchestrationState, strategy: Dict[str, Any]):
+        """Store AI strategy in database"""
+        try:
+            await self.database_service.update_campaign(
+                state.campaign_id,
+                {"ai_strategy": strategy}
+            )
+            logger.info("🧠 AI strategy stored in database")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to store strategy: {e}")
+    
+    async def _run_discovery_phase_with_db(self, state: CampaignOrchestrationState, strategy: Dict[str, Any]):
+        """🔍 Run discovery phase with immediate database storage"""
+        logger.info("🔍 Starting influencer discovery phase...")
+        
+        # Use strategy to determine how many creators to find
+        max_creators = strategy.get("max_creators_to_contact", 3)
+        
+        # Find top matching influencers
+        discovered_influencers = await self.discovery_agent.find_matches(
+            state.campaign_data,
+            max_results=max_creators
+        )
+        
+        state.discovered_influencers = discovered_influencers
+        
+        # *** IMMEDIATELY store discovered creators in database ***
+        logger.info("💾 Storing discovered creators in database...")
+        for i, match in enumerate(discovered_influencers):
+            try:
+                await self.database_service.create_or_update_creator(match.creator)
+                logger.info(f"✅ Creator {i+1} stored: {match.creator.name}")
+            except Exception as e:
+                logger.error(f"❌ Failed to store creator {match.creator.name}: {e}")
+        
+        logger.info(f"✅ Discovery complete: Found {len(discovered_influencers)} matching influencers")
+        for i, match in enumerate(discovered_influencers):
+            logger.info(f"  {i+1}. {match.creator.name} - {match.similarity_score:.2f} similarity, ${match.estimated_rate:,}")
+    
+    async def _run_negotiation_phase_with_db(
+        self,
+        state: CampaignOrchestrationState,
+        task_id: str,
+        strategy: Dict[str, Any]
+    ):
+        """📞 Run negotiation phase with real-time database updates"""
+        logger.info("📞 Starting negotiation phase...")
+        
+        # Get creators to negotiate with based on strategy
+        creators_to_contact = state.discovered_influencers[:strategy.get("max_creators_to_contact", 3)]
+        
+        for i, influencer_match in enumerate(creators_to_contact):
+            logger.info(f"📞 Negotiating with {influencer_match.creator.name} ({i+1}/{len(creators_to_contact)})")
+            
+            # Update current influencer in state
+            state.current_influencer = influencer_match.creator.name
+            state.estimated_completion_minutes = (len(creators_to_contact) - i) * 1.5
+            await self._update_active_campaign_state(task_id, state)
+            
+            # 🧠 AI decides negotiation approach for this specific creator
+            if self.groq_client and len(state.negotiations) > 0:
+                negotiation_strategy = await self._get_ai_negotiation_strategy(
+                    influencer_match, state.campaign_data, state.negotiations, strategy
+                )
+            else:
+                negotiation_strategy = {"approach": strategy.get("negotiation_approach", "collaborative")}
+            
+            # Run negotiation with AI guidance
+            negotiation_result = await self.negotiation_agent.negotiate(
+                influencer_match,
+                state.campaign_data,
+                ai_strategy=negotiation_strategy
+            )
+            
+            # Add result to state
+            state.add_negotiation_result(negotiation_result)
+            
+            # *** IMMEDIATELY store negotiation in database ***
+            await self._store_negotiation_in_db(state, negotiation_result)
+            
+            # *** Update campaign totals in database immediately ***
+            await self._update_campaign_totals_in_db(state)
+            
+            # Log result
+            if negotiation_result.status == NegotiationStatus.SUCCESS:
+                logger.info(f"✅ Successful negotiation: ${negotiation_result.final_rate:,}")
+            else:
+                logger.info(f"❌ Failed negotiation: {negotiation_result.failure_reason}")
+            
+            # 🧠 AI analyzes progress and decides whether to continue
+            if len(state.negotiations) >= 2 and self.groq_client:
+                continue_decision = await self._analyze_progress_with_ai(state, strategy)
+                
+                if continue_decision.get("action") == "stop_early":
+                    logger.info(f"🧠 AI Decision: Stop early - {continue_decision.get('reason')}")
+                    break
+                elif continue_decision.get("action") == "adjust_approach":
+                    logger.info(f"🧠 AI Decision: Adjust approach - {continue_decision.get('reason')}")
+                    # AI adjustments would be applied to remaining negotiations
+            
+            # Brief pause between calls for demo effect
+            await asyncio.sleep(3)
+        
+        logger.info(f"📞 Negotiation phase complete: {state.successful_negotiations}/{len(creators_to_contact)} successful")
+    
+    async def _store_negotiation_in_db(self, state: CampaignOrchestrationState, negotiation_result):
+        """Store individual negotiation in database immediately"""
+        try:
+            negotiation_data = {
+                "status": negotiation_result.status,
+                "initial_rate": negotiation_result.initial_rate,
+                "final_rate": negotiation_result.final_rate,
+                "call_status": negotiation_result.call_status,
+                "email_status": negotiation_result.email_status,
+                "call_duration_seconds": negotiation_result.call_duration_seconds,
+                "negotiated_terms": negotiation_result.negotiated_terms,
+                "last_contact_date": negotiation_result.last_contact_date,
+                "call_recording_url": getattr(negotiation_result, 'call_recording_url', None),
+                "call_transcript": getattr(negotiation_result, 'call_transcript', None)
+            }
+            
+            negotiation_record = await self.database_service.create_negotiation(
+                state.campaign_id,
+                negotiation_result.creator_id,
+                negotiation_data
+            )
+            
+            logger.info(f"✅ Negotiation stored in database: ID {negotiation_record.id}")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to store negotiation for {negotiation_result.creator_id}: {e}")
+    
+    async def _update_campaign_totals_in_db(self, state: CampaignOrchestrationState):
+        """Update campaign totals in database in real-time"""
+        try:
+            updates = {
+                "influencer_count": state.successful_negotiations,
+                "total_cost": state.total_cost,
+                "updated_at": datetime.now()
+            }
+            
+            await self.database_service.update_campaign(state.campaign_id, updates)
+            logger.info(f"💾 Campaign totals updated: {state.successful_negotiations} influencers, ${state.total_cost:,}")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to update campaign totals: {e}")
+    
+    async def _run_contract_phase_with_db(self, state: CampaignOrchestrationState):
+        """📝 Generate contracts with immediate database storage"""
+        logger.info("📝 Starting contract generation phase...")
+        
+        successful_negotiations = [
+            neg for neg in state.negotiations 
+            if neg.status == NegotiationStatus.SUCCESS
+        ]
+        
+        for negotiation in successful_negotiations:
+            try:
+                # Generate contract
+                contract_data = await self.contract_agent.generate_contract(
+                    negotiation,
+                    state.campaign_data
+                )
+                
+                # *** IMMEDIATELY store contract in database ***
+                contract_record = await self._store_contract_in_db(state, negotiation, contract_data)
+                
+                # Store contract reference in negotiation
+                negotiation.negotiated_terms["contract_generated"] = True
+                negotiation.negotiated_terms["contract_id"] = contract_record.id
+                
+                logger.info(f"📝 Contract generated and stored: {contract_record.id}")
+                
+            except Exception as e:
+                logger.error(f"❌ Contract generation failed for {negotiation.creator_id}: {str(e)}")
+        
+        logger.info(f"📝 Contract phase complete: {len(successful_negotiations)} contracts generated")
+    
+    async def _store_contract_in_db(self, state: CampaignOrchestrationState, negotiation, contract_data):
+        """Store contract in database"""
+        try:
+            contract_record = await self.database_service.create_contract({
+                "id": f"contract_{negotiation.creator_id}_{state.campaign_id}",
+                "campaign_id": state.campaign_id,
+                "creator_id": negotiation.creator_id,
+                "compensation_amount": negotiation.final_rate,
+                "deliverables": contract_data.get("deliverables", []),
+                "timeline": contract_data.get("timeline", {}),
+                "usage_rights": contract_data.get("usage_rights", {}),
+                "status": "draft",
+                "contract_text": contract_data.get("contract_text", "")
+            })
+            
+            # Also create payment record
+            payment_record = await self.database_service.create_payment({
+                "contract_id": contract_record.id,
+                "amount": negotiation.final_rate,
+                "status": "pending",
+                "payment_method": "bank_transfer",
+                "due_date": datetime.now()
+            })
+            
+            logger.info(f"✅ Contract and payment record created: {contract_record.id}")
+            return contract_record
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to store contract: {e}")
+            raise
+    
+    async def _final_database_sync_and_analytics(self, state: CampaignOrchestrationState):
+        """Final comprehensive database sync and analytics generation"""
+        try:
+            logger.info("💾 Running final comprehensive database sync...")
+            
+            # Run comprehensive sync (this ensures everything is stored)
+            await self.database_service.sync_campaign_results(state)
+            
+            # Generate analytics from database
+            analytics = await self.database_service.get_campaign_analytics(state.campaign_id)
+            state.final_analytics = analytics
+            
+            logger.info("✅ Final database sync and analytics completed")
+            logger.info(f"📊 Analytics: {analytics.get('success_rate', 0):.1f}% success rate, ${analytics.get('total_cost', 0):,} spent")
+            
+        except Exception as e:
+            logger.error(f"❌ Final database sync failed: {e}")
+    
+    async def _mark_campaign_completed_in_db(self, state: CampaignOrchestrationState):
+        """Mark campaign as completed in database"""
+        try:
+            await self.database_service.update_campaign(
+                state.campaign_id,
+                {
+                    "status": "completed",
+                    "completed_at": state.completed_at
+                }
+            )
+            logger.info("✅ Campaign marked as completed in database")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to mark campaign completed: {e}")
+    
+    async def _mark_campaign_failed_in_db(self, state: CampaignOrchestrationState, error_message: str):
+        """Mark campaign as failed in database"""
+        try:
+            await self.database_service.update_campaign(
+                state.campaign_id,
+                {
+                    "status": "failed",
+                    "completed_at": datetime.now(),
+                    "ai_strategy": {"error": error_message}
+                }
+            )
+            logger.info("⚠️ Campaign marked as failed in database")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to mark campaign failed: {e}")
+    
+    # ================================
+    # EXISTING METHODS (Keep all your existing AI methods)
+    # ================================
     
     async def _generate_ai_strategy(self, campaign_data: CampaignData) -> Dict[str, Any]:
         """🧠 Generate AI-powered campaign strategy using Groq"""

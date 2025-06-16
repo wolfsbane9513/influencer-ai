@@ -1,64 +1,114 @@
-# api/enhanced_webhooks.py - COMPLETELY FIXED VERSION
+# api/enhanced_webhooks.py (UPDATE to include database)
+"""
+Enhanced webhooks with database integration
+"""
 import uuid
+import asyncio
 import logging
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
-from typing import Dict, Any
 
-# Import only what we actually need - clean dependencies
-from models.campaign import (
-    CampaignWebhook, CampaignData, 
-    validate_campaign_data, create_campaign_from_webhook
-)
+# Your existing imports
+from models.campaign import CampaignWebhook, CampaignData, CampaignOrchestrationState
 from agents.enhanced_orchestrator import EnhancedCampaignOrchestrator
+from services.enhanced_voice import EnhancedVoiceService
+
+# *** ADD DATABASE IMPORT ***
+from services.database import DatabaseService
+
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-# Initialize router and minimal services
 enhanced_webhook_router = APIRouter()
-orchestrator = EnhancedCampaignOrchestrator()
+
+# Initialize enhanced services
+enhanced_orchestrator = EnhancedCampaignOrchestrator()
+enhanced_voice_service = EnhancedVoiceService()
+database_service = DatabaseService()  # *** ADD DATABASE SERVICE ***
 
 @enhanced_webhook_router.post("/enhanced-campaign")
-async def handle_enhanced_campaign_created(
+async def create_enhanced_campaign_with_db(
     campaign_webhook: CampaignWebhook,
     background_tasks: BackgroundTasks
 ):
     """
-    🎯 ENHANCED CAMPAIGN WEBHOOK - COMPLETELY FIXED VERSION
+    🎯 ENHANCED CAMPAIGN CREATION WITH DATABASE INTEGRATION
+    
+    Creates campaign with:
+    - Database persistence from start
+    - Enhanced ElevenLabs integration
+    - Real-time progress tracking
+    - Advanced analytics
     """
     try:
+        # Generate unique task ID
         task_id = str(uuid.uuid4())
+        
         logger.info(f"🚀 Enhanced campaign webhook received: {campaign_webhook.product_name}")
         
-        # Convert webhook data to internal campaign representation
-        campaign_data = create_campaign_from_webhook(campaign_webhook)
+        # *** STEP 1: Initialize database ***
+        try:
+            await database_service.initialize()
+            logger.info("✅ Database initialized for enhanced campaign")
+            database_enabled = True
+        except Exception as e:
+            logger.error(f"⚠️ Database initialization failed: {e}")
+            database_enabled = False
         
-        # Validate campaign data
-        validation_result = validate_campaign_data(campaign_data)
-        if not validation_result.is_valid:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "error": "Campaign validation failed",
-                    "validation_errors": validation_result.errors,
-                    "warnings": validation_result.warnings
-                }
-            )
+        # Convert webhook to campaign data
+        campaign_data = CampaignData(
+            id=campaign_webhook.campaign_id,
+            product_name=campaign_webhook.product_name,
+            brand_name=campaign_webhook.brand_name,
+            product_description=campaign_webhook.product_description,
+            target_audience=campaign_webhook.target_audience,
+            campaign_goal=campaign_webhook.campaign_goal,
+            product_niche=campaign_webhook.product_niche,
+            total_budget=campaign_webhook.total_budget,
+            campaign_code=f"ENH-{campaign_webhook.campaign_id[:8].upper()}"
+        )
         
-        # Start background orchestration
+        # *** STEP 2: Create campaign in database immediately ***
+        if database_enabled:
+            try:
+                db_campaign = await database_service.create_campaign(campaign_data)
+                logger.info(f"✅ Enhanced campaign created in database: {db_campaign.id}")
+            except Exception as e:
+                logger.error(f"❌ Failed to create campaign in database: {e}")
+                database_enabled = False
+        
+        # Initialize enhanced orchestration state
+        orchestration_state = CampaignOrchestrationState(
+            campaign_id=campaign_data.id,
+            campaign_data=campaign_data,
+            current_stage="enhanced_webhook_received"
+        )
+        
+        # Mark database status
+        orchestration_state.database_enabled = database_enabled
+        
+        # Store in global state
+        from main import active_campaigns
+        active_campaigns[task_id] = orchestration_state
+        
+        # *** STEP 3: Inject database service into orchestrator ***
+        if database_enabled and hasattr(enhanced_orchestrator, 'database_service'):
+            enhanced_orchestrator.database_service = database_service
+            logger.info("✅ Database service injected into enhanced orchestrator")
+        
+        # 🔥 START ENHANCED WORKFLOW WITH DATABASE
         background_tasks.add_task(
-            run_enhanced_campaign_orchestration,
-            campaign_data,
+            enhanced_orchestrator.orchestrate_campaign,
+            orchestration_state,
             task_id
         )
         
-        # Return clean response
         return JSONResponse(
             status_code=202,
             content={
-                "message": "🎯 Enhanced AI campaign workflow started",
+                "message": "🎯 Enhanced AI campaign workflow started WITH DATABASE",
                 "task_id": task_id,
                 "campaign_id": campaign_data.id,
                 "brand_name": campaign_data.brand_name,
@@ -66,490 +116,496 @@ async def handle_enhanced_campaign_created(
                 "estimated_duration_minutes": 8,
                 "monitor_url": f"/api/monitor/enhanced-campaign/{task_id}",
                 "status": "started",
+                "database_enabled": database_enabled,
                 "enhancements": [
-                    "AI-powered creator discovery",
-                    "Intelligent negotiation strategies", 
-                    "Automated contract generation",
-                    "Real-time progress tracking"
+                    "ElevenLabs dynamic variables integration",
+                    "PostgreSQL database persistence",
+                    "Structured conversation analysis", 
+                    "AI-powered negotiation strategies",
+                    "Real-time progress tracking",
+                    "Advanced analytics and reporting"
                 ],
-                "validation_result": {
-                    "is_valid": validation_result.is_valid,
-                    "errors": validation_result.errors,
-                    "warnings": validation_result.warnings
-                }
+                "database_features": [
+                    "Campaign tracking from creation",
+                    "Creator performance analytics",
+                    "Negotiation history with transcripts",
+                    "Contract and payment management",
+                    "ROI analysis and reporting"
+                ] if database_enabled else ["Limited to in-memory tracking"],
+                "next_steps": [
+                    f"Database: Campaign record {'created' if database_enabled else 'skipped'}",
+                    "Discovery: Enhanced creator matching with database lookup",
+                    "Strategy: AI-powered negotiation planning", 
+                    "Negotiations: ElevenLabs calls with real-time database updates",
+                    "Contracts: Automated generation with database storage",
+                    "Analytics: Comprehensive performance reporting"
+                ]
             }
         )
         
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"❌ Enhanced campaign webhook error: {e}")
+        logger.error(f"❌ Enhanced webhook processing failed: {str(e)}")
+        
+        # Try to log error to database
+        try:
+            if database_enabled and 'campaign_data' in locals():
+                await database_service.update_campaign(
+                    campaign_data.id,
+                    {
+                        "status": "failed", 
+                        "ai_strategy": {"error": str(e), "stage": "webhook_processing"}
+                    }
+                )
+        except:
+            pass  # Don't fail twice
+        
         raise HTTPException(
             status_code=500,
-            detail={
-                "error": "Internal server error",
-                "message": str(e)
-            }
+            detail=f"Enhanced campaign creation failed: {str(e)}"
         )
 
-async def run_enhanced_campaign_orchestration(
-    campaign_data: CampaignData,
-    task_id: str
-):
+@enhanced_webhook_router.post("/test-enhanced-campaign")
+async def create_test_enhanced_campaign(background_tasks: BackgroundTasks):
     """
-    🎯 Background orchestration - clean implementation
+    🧪 Create enhanced test campaign WITH DATABASE
+    """
+    test_campaign = CampaignWebhook(
+        campaign_id=str(uuid.uuid4()),
+        product_name="Enhanced FitPro Max",
+        brand_name="Enhanced FitLife",
+        product_description="Next-generation protein powder with AI-optimized nutrition profile for enhanced performance and recovery",
+        target_audience="Serious athletes, bodybuilders, and fitness professionals aged 20-40 seeking premium nutrition solutions",
+        campaign_goal="Launch premium product line with enhanced creator partnerships and database-tracked performance",
+        product_niche="fitness",
+        total_budget=18000.0
+    )
+    
+    logger.info("🧪 Enhanced test campaign created with database integration")
+    
+    return await create_enhanced_campaign_with_db(test_campaign, background_tasks)
+
+@enhanced_webhook_router.post("/test-enhanced-call")
+async def test_enhanced_elevenlabs_call():
+    """
+    🧪 Test enhanced ElevenLabs call with database logging
     """
     try:
-        logger.info(f"🎯 Starting enhanced campaign orchestration: {task_id}")
+        # Enhanced test creator profile
+        enhanced_test_creator = {
+            "id": "enhanced_test_creator",
+            "name": "Enhanced TestCreator Pro",
+            "niche": "fitness",
+            "followers": 150000,
+            "engagement_rate": 4.8,
+            "average_views": 75000,
+            "location": "Enhanced Test Location",
+            "languages": ["English"],
+            "typical_rate": 4000,
+            "specialties": ["enhanced content", "premium collaborations"]
+        }
         
-        # Run the orchestration
-        final_state = await orchestrator.orchestrate_enhanced_campaign(
-            campaign_data=campaign_data,
-            task_id=task_id
+        enhanced_campaign_brief = """
+        Enhanced Campaign Brief:
+        Brand: Enhanced TestBrand Pro
+        Product: Enhanced Test Product with Premium Features
+        Description: Advanced test campaign for enhanced ElevenLabs integration with database tracking
+        Target Audience: Premium test audience
+        Goal: Validate enhanced calling system with database persistence
+        Budget: $18,000 (premium tier)
+        """
+        
+        # Use your phone number
+        test_phone = "+918806859890"
+        
+        logger.info(f"🧪 Initiating enhanced test call with database logging")
+        logger.info(f"   Enhanced FROM: +1 320 383 8447 (Twilio Premium)")
+        logger.info(f"   Enhanced TO: {test_phone} (Your phone)")
+        
+        # *** Log call attempt to database ***
+        if database_service:
+            try:
+                await database_service.initialize()
+                
+                # Create outreach log
+                outreach_log = await database_service.create_outreach_log({
+                    "campaign_id": "enhanced_test_campaign",
+                    "creator_id": "enhanced_test_creator",
+                    "contact_type": "test_call",
+                    "status": "initiated",
+                    "notes": f"Enhanced test call to {test_phone}"
+                })
+                
+                logger.info(f"✅ Test call logged to database: {outreach_log.id}")
+                
+            except Exception as e:
+                logger.error(f"❌ Failed to log test call: {e}")
+        
+        # Initiate enhanced call
+        call_result = await enhanced_voice_service.initiate_negotiation_call(
+            creator_phone=test_phone,
+            creator_profile=enhanced_test_creator,
+            campaign_brief=enhanced_campaign_brief,
+            price_range="3000-5000"
         )
         
-        # Store in global state for monitoring
-        from main import active_campaigns
-        active_campaigns[task_id] = final_state
-        
-        logger.info(f"✅ Enhanced campaign orchestration completed: {task_id}")
-        logger.info(f"📊 Results: {final_state.successful_negotiations} successful negotiations")
+        return JSONResponse(
+            status_code=200,
+            content={
+                "enhanced_call_result": call_result,
+                "message": f"Enhanced test call initiated! Check your phone {test_phone}",
+                "call_flow": {
+                    "from_number": "+1 320 383 8447 (Enhanced Twilio)",
+                    "to_number": test_phone,
+                    "expected": "Enhanced phone experience with improved audio quality"
+                },
+                "enhancements": [
+                    "Dynamic variables integration",
+                    "Enhanced conversation analysis",
+                    "Database call logging",
+                    "Improved error handling"
+                ],
+                "database_tracking": database_service is not None,
+                "troubleshooting": {
+                    "if_no_ring": "Check enhanced Twilio console logs",
+                    "if_call_fails": "Verify enhanced ElevenLabs agent configuration",
+                    "database_issues": "Check PostgreSQL connection"
+                }
+            }
+        )
         
     except Exception as e:
-        logger.error(f"❌ Enhanced campaign orchestration failed: {task_id} - {e}")
+        logger.error(f"❌ Enhanced test call failed: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": str(e),
+                "message": "Enhanced test call failed",
+                "type": "enhanced_call_error"
+            }
+        )
 
 @enhanced_webhook_router.get("/test-enhanced-elevenlabs")
-async def test_enhanced_elevenlabs_integration():
+async def test_enhanced_elevenlabs_setup():
     """
-    📞 Simple ElevenLabs integration test
-    """
-    try:
-        logger.info("📞 Testing enhanced ElevenLabs integration...")
-        
-        return {
-            "status": "success",
-            "message": "Enhanced ElevenLabs integration ready",
-            "api_connected": True,
-            "features": [
-                "Dynamic variable injection",
-                "Real-time conversation monitoring", 
-                "Structured outcome analysis"
-            ]
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ ElevenLabs integration test failed: {e}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "api_connected": False
-        }
-
-@enhanced_webhook_router.post("/generate-enhanced-contract")
-async def generate_enhanced_contract(contract_request: Dict[str, Any]):
-    """
-    📝 Simple contract generation
+    🧪 Test enhanced ElevenLabs setup with database validation
     """
     try:
-        logger.info("📋 Generating enhanced contract...")
+        # Test enhanced voice service
+        result = await enhanced_voice_service.test_credentials()
         
-        # Extract required data
-        creator_name = contract_request.get("creator_name", "TestCreator Pro")
-        compensation = float(contract_request.get("compensation", 2500.0))
-        campaign_details = contract_request.get("campaign_details", {})
+        # Test database connection
+        database_status = "unknown"
+        if database_service:
+            try:
+                await database_service.initialize()
+                async with database_service.get_session() as session:
+                    await session.execute("SELECT 1")
+                database_status = "connected"
+            except:
+                database_status = "failed"
         
-        logger.info(f"📄 Contract data prepared for {creator_name}: ${compensation}")
-        
-        # Generate simple contract
-        contract_text = _generate_contract_text(creator_name, compensation, campaign_details)
-        
-        logger.info(f"✅ Contract generated successfully for {creator_name}")
-        
-        return {
-            "status": "success",
-            "message": "Enhanced contract generated successfully",
-            "contract_generated": True,
-            "contract_data": {
-                "creator_name": creator_name,
-                "compensation": compensation,
-                "campaign_details": campaign_details,
-                "generation_timestamp": datetime.now().isoformat()
-            },
-            "contract_metadata": {
-                "contract_id": f"contract_{creator_name}_{int(datetime.now().timestamp())}",
-                "validation_passed": True
-            },
-            "full_contract": contract_text
-        }
+        return JSONResponse(
+            status_code=200 if result["status"] == "success" else 400,
+            content={
+                "enhanced_elevenlabs_status": result,
+                "database_status": database_status,
+                "setup_instructions": {
+                    "step_1": "Enhanced API key from https://elevenlabs.io/app/settings/api-keys",
+                    "step_2": "Enhanced agent at https://elevenlabs.io/app/conversational-ai",
+                    "step_3": "Enhanced phone number integration with dynamic variables",
+                    "step_4": "Enhanced credentials in .env file",
+                    "step_5": "Database setup for call tracking",
+                    "required_env_vars": [
+                        "ELEVENLABS_API_KEY=sk_your_enhanced_key_here",
+                        "ELEVENLABS_AGENT_ID=your_enhanced_agent_id_here", 
+                        "ELEVENLABS_PHONE_NUMBER_ID=your_enhanced_phone_id_here",
+                        "DATABASE_URL=postgresql://user:password@localhost:5432/influencerflow"
+                    ]
+                },
+                "current_settings": {
+                    "api_key_set": bool(settings.elevenlabs_api_key),
+                    "agent_id_set": bool(settings.elevenlabs_agent_id),
+                    "phone_number_id_set": bool(settings.elevenlabs_phone_number_id),
+                    "database_connected": database_status == "connected",
+                    "mock_mode": enhanced_voice_service.use_mock
+                },
+                "enhancements": [
+                    "Dynamic variables support",
+                    "Enhanced conversation monitoring",
+                    "Database call logging",
+                    "Improved error handling",
+                    "Real-time analytics"
+                ]
+            }
+        )
         
     except Exception as e:
-        logger.error(f"❌ Enhanced contract generation error: {e}")
+        logger.error(f"❌ Enhanced ElevenLabs test failed: {e}")
         return JSONResponse(
             status_code=500,
             content={
-                "status": "error",
-                "error": "Contract generation failed",
-                "message": str(e)
-            }
-        )
-
-def _generate_contract_text(creator_name: str, compensation: float, campaign_details: Dict[str, Any]) -> str:
-    """
-    📝 Generate contract text - simple and clean
-    """
-    brand = campaign_details.get("brand", "Brand Name")
-    product = campaign_details.get("product", "Product Name")
-    
-    return f"""
-INFLUENCER COLLABORATION AGREEMENT
-
-Creator: {creator_name}
-Brand: {brand}
-Product: {product}
-Compensation: ${compensation:,.2f}
-
-TERMS:
-• Creator will produce high-quality content showcasing the product
-• Payment processed within 30 days of content delivery
-• Usage rights granted for 12 months from publication
-• Content must include proper FTC disclosure
-
-Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-""".strip()
-
-@enhanced_webhook_router.post("/test-actual-call")
-async def test_actual_call(call_data: Dict[str, Any]):
-    """
-    🧪 MAKE ACTUAL ELEVENLABS CALL - FOR TESTING
-    """
-    try:
-        logger.info("🧪 Initiating actual ElevenLabs call test...")
-        
-        # Extract call data
-        creator_phone = call_data.get("creator_phone")
-        creator_profile = call_data.get("creator_profile", {})
-        campaign_data = call_data.get("campaign_data", {})
-        pricing_strategy = call_data.get("pricing_strategy", {})
-        
-        logger.info(f"📞 Making real call to: {creator_phone}")
-        
-        # Initialize voice service for actual call
-        from services.enhanced_voice import EnhancedVoiceService
-        voice_service = EnhancedVoiceService()
-        
-        # Make actual call using enhanced voice service
-        call_result = await voice_service.initiate_negotiation_call(
-            creator_phone=creator_phone,
-            creator_profile=creator_profile,
-            campaign_data=campaign_data,
-            pricing_strategy=pricing_strategy
-        )
-        
-        if call_result.get("status") == "success":
-            logger.info(f"✅ Real call initiated successfully: {call_result.get('conversation_id')}")
-            
-            return {
-                "status": "success",
-                "message": "Actual ElevenLabs call initiated successfully",
-                "conversation_id": call_result.get("conversation_id"),
-                "call_id": call_result.get("call_id"),
-                "phone_number": creator_phone,
-                "expected_duration": "2-5 minutes",
-                "monitor_instructions": "Check your phone for incoming call from ElevenLabs",
-                "creator_name": creator_profile.get("name", "Test Creator"),
-                "product_name": campaign_data.get("product_name", "Test Product")
-            }
-        else:
-            logger.error(f"❌ Real call failed: {call_result}")
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "status": "failed",
-                    "message": "ElevenLabs call initiation failed",
-                    "error": call_result.get("error", "Unknown error"),
-                    "details": call_result
-                }
-            )
-            
-    except Exception as e:
-        logger.error(f"❌ Actual call test exception: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "error",
-                "message": "Actual call test failed",
-                "error": str(e)
-            }
-        )
-
-@enhanced_webhook_router.get("/call-status/{conversation_id}")
-async def get_call_status(conversation_id: str):
-    """
-    👁️  Get status of ongoing or completed call
-    """
-    try:
-        logger.info(f"📊 Checking call status: {conversation_id}")
-        
-        # Initialize voice service to check status
-        from services.enhanced_voice import EnhancedVoiceService
-        voice_service = EnhancedVoiceService()
-        
-        # Get call status from ElevenLabs
-        status_result = await voice_service.get_conversation_status(conversation_id)
-        
-        if not status_result:
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "status": "not_found",
-                    "message": "Conversation not found or still initializing",
-                    "conversation_id": conversation_id
-                }
-            )
-        
-        # Extract status information
-        raw_status = status_result.get("status", "unknown")
-        normalized_status = status_result.get("normalized_status", "unknown")
-        
-        # Determine outcome based on status
-        outcome = "pending"
-        if normalized_status == "completed":
-            outcome = "completed"
-        elif normalized_status == "failed":
-            outcome = "failed"
-        elif normalized_status in ["in_progress"]:
-            outcome = "in_progress"
-        
-        return {
-            "conversation_id": conversation_id,
-            "status": normalized_status,
-            "raw_status": raw_status,
-            "duration": 0,
-            "outcome": outcome,
-            "analysis": {
-                "negotiation_outcome": "success" if normalized_status == "completed" else "pending",
-                "agreed_rate": None,
-                "sentiment": "positive" if normalized_status == "completed" else "neutral"
-            },
-            "last_updated": datetime.now().isoformat(),
-            "raw_data": status_result
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Call status check failed: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "error",
-                "message": "Call status check failed",
                 "error": str(e),
-                "conversation_id": conversation_id
-            }
-        )
-
-@enhanced_webhook_router.post("/generate-contract-from-call")
-async def generate_contract_from_call(request: Dict[str, Any]):
-    """
-    📋 Generate contract from completed ElevenLabs call
-    """
-    try:
-        conversation_id = request.get("conversation_id")
-        if not conversation_id:
-            raise HTTPException(400, "conversation_id is required")
-        
-        logger.info(f"📋 Generating contract from call: {conversation_id}")
-        
-        # Get call results from ElevenLabs
-        from services.enhanced_voice import EnhancedVoiceService
-        voice_service = EnhancedVoiceService()
-        
-        # Fetch full conversation data
-        import requests
-        
-        response = requests.get(
-            f"https://api.elevenlabs.io/v1/convai/conversations/{conversation_id}",
-            headers={"Xi-Api-Key": voice_service.api_key},
-            timeout=15
-        )
-        
-        if response.status_code != 200:
-            raise HTTPException(500, f"Failed to fetch call data: {response.status_code}")
-        
-        call_data = response.json()
-        
-        # Extract negotiation results
-        analysis = call_data.get("analysis", {})
-        data_collection = analysis.get("data_collection_results", {})
-        dynamic_vars = call_data.get("conversation_initiation_client_data", {}).get("dynamic_variables", {})
-        
-        # Get contract details
-        creator_name = dynamic_vars.get("influencerName", "Creator")
-        brand_name = dynamic_vars.get("brandName", "Brand")
-        product_name = dynamic_vars.get("productName", "Product")
-        
-        final_rate = data_collection.get("final_rate_mentioned", {}).get("value")
-        timeline = data_collection.get("timeline_mentioned", {}).get("value", "4 weeks")
-        deliverables_str = data_collection.get("deliverables_discussed", {}).get("value", "video_review,instagram_story")
-        usage_rights = data_collection.get("usage_rights_discussed", {}).get("value", "commercial_use")
-        call_successful = analysis.get("call_successful", "unknown")
-        
-        if call_successful != "success" or not final_rate:
-            return JSONResponse(
-                status_code=422,
-                content={
-                    "status": "failed",
-                    "message": "Contract cannot be generated - negotiation was not successful",
-                    "call_status": call_successful,
-                    "final_rate": final_rate
-                }
-            )
-        
-        # Parse deliverables
-        deliverables = []
-        if "video_review" in deliverables_str:
-            deliverables.append("1 dedicated video review")
-        if "instagram_story" in deliverables_str:
-            deliverables.append("3 Instagram stories")
-        if "instagram_post" in deliverables_str:
-            deliverables.append("1 Instagram post")
-        
-        # Generate detailed contract
-        contract_id = f"IFC-{conversation_id[:8].upper()}"
-        
-        contract_text = f"""
-INFLUENCER MARKETING COLLABORATION AGREEMENT
-
-CONTRACT ID: {contract_id}
-GENERATED: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-CONVERSATION REF: {conversation_id}
-
-PARTIES:
-• Brand: {brand_name}
-• Creator: {creator_name}
-
-CAMPAIGN DETAILS:
-• Product: {product_name}
-• Campaign Type: Product Collaboration
-• Content Category: Technology Review
-
-COMPENSATION:
-• Total Amount: ${final_rate:,.2f} USD
-• Payment Terms: Net 30 days from content delivery
-• Payment Method: Bank transfer or PayPal
-
-DELIVERABLES:
-{chr(10).join([f"   • {item}" for item in deliverables])}
-
-TIMELINE:
-• Content Creation: {timeline}
-• Review Period: 3 business days
-• Go-Live Date: Upon brand approval
-
-USAGE RIGHTS:
-• Rights Type: {usage_rights.replace('_', ' ').title()}
-• Duration: 12 months from publication
-• Platforms: Instagram, brand website, marketing materials
-
-CONTENT REQUIREMENTS:
-• All content must include FTC disclosure (#ad, #sponsored)
-• Content must align with brand guidelines
-• Creator retains creative control within brand parameters
-
-SIGNATURES:
-Brand Representative: _________________ Date: _________
-Creator ({creator_name}): _________________ Date: _________
-""".strip()
-        
-        # Save contract data
-        contract_data = {
-            "contract_id": contract_id,
-            "conversation_id": conversation_id,
-            "creator_name": creator_name,
-            "brand_name": brand_name,
-            "product_name": product_name,
-            "final_rate": final_rate,
-            "timeline": timeline,
-            "deliverables": deliverables,
-            "usage_rights": usage_rights,
-            "contract_text": contract_text,
-            "generated_at": datetime.now().isoformat(),
-            "status": "draft"
-        }
-        
-        logger.info(f"✅ Contract generated successfully: {contract_id}")
-        
-        return {
-            "status": "success",
-            "message": "Contract generated from call results",
-            "contract_id": contract_id,
-            "contract_data": contract_data,
-            "contract_text": contract_text,
-            "negotiation_summary": {
-                "creator": creator_name,
-                "compensation": f"${final_rate:,.2f}",
-                "deliverables": deliverables,
-                "timeline": timeline,
-                "call_duration": f"{call_data.get('metadata', {}).get('call_duration_secs', 0)} seconds"
-            },
-            "next_steps": [
-                "Review contract terms",
-                "Send to creator for signature",
-                "Set up payment processing",
-                "Schedule content delivery"
-            ]
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Contract generation from call failed: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "error",
-                "message": "Contract generation failed",
-                "error": str(e)
+                "message": "Enhanced ElevenLabs test failed - check your enhanced setup"
             }
         )
 
 @enhanced_webhook_router.get("/system-status")
-async def get_enhanced_system_status():
-    """
-    📊 System status - completely fixed
-    """
+async def enhanced_system_status():
+    """📊 Enhanced system status with database metrics"""
+    
+    # Check database status and get metrics
+    database_metrics = {}
+    if database_service:
+        try:
+            await database_service.initialize()
+            
+            # Get basic database metrics
+            async with database_service.get_session() as session:
+                # Count campaigns
+                campaigns_result = await session.execute("SELECT COUNT(*) FROM campaigns")
+                campaigns_count = campaigns_result.scalar()
+                
+                # Count creators  
+                creators_result = await session.execute("SELECT COUNT(*) FROM creators")
+                creators_count = creators_result.scalar()
+                
+                database_metrics = {
+                    "status": "connected",
+                    "total_campaigns": campaigns_count,
+                    "total_creators": creators_count
+                }
+        except Exception as e:
+            database_metrics = {
+                "status": "error",
+                "error": str(e)
+            }
+    else:
+        database_metrics = {"status": "not_initialized"}
+    
+    return {
+        "service": "Enhanced InfluencerFlow Webhook Handler",
+        "status": "healthy",
+        "version": "2.1.0-enhanced-database",
+        "database": database_metrics,
+        "endpoints": {
+            "enhanced_campaign": "/api/webhook/enhanced-campaign",
+            "test_enhanced_campaign": "/api/webhook/test-enhanced-campaign",
+            "test_enhanced_call": "/api/webhook/test-enhanced-call", 
+            "test_enhanced_elevenlabs": "/api/webhook/test-enhanced-elevenlabs",
+            "system_status": "/api/webhook/system-status"
+        },
+        "enhanced_capabilities": [
+            "Enhanced ElevenLabs dynamic variables",
+            "PostgreSQL database integration",
+            "Real-time campaign tracking",
+            "Advanced conversation analysis",
+            "Creator performance analytics",
+            "Automated contract generation",
+            "Payment tracking and management",
+            "ROI analysis and reporting"
+        ],
+        "integrations": {
+            "groq_ai": bool(settings.groq_api_key),
+            "elevenlabs_enhanced": bool(settings.elevenlabs_api_key),
+            "postgresql": database_metrics.get("status") == "connected",
+            "mock_mode": enhanced_voice_service.use_mock
+        },
+        "database_features": {
+            "real_time_tracking": True,
+            "campaign_analytics": True,
+            "creator_management": True,
+            "negotiation_history": True,
+            "contract_management": True,
+            "payment_tracking": True,
+            "performance_reporting": True
+        } if database_metrics.get("status") == "connected" else None
+    }
+
+# *** NEW: Database analytics endpoints ***
+@enhanced_webhook_router.get("/analytics/campaigns")
+async def get_campaign_analytics():
+    """📊 Get campaign analytics from database"""
     try:
-        # Check orchestrator status
-        orchestrator_status = "operational" if orchestrator.groq_client else "fallback_mode"
+        if not database_service:
+            raise HTTPException(status_code=500, detail="Database service not available")
         
-        # Get active campaigns count
-        from main import active_campaigns
-        active_count = len(active_campaigns)
+        await database_service.initialize()
         
+        async with database_service.get_session() as session:
+            # Get campaign statistics
+            campaigns_result = await session.execute("""
+                SELECT 
+                    COUNT(*) as total_campaigns,
+                    COUNT(*) FILTER (WHERE status = 'completed') as completed_campaigns,
+                    COUNT(*) FILTER (WHERE status = 'active') as active_campaigns,
+                    AVG(total_cost) as avg_cost,
+                    SUM(total_cost) as total_spent
+                FROM campaigns
+            """)
+            stats = campaigns_result.fetchone()
+            
+            # Get recent campaigns
+            recent_campaigns_result = await session.execute("""
+                SELECT id, product_name, brand_name, status, total_cost, created_at
+                FROM campaigns 
+                ORDER BY created_at DESC 
+                LIMIT 5
+            """)
+            recent_campaigns = recent_campaigns_result.fetchall()
+            
         return {
-            "status": "operational",
-            "version": "2.0.0-enhanced",
-            "enhanced_features": {
-                "ai_strategy_generation": bool(orchestrator.groq_client),
-                "creator_discovery": True,
-                "contract_automation": True,
-                "progress_monitoring": True,
-                "actual_call_testing": True,
-                "contract_from_calls": True
+            "campaign_statistics": {
+                "total_campaigns": stats.total_campaigns,
+                "completed_campaigns": stats.completed_campaigns,
+                "active_campaigns": stats.active_campaigns,
+                "average_cost": float(stats.avg_cost) if stats.avg_cost else 0,
+                "total_spent": float(stats.total_spent) if stats.total_spent else 0
             },
-            "services": {
-                "enhanced_orchestrator": orchestrator_status,
-                "campaign_management": "operational",
-                "elevenlabs_integration": "operational"
-            },
-            "active_campaigns": active_count,
-            "system_health": "excellent",
-            "last_updated": datetime.now().isoformat()
+            "recent_campaigns": [
+                {
+                    "id": campaign.id,
+                    "product_name": campaign.product_name,
+                    "brand_name": campaign.brand_name,
+                    "status": campaign.status,
+                    "total_cost": float(campaign.total_cost) if campaign.total_cost else 0,
+                    "created_at": campaign.created_at.isoformat()
+                }
+                for campaign in recent_campaigns
+            ]
         }
         
     except Exception as e:
-        logger.error(f"❌ System status check failed: {e}")
+        logger.error(f"❌ Campaign analytics failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Analytics failed: {str(e)}")
+
+@enhanced_webhook_router.get("/analytics/creators")
+async def get_creator_analytics():
+    """📊 Get creator performance analytics from database"""
+    try:
+        if not database_service:
+            raise HTTPException(status_code=500, detail="Database service not available")
+        
+        await database_service.initialize()
+        
+        async with database_service.get_session() as session:
+            # Get creator statistics by niche
+            creators_by_niche_result = await session.execute("""
+                SELECT 
+                    niche,
+                    COUNT(*) as creator_count,
+                    AVG(followers) as avg_followers,
+                    AVG(engagement_rate) as avg_engagement,
+                    AVG(typical_rate) as avg_rate
+                FROM creators 
+                GROUP BY niche
+                ORDER BY creator_count DESC
+            """)
+            creators_by_niche = creators_by_niche_result.fetchall()
+            
+            # Get top performers
+            top_creators_result = await session.execute("""
+                SELECT id, name, niche, followers, engagement_rate, typical_rate
+                FROM creators 
+                ORDER BY engagement_rate DESC, followers DESC
+                LIMIT 10
+            """)
+            top_creators = top_creators_result.fetchall()
+            
         return {
-            "status": "error",
-            "message": str(e),
-            "system_health": "degraded"
+            "creators_by_niche": [
+                {
+                    "niche": row.niche,
+                    "creator_count": row.creator_count,
+                    "avg_followers": int(row.avg_followers) if row.avg_followers else 0,
+                    "avg_engagement": float(row.avg_engagement) if row.avg_engagement else 0,
+                    "avg_rate": float(row.avg_rate) if row.avg_rate else 0
+                }
+                for row in creators_by_niche
+            ],
+            "top_performers": [
+                {
+                    "id": creator.id,
+                    "name": creator.name,
+                    "niche": creator.niche,
+                    "followers": creator.followers,
+                    "engagement_rate": float(creator.engagement_rate),
+                    "typical_rate": float(creator.typical_rate)
+                }
+                for creator in top_creators
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Creator analytics failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Creator analytics failed: {str(e)}")
+
+@enhanced_webhook_router.get("/database/health")
+async def database_health_check():
+    """🏥 Comprehensive database health check"""
+    try:
+        if not database_service:
+            return {
+                "status": "not_initialized",
+                "message": "Database service not available"
+            }
+        
+        await database_service.initialize()
+        
+        health_checks = {}
+        
+        # Test basic connection
+        async with database_service.get_session() as session:
+            # Connection test
+            start_time = datetime.now()
+            result = await session.execute("SELECT 1")
+            connection_time = (datetime.now() - start_time).total_seconds()
+            health_checks["connection"] = {
+                "status": "healthy",
+                "response_time_ms": connection_time * 1000
+            }
+            
+            # Table existence checks
+            tables_result = await session.execute("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public'
+            """)
+            tables = [row.table_name for row in tables_result.fetchall()]
+            
+            expected_tables = ["campaigns", "creators", "negotiations", "contracts", "payments", "outreach_logs"]
+            missing_tables = [table for table in expected_tables if table not in tables]
+            
+            health_checks["schema"] = {
+                "status": "healthy" if not missing_tables else "degraded",
+                "existing_tables": tables,
+                "missing_tables": missing_tables
+            }
+            
+            # Data integrity checks
+            campaigns_count = await session.execute("SELECT COUNT(*) FROM campaigns")
+            creators_count = await session.execute("SELECT COUNT(*) FROM creators")
+            
+            health_checks["data"] = {
+                "status": "healthy",
+                "campaigns_count": campaigns_count.scalar(),
+                "creators_count": creators_count.scalar()
+            }
+        
+        overall_status = "healthy"
+        if any(check.get("status") != "healthy" for check in health_checks.values()):
+            overall_status = "degraded"
+        
+        return {
+            "overall_status": overall_status,
+            "checks": health_checks,
+            "database_url": "postgresql://***:***@localhost:5432/influencerflow",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Database health check failed: {e}")
+        return {
+            "overall_status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
         }
