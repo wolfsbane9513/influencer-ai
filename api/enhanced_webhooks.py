@@ -101,7 +101,7 @@ async def create_enhanced_campaign_with_db(
         # 🔥 START ENHANCED WORKFLOW WITH DATABASE
         background_tasks.add_task(
             enhanced_orchestrator.orchestrate_enhanced_campaign,  # ✅ CORRECT METHOD NAME
-            campaign_data,  # ✅ Pass campaign_data, not orchestration_state
+            orchestration_state,  # ✅ Pass campaign_data, not orchestration_state
             task_id
         )
         

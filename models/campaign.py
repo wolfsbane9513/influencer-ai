@@ -192,6 +192,10 @@ class CampaignOrchestrationState(BaseModel):
     campaign_id: str
     campaign_data: CampaignData
     
+    database_enabled: bool = False
+    database_errors: List[str] = Field(default_factory=list)
+
+
     # Discovery results
     discovered_influencers: List[CreatorMatch] = Field(default_factory=list)
     

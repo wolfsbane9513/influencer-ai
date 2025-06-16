@@ -43,33 +43,30 @@ class EnhancedCampaignOrchestrator:
         
         logger.info("🧠 Enhanced Campaign Orchestrator initialized")
 
-    # ✅ ADD: This method to match webhook calls
     async def orchestrate_campaign(
         self,
         orchestration_state: CampaignOrchestrationState,
         task_id: str
     ) -> CampaignOrchestrationState:
         """
-        🎯 WEBHOOK-COMPATIBLE METHOD WITH DATABASE
-        This is what your enhanced_webhooks.py is actually calling
+        🎯 WEBHOOK-COMPATIBLE METHOD - MISSING COMPLETE IMPLEMENTATION
         """
         logger.info(f"🎯 Starting enhanced campaign orchestration: {task_id}")
         
         try:
-            # *** DATABASE INITIALIZATION ***
+            # *** PROBLEM: Missing database initialization logic ***
             if self.database_service:
                 try:
                     await self.database_service.initialize()
-                    # Campaign already created in webhook, just mark as database-enabled
                     orchestration_state.database_enabled = True
                     logger.info("✅ Database integration enabled")
                 except Exception as e:
                     logger.error(f"❌ Database initialization failed: {e}")
                     orchestration_state.database_enabled = False
             
-            # Call your existing enhanced campaign method
+            # *** PROBLEM: This calls the wrong method signature ***
             return await self.orchestrate_enhanced_campaign(
-                orchestration_state.campaign_data,
+                orchestration_state.campaign_data,  # ✅ Extract campaign_data
                 task_id
             )
             
@@ -88,8 +85,8 @@ class EnhancedCampaignOrchestrator:
                 except:
                     pass
             
-            return orchestration_state        
-    
+            return orchestration_state
+        
     def _initialize_groq_client(self) -> Optional[Groq]:
         """Initialize Groq client with proper error handling"""
         if GROQ_AVAILABLE and hasattr(settings, 'groq_api_key') and settings.groq_api_key:
