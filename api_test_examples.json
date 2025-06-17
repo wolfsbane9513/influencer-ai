@@ -1,0 +1,138 @@
+{
+  "enhanced_campaign_webhook": {
+    "description": "POST /api/webhook/enhanced-campaign - Start AI campaign workflow",
+    "examples": [
+      {
+        "name": "Sustainability Campaign",
+        "data": {
+          "campaign_id": "camp_eco_2024",
+          "product_name": "EcoClean Bottles",
+          "brand_name": "GreenTech Solutions", 
+          "product_description": "Sustainable water bottles made from recycled materials with temperature control technology. Features include leak-proof design, 24-hour temperature retention, and eco-friendly packaging.",
+          "target_audience": "Environmentally conscious millennials and Gen Z aged 18-35 who value sustainability and premium quality products",
+          "campaign_goal": "Build brand awareness and drive sales for our new eco-friendly product line targeting sustainability-focused consumers",
+          "product_niche": "sustainability",
+          "total_budget": 5000
+        }
+      },
+      {
+        "name": "Tech Product Campaign",
+        "data": {
+          "campaign_id": "tech_smart_789",
+          "product_name": "SmartFit Pro Watch",
+          "brand_name": "TechLife Innovations", 
+          "product_description": "Advanced fitness tracking smartwatch with health monitoring, GPS, heart rate tracking, sleep analysis, and 7-day battery life",
+          "target_audience": "Fitness enthusiasts and tech-savvy professionals aged 25-45 who want comprehensive health tracking",
+          "campaign_goal": "Generate buzz and pre-orders for our new smartwatch launch, highlighting advanced features and competitive pricing",
+          "product_niche": "tech",
+          "total_budget": 7500
+        }
+      },
+      {
+        "name": "Beauty Product Campaign",
+        "data": {
+          "campaign_id": "beauty_glow_456",
+          "product_name": "Radiant Glow Serum",
+          "brand_name": "PureBeauty Labs", 
+          "product_description": "Natural vitamin C serum for glowing skin with organic ingredients, hyaluronic acid, and anti-aging properties. Suitable for all skin types",
+          "target_audience": "Beauty enthusiasts and skincare lovers aged 20-40 looking for effective anti-aging and brightening solutions",
+          "campaign_goal": "Increase brand awareness and drive online sales through authentic skincare transformation content",
+          "product_niche": "beauty",
+          "total_budget": 4000
+        }
+      },
+      {
+        "name": "Fitness Product Campaign",
+        "data": {
+          "campaign_id": "fitness_power_321",
+          "product_name": "PowerLift Protein",
+          "brand_name": "StrengthFirst Nutrition", 
+          "product_description": "Premium whey protein powder for muscle building and recovery. 25g protein per serving, natural flavors, and third-party tested for purity",
+          "target_audience": "Athletes, bodybuilders, and fitness enthusiasts aged 18-50 focused on muscle building and recovery",
+          "campaign_goal": "Build credibility and drive supplement sales through authentic fitness transformation and workout content",
+          "product_niche": "fitness",
+          "total_budget": 6000
+        }
+      }
+    ]
+  },
+  "contract_generation": {
+    "description": "POST /api/webhook/generate-enhanced-contract - Generate contracts",
+    "example": {
+      "creator_name": "TechReviewer_Sarah",
+      "compensation": 2500.0,
+      "campaign_details": {
+        "brand": "GreenTech Solutions",
+        "product": "EcoClean Bottles",
+        "deliverables": ["1 Instagram post", "3 Instagram stories", "1 YouTube review"],
+        "timeline": "2 weeks",
+        "usage_rights": "1 year exclusive"
+      }
+    }
+  },
+  "test_call": {
+    "description": "POST /api/webhook/test-actual-call - Test ElevenLabs calling",
+    "example": {
+      "creator_name": "TechReviewer_Sarah",
+      "creator_phone": "+918806859890",
+      "campaign_details": {
+        "product_name": "EcoClean Bottles",
+        "brand_name": "GreenTech Solutions",
+        "compensation_offer": 2500.0,
+        "niche": "sustainability"
+      }
+    }
+  },
+  "monitoring_endpoints": {
+    "description": "GET endpoints for monitoring campaign progress",
+    "endpoints": [
+      {
+        "url": "/api/monitor/campaign/{task_id}",
+        "method": "GET",
+        "description": "Real-time campaign progress monitoring"
+      },
+      {
+        "url": "/api/monitor/campaigns",
+        "method": "GET", 
+        "description": "List all active and recent campaigns"
+      },
+      {
+        "url": "/api/monitor/campaign/{task_id}/summary",
+        "method": "GET",
+        "description": "Detailed campaign results and analytics"
+      }
+    ]
+  },
+  "expected_workflow": {
+    "description": "Complete workflow example",
+    "steps": [
+      {
+        "step": 1,
+        "action": "POST /api/webhook/enhanced-campaign",
+        "description": "Start campaign with JSON data above",
+        "expected_response": {
+          "message": "🎯 Enhanced AI campaign workflow started",
+          "task_id": "9a2687c3-350b-48dc-8261-d07cad7c90d3",
+          "campaign_id": "camp_eco_2024",
+          "brand_name": "GreenTech Solutions",
+          "product_name": "EcoClean Bottles",
+          "estimated_duration_minutes": 8,
+          "monitor_url": "/api/monitor/campaign/9a2687c3-350b-48dc-8261-d07cad7c90d3",
+          "status": "started"
+        }
+      },
+      {
+        "step": 2,
+        "action": "GET /api/monitor/campaign/{task_id}",
+        "description": "Monitor progress in real-time",
+        "expected_stages": ["discovery", "strategy", "negotiations", "contracts", "completed"]
+      },
+      {
+        "step": 3,
+        "action": "GET /api/monitor/campaign/{task_id}/summary",
+        "description": "Get final results and analytics",
+        "expected_data": ["successful_negotiations", "generated_contracts", "total_cost", "performance_metrics"]
+      }
+    ]
+  }
+} 

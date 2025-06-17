@@ -1,0 +1,69 @@
+{
+  "test_timestamp": "2025-06-16T14:52:48.754730",
+  "summary": {
+    "total_tests": 7,
+    "passed_tests": 5,
+    "success_rate": 71.42857142857143
+  },
+  "detailed_results": {
+    "system_health": {
+      "status": "passed",
+      "response_time": 0.550989,
+      "services": {
+        "voice_service": {
+          "status": "success",
+          "mode": "live"
+        },
+        "orchestrator": {
+          "status": "initialized",
+          "active_campaigns": 0
+        }
+      }
+    },
+    "elevenlabs_integration": {
+      "status": "passed",
+      "api_connected": true,
+      "features": [
+        "Dynamic variable injection",
+        "Real-time conversation monitoring",
+        "Structured outcome analysis"
+      ]
+    },
+    "campaign_creation": {
+      "status": "passed",
+      "task_id": "e4d2cfa1-15cf-4d1e-abe7-70c6c987be61",
+      "campaign_id": "e2e_test_1750065747",
+      "enhancements": [
+        "AI-powered creator discovery",
+        "Intelligent negotiation strategies",
+        "Automated contract generation",
+        "Real-time progress tracking"
+      ]
+    },
+    "campaign_monitoring": {
+      "status": "timeout",
+      "attempts": 12
+    },
+    "ai_strategy": {
+      "status": "passed",
+      "features": {
+        "ai_strategy_generation": true,
+        "creator_discovery": true,
+        "contract_automation": true,
+        "progress_monitoring": true,
+        "actual_call_testing": true,
+        "contract_from_calls": true
+      },
+      "ai_available": true
+    },
+    "elevenlabs_call": {
+      "status": "failed",
+      "error": "{\"status\":\"failed\",\"message\":\"ElevenLabs call initiation failed\",\"error\":\"Missing conversation_id in API response\",\"details\":{\"status\":\"failed\",\"error\":\"Missing conversation_id in API response\",\"phone_number\":\"7013543557\",\"retry_attempts\":3}}"
+    },
+    "contract_generation": {
+      "status": "passed",
+      "simple_contract": true,
+      "from_call": false
+    }
+  }
+}
